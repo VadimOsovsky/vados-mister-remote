@@ -1,0 +1,1233 @@
+import React, { useState, useRef, useCallback, useEffect } from 'react';
+
+// ── TYPES ──
+interface Game {
+  id: string;
+  title: string;
+  year: string;
+  genre: string;
+  desc: string;
+  fav: boolean;
+  plays: number;
+  time: string;
+  last: string;
+  saves: number;
+  hasDisk: boolean;
+}
+
+interface GameWithConsole extends Game {
+  _console: string;
+}
+
+type ConsoleKey = 'nes' | 'snes' | 'genesis' | 'gb' | 'gba' | 'ps1' | 'tg16' | 'neogeo';
+type SortMode = 'az' | 'za' | 'recent' | 'most';
+type TabKey = 'games' | 'favorites' | 'recents' | 'settings';
+type SheetTab = 'info' | 'library' | 'controls';
+
+// ── CONSTANTS ──
+const CONSOLE_NAMES: Record<ConsoleKey, string> = {
+  nes: 'NES', snes: 'SNES', genesis: 'Genesis', gb: 'Game Boy',
+  gba: 'GBA', ps1: 'PlayStation', tg16: 'TG-16', neogeo: 'Neo Geo'
+};
+
+const CONSOLE_ICONS: Record<ConsoleKey, string> = {
+  nes: '🎮', snes: '🕹️', genesis: '⚡', gb: '🟢',
+  gba: '💜', ps1: '💿', tg16: '🟠', neogeo: '🥊'
+};
+
+const CONSOLE_THEMES: Record<ConsoleKey, string> = {
+  nes: 'theme-nes', snes: 'theme-snes', genesis: 'theme-genesis', gb: 'theme-gb',
+  gba: 'theme-gba', ps1: 'theme-ps1', tg16: 'theme-tg16', neogeo: 'theme-neogeo'
+};
+
+const CONSOLE_COLORS: Record<ConsoleKey, string[]> = {
+  nes: ['#c0392b', '#e74c3c', '#d35400', '#e67e22'],
+  snes: ['#6c3fb5', '#8e44ad', '#2980b9', '#3498db'],
+  genesis: ['#2c3e50', '#34495e', '#1abc9c', '#16a085'],
+  gb: ['#306230', '#0f380f', '#4a752c', '#6d8b00'],
+  gba: ['#4a1090', '#6c3fb5', '#8e44ad', '#a855f7'],
+  ps1: ['#2563eb', '#1d4ed8', '#7c3aed', '#6d28d9'],
+  tg16: ['#c2410c', '#ea580c', '#d97706', '#b45309'],
+  neogeo: ['#eab308', '#ca8a04', '#dc2626', '#b91c1c']
+};
+
+const GAME_ICONS: Record<string, string> = {
+  smb: '🍄', zelda: '🗡️', megaman2: '🤖', contra: '🔫', castlevania: '🧛',
+  metroid: '🚀', punchout: '🥊', smb3: '🦝', kirby: '⭐',
+  smw: '🦕', lttp: '🛡️', supermetroid: '👾', chronotrigger: '⏰', ff6: '⚔️', dkc: '🦍',
+  sonic1: '💎', sonic2: '🌀', streets2: '👊', shinobi3: '🥷', gunstar: '💥',
+  tetris: '🧱', pokered: '🔴', linksawakening: '🐟', marioland2: '🏰',
+  metroidfusion: '🧬', minishcap: '🧢', pokeemerald: '💚', advance_wars: '🪖', ffta: '📜',
+  ff7: '☁️', mgs: '📦', sotn: '🦇', re2: '🧟',
+  bonk: '💀', blazing: '🔥', ys12: '📖',
+  kof98: '🔥', metalslug: '🪖', samsho2: '⚔️', garou: '🐺'
+};
+
+const INITIAL_GAMES: Record<ConsoleKey, Game[]> = {
+  nes: [
+    { id: 'smb', title: 'Super Mario Bros.', year: '1985', genre: 'Platformer', desc: 'The classic that started it all. Run, jump, and stomp your way through the Mushroom Kingdom to rescue Princess Toadstool.', fav: true, plays: 42, time: '12h 30m', last: 'Today', saves: 3, hasDisk: false },
+    { id: 'zelda', title: 'The Legend of Zelda', year: '1986', genre: 'Adventure', desc: 'Explore the vast land of Hyrule in this groundbreaking action-adventure.', fav: true, plays: 28, time: '24h 15m', last: 'Yesterday', saves: 5, hasDisk: false },
+    { id: 'megaman2', title: 'Mega Man 2', year: '1988', genre: 'Action', desc: 'Dr. Wily returns with eight new Robot Masters. Choose your path wisely.', fav: false, plays: 15, time: '8h 45m', last: '3 days ago', saves: 2, hasDisk: false },
+    { id: 'contra', title: 'Contra', year: '1988', genre: 'Run & Gun', desc: 'Two commandos are sent to stop the alien Red Falcon organization.', fav: false, plays: 8, time: '3h 20m', last: '1 week ago', saves: 1, hasDisk: false },
+    { id: 'castlevania', title: 'Castlevania', year: '1986', genre: 'Action', desc: "Simon Belmont enters Dracula's castle to destroy the Dark Lord.", fav: true, plays: 20, time: '6h 10m', last: '2 days ago', saves: 2, hasDisk: false },
+    { id: 'metroid', title: 'Metroid', year: '1986', genre: 'Action-Adventure', desc: 'Samus Aran must navigate the labyrinthine corridors of Planet Zebes.', fav: false, plays: 12, time: '10h 5m', last: '5 days ago', saves: 3, hasDisk: false },
+    { id: 'punchout', title: 'Punch-Out!!', year: '1987', genre: 'Sports', desc: 'Fight your way through the WVBA ranks as Little Mac.', fav: false, plays: 6, time: '4h 30m', last: '2 weeks ago', saves: 1, hasDisk: false },
+    { id: 'smb3', title: 'Super Mario Bros. 3', year: '1988', genre: 'Platformer', desc: 'The Koopalings have stolen the magic wands! Mario must recover them all.', fav: true, plays: 35, time: '18h 45m', last: 'Today', saves: 4, hasDisk: false },
+    { id: 'kirby', title: "Kirby's Adventure", year: '1993', genre: 'Platformer', desc: 'King Dedede has stolen the Star Rod. Kirby must recover the pieces.', fav: false, plays: 9, time: '5h 20m', last: '1 week ago', saves: 2, hasDisk: false },
+  ],
+  snes: [
+    { id: 'smw', title: 'Super Mario World', year: '1990', genre: 'Platformer', desc: 'Mario arrives in Dinosaur Land. Team up with Yoshi to save the day!', fav: true, plays: 55, time: '32h', last: 'Today', saves: 6, hasDisk: false },
+    { id: 'lttp', title: 'A Link to the Past', year: '1991', genre: 'Action RPG', desc: 'Travel between Light and Dark Worlds to save Hyrule from Ganon.', fav: true, plays: 40, time: '28h 15m', last: 'Yesterday', saves: 4, hasDisk: false },
+    { id: 'supermetroid', title: 'Super Metroid', year: '1994', genre: 'Action-Adventure', desc: 'Return to Zebes to rescue the last Metroid from the Space Pirates.', fav: true, plays: 30, time: '15h 40m', last: '3 days ago', saves: 5, hasDisk: false },
+    { id: 'chronotrigger', title: 'Chrono Trigger', year: '1995', genre: 'RPG', desc: 'A journey through time to prevent the apocalypse. A masterpiece.', fav: true, plays: 18, time: '45h 30m', last: '1 week ago', saves: 8, hasDisk: false },
+    { id: 'ff6', title: 'Final Fantasy VI', year: '1994', genre: 'RPG', desc: 'In a world where magic has vanished, the Empire seeks to revive it.', fav: false, plays: 14, time: '52h', last: '2 weeks ago', saves: 7, hasDisk: false },
+    { id: 'dkc', title: 'Donkey Kong Country', year: '1994', genre: 'Platformer', desc: 'K. Rool stole the banana hoard! DK and Diddy fight to get it back.', fav: false, plays: 22, time: '9h 15m', last: '4 days ago', saves: 3, hasDisk: false },
+  ],
+  genesis: [
+    { id: 'sonic1', title: 'Sonic the Hedgehog', year: '1991', genre: 'Platformer', desc: 'Sonic must stop Dr. Robotnik from stealing the Chaos Emeralds.', fav: true, plays: 38, time: '6h 50m', last: 'Today', saves: 2, hasDisk: false },
+    { id: 'sonic2', title: 'Sonic the Hedgehog 2', year: '1992', genre: 'Platformer', desc: 'Sonic and Tails race to stop the Death Egg from launching.', fav: true, plays: 45, time: '8h 20m', last: 'Yesterday', saves: 3, hasDisk: false },
+    { id: 'streets2', title: 'Streets of Rage 2', year: '1992', genre: "Beat 'em up", desc: 'Mr. X has returned. Fight through the city streets once more.', fav: false, plays: 25, time: '5h 10m', last: '3 days ago', saves: 2, hasDisk: false },
+    { id: 'shinobi3', title: 'Shinobi III', year: '1993', genre: 'Action', desc: 'Joe Musashi returns to battle the Neo Zeed organization.', fav: false, plays: 10, time: '4h 30m', last: '1 week ago', saves: 1, hasDisk: false },
+    { id: 'gunstar', title: 'Gunstar Heroes', year: '1993', genre: 'Run & Gun', desc: 'Collect four gems before the empire uses them for destruction.', fav: true, plays: 16, time: '3h 45m', last: '5 days ago', saves: 2, hasDisk: false },
+  ],
+  gb: [
+    { id: 'tetris', title: 'Tetris', year: '1989', genre: 'Puzzle', desc: 'The timeless falling block puzzle. Clear lines, chase high scores.', fav: true, plays: 100, time: '40h', last: 'Today', saves: 0, hasDisk: false },
+    { id: 'pokered', title: 'Pokémon Red', year: '1996', genre: 'RPG', desc: 'Catch, train, and battle your way to become the Pokémon Champion.', fav: true, plays: 35, time: '80h', last: '2 days ago', saves: 4, hasDisk: false },
+    { id: 'linksawakening', title: "Link's Awakening", year: '1993', genre: 'Adventure', desc: 'Stranded on Koholint Island. Wake the Wind Fish to escape.', fav: false, plays: 20, time: '15h 30m', last: '1 week ago', saves: 3, hasDisk: false },
+    { id: 'marioland2', title: 'Super Mario Land 2', year: '1992', genre: 'Platformer', desc: "Wario stole Mario's castle! Collect 6 golden coins to reclaim it.", fav: false, plays: 14, time: '6h', last: '3 days ago', saves: 2, hasDisk: false },
+  ],
+  gba: [
+    { id: 'metroidfusion', title: 'Metroid Fusion', year: '2002', genre: 'Action-Adventure', desc: 'Infected by the X Parasite, Samus must face her own doppelgänger.', fav: true, plays: 18, time: '12h', last: 'Yesterday', saves: 4, hasDisk: false },
+    { id: 'minishcap', title: 'Zelda: Minish Cap', year: '2004', genre: 'Adventure', desc: 'Shrink down with Ezlo to explore a miniature world and save Zelda.', fav: true, plays: 12, time: '18h 30m', last: '3 days ago', saves: 3, hasDisk: false },
+    { id: 'pokeemerald', title: 'Pokémon Emerald', year: '2004', genre: 'RPG', desc: 'Journey through Hoenn and stop Team Aqua and Magma.', fav: false, plays: 28, time: '95h', last: '1 week ago', saves: 5, hasDisk: false },
+    { id: 'advance_wars', title: 'Advance Wars', year: '2001', genre: 'Strategy', desc: 'Command the Orange Star Army in turn-based tactical battles.', fav: false, plays: 22, time: '35h', last: '5 days ago', saves: 3, hasDisk: false },
+    { id: 'ffta', title: 'FF Tactics Advance', year: '2003', genre: 'Tactical RPG', desc: 'Transported to Ivalice, Marche must find a way back home.', fav: false, plays: 16, time: '48h', last: '2 weeks ago', saves: 4, hasDisk: false },
+  ],
+  ps1: [
+    { id: 'ff7', title: 'Final Fantasy VII', year: '1997', genre: 'RPG', desc: 'Cloud joins AVALANCHE against Shinra, but Sephiroth awaits.', fav: true, plays: 8, time: '65h', last: '2 days ago', saves: 10, hasDisk: true },
+    { id: 'mgs', title: 'Metal Gear Solid', year: '1998', genre: 'Stealth', desc: 'Solid Snake infiltrates Shadow Moses to neutralize Metal Gear REX.', fav: true, plays: 12, time: '14h 20m', last: 'Yesterday', saves: 6, hasDisk: true },
+    { id: 'sotn', title: 'Castlevania: SOTN', year: '1997', genre: 'Action RPG', desc: "Alucard explores his father's castle in this genre-defining classic.", fav: true, plays: 25, time: '20h 45m', last: '3 days ago', saves: 5, hasDisk: false },
+    { id: 're2', title: 'Resident Evil 2', year: '1998', genre: 'Survival Horror', desc: 'Leon and Claire arrive in Raccoon City overrun by zombies.', fav: false, plays: 6, time: '8h 30m', last: '1 week ago', saves: 4, hasDisk: true },
+  ],
+  tg16: [
+    { id: 'bonk', title: "Bonk's Adventure", year: '1989', genre: 'Platformer', desc: 'A caveman with a huge head rescues Princess Za from King Drool.', fav: false, plays: 8, time: '3h 20m', last: '1 week ago', saves: 1, hasDisk: false },
+    { id: 'blazing', title: 'Blazing Lazers', year: '1989', genre: "Shoot 'em up", desc: 'Vertical scrolling shooter. Defend the galaxy from the Dark Squadron.', fav: true, plays: 15, time: '5h 10m', last: '3 days ago', saves: 1, hasDisk: false },
+    { id: 'ys12', title: 'Ys Book I & II', year: '1989', genre: 'Action RPG', desc: 'Adol Christin explores the ancient land of Ys. CD-ROM enhanced.', fav: true, plays: 10, time: '16h', last: '5 days ago', saves: 4, hasDisk: true },
+  ],
+  neogeo: [
+    { id: 'kof98', title: "King of Fighters '98", year: '1998', genre: 'Fighting', desc: 'The dream match. 38 fighters from across the KOF series.', fav: true, plays: 50, time: '25h', last: 'Today', saves: 0, hasDisk: false },
+    { id: 'metalslug', title: 'Metal Slug', year: '1996', genre: 'Run & Gun', desc: 'Marco and Tarma vs General Morden and his rebel army.', fav: true, plays: 35, time: '8h 40m', last: 'Yesterday', saves: 0, hasDisk: false },
+    { id: 'samsho2', title: 'Samurai Shodown II', year: '1994', genre: 'Fighting', desc: 'Blade warriors clash in feudal Japan. Master the sword.', fav: false, plays: 20, time: '12h', last: '3 days ago', saves: 0, hasDisk: false },
+    { id: 'garou', title: 'Garou: MOTW', year: '1999', genre: 'Fighting', desc: 'Rock Howard enters the King of Fighters: Maximum Mayhem tournament.', fav: true, plays: 28, time: '15h 30m', last: '2 days ago', saves: 0, hasDisk: false },
+  ]
+};
+
+const SORT_MODES: { key: SortMode; label: string }[] = [
+  { key: 'az', label: 'A-Z' },
+  { key: 'za', label: 'Z-A' },
+  { key: 'recent', label: 'Recent' },
+  { key: 'most', label: 'Most' },
+];
+
+// ── PLACEHOLDER COMPONENTS ──
+const PlaceholderArt: React.FC<{
+  game: Game;
+  consoleName: ConsoleKey;
+  size?: 'small' | 'normal' | 'large';
+}> = ({ game, consoleName, size = 'normal' }) => {
+  const icon = GAME_ICONS[game.id] || '🎮';
+  const colors = CONSOLE_COLORS[consoleName];
+  const c1 = colors[0];
+  const c2 = colors[1] || colors[0];
+  const iconSize = size === 'small' ? 24 : size === 'large' ? 48 : 32;
+  const titleSize = size === 'small' ? 9 : size === 'large' ? 14 : 10;
+  const consoleSize = size === 'small' ? 7 : 8;
+
+  return (
+    <div style={{
+      width: '100%', height: '100%', display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden',
+      background: `linear-gradient(135deg, ${c1} 0%, ${c2} 100%)`,
+    }}>
+      <div style={{
+        position: 'absolute', inset: 6, border: '2px solid rgba(255,255,255,0.1)',
+        borderRadius: 4, pointerEvents: 'none',
+      }} />
+      <div style={{ fontSize: iconSize, marginBottom: 6, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}>
+        {icon}
+      </div>
+      <div style={{
+        fontSize: titleSize, fontWeight: 700, color: 'rgba(255,255,255,0.9)',
+        textAlign: 'center', padding: '0 8px', lineHeight: 1.2, maxWidth: '100%',
+        overflow: 'hidden', textOverflow: 'ellipsis',
+        display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+        textShadow: '0 1px 3px rgba(0,0,0,0.4)',
+      }}>
+        {game.title}
+      </div>
+      <div style={{
+        fontSize: consoleSize, fontWeight: 600, color: 'rgba(255,255,255,0.5)',
+        textTransform: 'uppercase', letterSpacing: 1, marginTop: 4,
+      }}>
+        {CONSOLE_NAMES[consoleName]}
+      </div>
+      <div style={{
+        position: 'absolute', bottom: 6, right: 8, fontSize: 9,
+        fontWeight: 600, color: 'rgba(255,255,255,0.3)',
+      }}>
+        {game.year}
+      </div>
+    </div>
+  );
+};
+
+const BackCoverArt: React.FC<{ game: Game; consoleName: ConsoleKey }> = ({ game, consoleName }) => {
+  const colors = CONSOLE_COLORS[consoleName];
+  const c1 = colors[0];
+  const c2 = colors[1] || colors[0];
+  const bars = Array.from({ length: 20 }, (_, i) => 8 + Math.floor((i * 7 + 3) % 14));
+
+  return (
+    <div style={{
+      width: '100%', height: '100%', display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'flex-start', position: 'relative', overflow: 'hidden',
+      background: `linear-gradient(135deg, ${c2} 0%, ${c1} 100%)`,
+      padding: '16px 12px',
+    }}>
+      <div style={{
+        position: 'absolute', inset: 6, border: '2px solid rgba(255,255,255,0.1)',
+        borderRadius: 4, pointerEvents: 'none',
+      }} />
+      <div style={{
+        fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.85)',
+        marginBottom: 8, textAlign: 'center', width: '100%',
+      }}>
+        {game.title}
+      </div>
+      <div style={{
+        fontSize: 8, color: 'rgba(255,255,255,0.5)', lineHeight: 1.5, textAlign: 'center',
+      }}>
+        {game.desc.substring(0, 120)}{game.desc.length > 120 ? '...' : ''}
+      </div>
+      <div style={{
+        position: 'absolute', bottom: 10, left: '50%', transform: 'translateX(-50%)',
+        display: 'flex', gap: 1.5, alignItems: 'flex-end', height: 22,
+      }}>
+        {bars.map((h, i) => (
+          <span key={i} style={{
+            display: 'block', width: 1.5, height: h,
+            background: 'rgba(255,255,255,0.25)', borderRadius: 0.5,
+          }} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ── SVG ICONS ──
+const Icons = {
+  settings: (
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} width={20} height={20}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+      <circle cx={12} cy={12} r={3} />
+    </svg>
+  ),
+  search: (
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} width={16} height={16}>
+      <circle cx={11} cy={11} r={8} /><path strokeLinecap="round" d="M21 21l-4.35-4.35" />
+    </svg>
+  ),
+  sort: (
+    <svg width={14} height={14} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" d="M3 6h18M3 12h12M3 18h6" />
+    </svg>
+  ),
+  play: (
+    <svg fill="currentColor" viewBox="0 0 24 24" width={14} height={14}><path d="M8 5v14l11-7z" /></svg>
+  ),
+  playLarge: (
+    <svg fill="currentColor" viewBox="0 0 24 24" width={22} height={22}><path d="M8 5v14l11-7z" /></svg>
+  ),
+  star: (
+    <svg viewBox="0 0 24 24" fill="currentColor" width={12} height={12}>
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+    </svg>
+  ),
+  grid: (
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} width={22} height={22}>
+      <rect x={3} y={3} width={7} height={7} rx={1} /><rect x={14} y={3} width={7} height={7} rx={1} />
+      <rect x={3} y={14} width={7} height={7} rx={1} /><rect x={14} y={14} width={7} height={7} rx={1} />
+    </svg>
+  ),
+  starOutline: (
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} width={22} height={22}>
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+    </svg>
+  ),
+  clock: (
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} width={22} height={22}>
+      <circle cx={12} cy={12} r={10} /><path strokeLinecap="round" d="M12 6v6l4 2" />
+    </svg>
+  ),
+  back: (
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} width={20} height={20}>
+      <path strokeLinecap="round" d="M15 19l-7-7 7-7" />
+    </svg>
+  ),
+  reset: (
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} width={18} height={18}>
+      <path strokeLinecap="round" d="M1 4v6h6" /><path strokeLinecap="round" d="M3.51 15a9 9 0 105.64-12.23L1 10" />
+    </svg>
+  ),
+  save: (
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} width={18} height={18}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
+      <polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" />
+    </svg>
+  ),
+  load: (
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} width={18} height={18}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+  ),
+  screenshot: (
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} width={18} height={18}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
+      <circle cx={12} cy={13} r={4} />
+    </svg>
+  ),
+  disk: (
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} width={18} height={18}>
+      <circle cx={12} cy={12} r={10} /><circle cx={12} cy={12} r={3} />
+    </svg>
+  ),
+  eject: (
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} width={18} height={18}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 5l-8 8h16l-8-8zM4 17h16" />
+    </svg>
+  ),
+  monitor: (
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} width={18} height={18}>
+      <rect x={2} y={3} width={20} height={14} rx={2} /><line x1={8} y1={21} x2={16} y2={21} />
+      <line x1={12} y1={17} x2={12} y2={21} />
+    </svg>
+  ),
+  stop: (
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} width={18} height={18}>
+      <rect x={6} y={6} width={12} height={12} rx={1} />
+    </svg>
+  ),
+  reboot: (
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} width={18} height={18}>
+      <path strokeLinecap="round" d="M18.36 6.64A9 9 0 1112 3v0" /><path strokeLinecap="round" d="M12 3v9" />
+    </svg>
+  ),
+  book: (
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} width={18} height={18}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+    </svg>
+  ),
+};
+
+// ── TOAST ──
+const Toast: React.FC<{ message: string; visible: boolean }> = ({ message, visible }) => (
+  <div style={{
+    position: 'fixed',
+    bottom: 'calc(60px + env(safe-area-inset-bottom, 20px) + 16px)',
+    left: '50%',
+    transform: `translateX(-50%) translateY(${visible ? 0 : 100}px)`,
+    background: 'var(--card)', color: 'var(--text)',
+    padding: '12px 20px', borderRadius: 12,
+    fontSize: 13, fontWeight: 600,
+    boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
+    zIndex: 300,
+    transition: 'transform 0.35s cubic-bezier(0.32, 0.72, 0, 1)',
+    display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap',
+    border: '1px solid rgba(128,128,128,0.1)',
+  }}>
+    {message}
+  </div>
+);
+
+// ── MAIN APP ──
+export default function MisterRemote() {
+  const [games, setGames] = useState<Record<ConsoleKey, Game[]>>(INITIAL_GAMES);
+  const [currentConsole, setCurrentConsole] = useState<ConsoleKey>('nes');
+  const [currentTab, setCurrentTab] = useState<TabKey>('games');
+  const [sortMode, setSortMode] = useState<SortMode>('az');
+  const [search, setSearch] = useState('');
+  const [selectedGame, setSelectedGame] = useState<GameWithConsole | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [sheetTab, setSheetTab] = useState<SheetTab>('info');
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [dynamicThemes, setDynamicThemes] = useState(true);
+  const [showTitles, setShowTitles] = useState(true);
+  const [gridCols, setGridCols] = useState(3);
+  const [boxFlipped, setBoxFlipped] = useState(false);
+  const [toast, setToast] = useState({ message: '', visible: false });
+  const [launching, setLaunching] = useState(false);
+  const [ipAddress, setIpAddress] = useState('192.168.1.100');
+  const [port, setPort] = useState('8080');
+  const [autoConnect, setAutoConnect] = useState(true);
+
+  const toastTimer = useRef<number>(0);
+  const Ref = useRef<HTMLconsoleTabsDivElement>(null);
+  const  = useRef<HTMLDivElementsheetRef>(null);
+
+  // ── SHEET GESTURE ──
+  const dragState = useRef({ startY: 0, curY: 0, dragging: false });
+
+  const handleSheetTouchStart = useCallback((e: React.TouchEvent) => {
+    const target = e.target as HTMLElement;
+    if (!target.closest('.sheet-handle, .sheet-header-zone')) return;
+    dragState.current.startY = e.touches[0].clientY;
+    dragState.current.dragging = true;
+    if (sheetRef.current) sheetRef.current.style.transition = 'none';
+  }, []);
+
+  const handleSheetTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!dragState.current.dragging) return;
+    let dy = e.touches[0].clientY - dragState.current.startY;
+    if (dy < 0) dy = 0;
+    dragState.current.curY = dy;
+    if (sheetRef.current) sheetRef.current.style.transform = `translateY(${dy}px)`;
+  }, []);
+
+  const handleSheetTouchEnd = useCallback(() => {
+    if (!dragState.current.dragging) return;
+    dragState.current.dragging = false;
+    if (sheetRef.current) sheetRef.current.style.transition = '';
+    if (dragState.current.curY > 120) {
+      setSheetOpen(false);
+    } else if (sheetRef.current) {
+      sheetRef.current.style.transform = '';
+    }
+    dragState.current.curY = 0;
+  }, []);
+
+  // ── TOAST ──
+  const showToast = useCallback((msg: string) => {
+    setToast({ message: msg, visible: true });
+    clearTimeout(toastTimer.current);
+    toastTimer.current = window.setTimeout(() => setToast(t => ({ ...t, visible: false })), 2500);
+  }, []);
+
+  // ── THEME ──
+  const currentTheme = dynamicThemes ? CONSOLE_THEMES[currentConsole] : 'theme-genesis';
+
+  useEffect(() => {
+    document.body.className = currentTheme;
+  }, [currentTheme]);
+
+  // ── SORT & FILTER ──
+  const toggleSort = () => {
+    const idx = SORT_MODES.findIndex(s => s.key === sortMode);
+    setSortMode(SORT_MODES[(idx + 1) % SORT_MODES.length].key);
+  };
+
+  const getProcessedGames = useCallback((): GameWithConsole[] => {
+    let result: GameWithConsole[] = [];
+
+    if (currentTab === 'favorites') {
+      Object.entries(games).forEach(([c, gs]) => {
+        gs.filter(g => g.fav).forEach(g => result.push({ ...g, _console: c }));
+      });
+    } else if (currentTab === 'recents') {
+      Object.entries(games).forEach(([c, gs]) => {
+        gs.forEach(g => result.push({ ...g, _console: c }));
+      });
+      result.sort((a, b) => b.plays - a.plays);
+      result = result.slice(0, 12);
+    } else {
+      result = (games[currentConsole] || []).map(g => ({ ...g, _console: currentConsole }));
+    }
+
+    // sort
+    switch (sortMode) {
+      case 'az': result.sort((a, b) => a.title.localeCompare(b.title)); break;
+      case 'za': result.sort((a, b) => b.title.localeCompare(a.title)); break;
+      case 'recent': result.sort((a, b) => b.plays - a.plays); break;
+      case 'most': result.sort((a, b) => b.plays - a.plays); break;
+    }
+
+    // search
+    if (search) {
+      const q = search.toLowerCase();
+      result = result.filter(g => g.title.toLowerCase().includes(q) || g.genre.toLowerCase().includes(q));
+    }
+
+    return result;
+  }, [games, currentConsole, currentTab, sortMode, search]);
+
+  const getRecents = useCallback((): GameWithConsole[] => {
+    const gs = games[currentConsole] || [];
+    return [...gs].sort((a, b) => b.plays - a.plays).slice(0, 5).map(g => ({ ...g, _console: currentConsole }));
+  }, [games, currentConsole]);
+
+  // ── ACTIONS ──
+  const openGame = (consoleName: ConsoleKey, gameId: string) => {
+    const game = games[consoleName]?.find(g => g.id === gameId);
+    if (!game) return;
+    setSelectedGame({ ...game, _console: consoleName });
+    setSheetTab('info');
+    setBoxFlipped(false);
+    setSheetOpen(true);
+  };
+
+  const toggleFavorite = () => {
+    if (!selectedGame) return;
+    const c = selectedGame._console as ConsoleKey;
+    setGames(prev => {
+      const updated = { ...prev };
+      updated[c] = updated[c].map(g =>
+        g.id === selectedGame.id ? { ...g, fav: !g.fav } : g
+      );
+      return updated;
+    });
+    const newFav = !selectedGame.fav;
+    setSelectedGame(prev => prev ? { ...prev, fav: newFav } : null);
+    showToast(newFav ? '⭐ Added to favorites' : '💔 Removed');
+  };
+
+  const launchGame = () => {
+    if (!selectedGame || launching) return;
+    setLaunching(true);
+    showToast(`🚀 Launching ${selectedGame.title}...`);
+    setTimeout(() => {
+      setLaunching(false);
+      showToast('✅ Game running!');
+    }, 2000);
+  };
+
+  const processedGames = getProcessedGames();
+  const recentGames = getRecents();
+  const showRecents = currentTab === 'games';
+
+  const gridTitle = currentTab === 'favorites' ? '⭐ Favorites'
+    : currentTab === 'recents' ? '🕐 Recently Played'
+    : 'All Games';
+
+  const saveDates = ['2 hours ago', 'Yesterday', '3 days ago', '1 week ago', '2 weeks ago'];
+
+  return (
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--text)', fontFamily: "'Inter', -apple-system, sans-serif" }}>
+      {/* STATUS BAR */}
+      <div style={{ height: 'env(safe-area-inset-top, 20px)', background: 'var(--surface)', position: 'sticky', top: 0, zIndex: 100 }} />
+
+      {/* HEADER
+      <header style={{
+        position: 'sticky', top: 'env(safe-area-inset-top, 20px)', zIndex: 99,
+        background: 'var(--surface)', backdropFilter: 'blur(20px)', height: 54,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '0 16px', borderBottom: '1px solid rgba(128,128,128,0.1)',
+        transition: 'background 0.4s',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{
+            width: 32, height: 32, background: 'var(--accent)', borderRadius: 8,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontWeight: 800, fontSize: 11, color: '#fff', letterSpacing: -0.5,
+          }}>MR</div>
+          <div style={{ fontSize: 18, fontWeight: 700 }}>MiSTer</div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{
+            width: 8, height: 8, borderRadius: '50%', background: '#22c55e',
+            boxShadow: '0 0 6px #22c55e88', animation: 'pulse-dot 2s infinite',
+          }} />
+          <button onClick={() => setSettingsOpen(true)} style={{
+            width: 36, height: 36, borderRadius: 10, border: 'none',
+            background: 'rgba(128,128,128,0.12)', color: 'var(--text)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+          }}>
+            {Icons.settings}
+          </button>
+        </div>
+      </header>
+
+      {/* CONSOLE TABS */}
+      <div style={{
+        position: 'sticky', top: 'calc(env(safe-area-inset-top, 20px) + 54px)', zIndex: 98,
+        background: 'var(--bg)', padding: '12px 0 8px', transition: 'background 0.4s',
+      }}>
+        <div ref={consoleTabsRef} style={{
+          display: 'flex', gap: 8, padding: '0 16px', overflowX: 'auto',
+          scrollSnapType: 'x proximity', scrollbarWidth: 'none',
+        }}>
+          {(Object.keys(CONSOLE_NAMES) as ConsoleKey[]).map(c => (
+            <button key={c} onClick={() => {
+              setCurrentConsole(c);
+              setCurrentTab('games');
+            }} style={{
+              flexShrink: 0, padding: '8px 16px', borderRadius: 20,
+              border: `1.5px solid ${currentConsole === c ? 'var(--accent)' : 'rgba(128,128,128,0.2)'}`,
+              background: currentConsole === c ? 'var(--accent)' : 'transparent',
+              color: currentConsole === c ? '#fff' : 'var(--text-secondary)',
+              fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6,
+              transition: 'all 0.25s',
+              boxShadow: currentConsole === c ? '0 2px 12px rgba(0,0,0,0.2)' : 'none',
+            }}>
+              <span style={{ fontSize: 15 }}>{CONSOLE_ICONS[c]}</span>
+              {CONSOLE_NAMES[c]}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* FILTER BAR */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 16px 12px' }}>
+        <div style={{ flex: 1, position: 'relative' }}>
+          <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)', pointerEvents: 'none' }}>
+            {Icons.search}
+          </span>
+          <input
+            value={search} onChange={e => setSearch(e.target.value)}
+            placeholder="Search games..."
+            style={{
+              width: '100%', height: 38, borderRadius: 10,
+              border: '1.5px solid rgba(128,128,128,0.15)',
+              background: 'var(--surface)', padding: '0 12px 0 36px',
+              color: 'var(--text)', fontSize: 14, fontFamily: 'inherit', outline: 'none',
+            }}
+          />
+        </div>
+        <button onClick={toggleSort} style={{
+          height: 38, padding: '0 14px', borderRadius: 10,
+          border: '1.5px solid rgba(128,128,128,0.15)',
+          background: 'var(--surface)', color: 'var(--text-secondary)',
+          fontFamily: 'inherit', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+          display: 'flex', alignItems: 'center', gap: 5,
+        }}>
+          {Icons.sort}
+          {SORT_MODES.find(s => s.key === sortMode)?.label}
+        </button>
+      </div>
+
+      {/* RECENTLY PLAYED */}
+      {showRecents && (
+        <section style={{ padding: '0 0 12px' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', padding: '8px 16px 10px' }}>
+            <div style={{ fontSize: 20, fontWeight: 700 }}>Recently Played</div>
+            <div style={{ fontSize: 13, color: 'var(--text-secondary)', fontWeight: 500 }}>Continue</div>
+          </div>
+          <div style={{
+            display: 'flex', gap: 12, padding: '0 16px', overflowX: 'auto',
+            scrollSnapType: 'x mandatory', scrollbarWidth: 'none',
+          }}>
+            {recentGames.map(g => (
+              <div key={g.id} onClick={() => openGame(g._console as ConsoleKey, g.id)} style={{
+                flexShrink: 0, width: 140, scrollSnapAlign: 'start', cursor: 'pointer',
+              }}>
+                <div style={{
+                  width: 140, height: 140, borderRadius: 10, overflow: 'hidden',
+                  position: 'relative', background: 'var(--surface)', marginBottom: 8,
+                }}>
+                  <PlaceholderArt game={g} consoleName={g._console as ConsoleKey} />
+                  <div style={{
+                    position: 'absolute', top: 6, left: 6, padding: '2px 7px', borderRadius: 6,
+                    background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)',
+                    fontSize: 10, fontWeight: 600, color: '#fff',
+                  }}>
+                    {CONSOLE_NAMES[g._console as ConsoleKey]}
+                  </div>
+                  <div style={{
+                    position: 'absolute', bottom: 6, right: 6, width: 28, height: 28,
+                    borderRadius: '50%', background: 'var(--accent)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                  }}>
+                    {Icons.play}
+                  </div>
+                </div>
+                <div style={{
+                  fontSize: 12, fontWeight: 600, lineHeight: 1.3,
+                  display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                }}>
+                  {g.title}
+                </div>
+                <div style={{ fontSize: 10, color: 'var(--text-secondary)', marginTop: 2 }}>{g.last}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* GRID HEADER */}
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', padding: '8px 16px 10px' }}>
+        <div style={{ fontSize: 20, fontWeight: 700 }}>{gridTitle}</div>
+        <div style={{ fontSize: 13, color: 'var(--text-secondary)', fontWeight: 500 }}>
+          {processedGames.length} game{processedGames.length !== 1 ? 's' : ''}
+        </div>
+      </div>
+
+      {/* GAME GRID */}
+      <div style={{
+        display: 'grid', gridTemplateColumns: `repeat(${gridCols}, 1fr)`,
+        gap: 12, padding: '0 16px 120px',
+      }}>
+        {processedGames.map((g, i) => {
+          const c = g._console as ConsoleKey;
+          return (
+            <div key={`${c}-${g.id}`} onClick={() => openGame(c, g.id)} style={{
+              cursor: 'pointer', position: 'relative',
+              animation: `fadeIn 0.3s ease both`,
+              animationDelay: `${i * 0.03}s`,
+            }}>
+              <div style={{
+                width: '100%', aspectRatio: '3/4', borderRadius: 10, overflow: 'hidden',
+                background: 'var(--surface)', position: 'relative',
+                boxShadow: '0 2px 10px rgba(0,0,0,0.15)',
+              }}>
+                <PlaceholderArt game={g} consoleName={c} />
+                {g.fav && (
+                  <div style={{
+                    position: 'absolute', top: 6, right: 6, width: 20, height: 20, borderRadius: '50%',
+                    background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2,
+                    color: '#fbbf24',
+                  }}>
+                    {Icons.star}
+                  </div>
+                )}
+                <div style={{
+                  position: 'absolute', bottom: 6, left: 6, padding: '2px 6px', borderRadius: 5,
+                  background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)',
+                  fontSize: 9, fontWeight: 600, color: '#fff', zIndex: 2,
+                }}>
+                  {g.genre}
+                </div>
+              </div>
+              {showTitles && (
+                <div style={{ padding: '6px 2px 0' }}>
+                  <div style={{
+                    fontSize: 11, fontWeight: 600, lineHeight: 1.3,
+                    display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                  }}>
+                    {g.title}
+                  </div>
+                  <div style={{ fontSize: 10, color: 'var(--text-secondary)', marginTop: 1 }}>
+                    {currentTab !== 'games' ? `${CONSOLE_NAMES[c]} · ` : ''}{g.year}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* TAB BAR */}
+      <nav style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
+        background: 'var(--surface)', backdropFilter: 'blur(20px)',
+        borderTop: '1px solid rgba(128,128,128,0.1)',
+        display: 'flex', alignItems: 'flex-start', paddingTop: 6,
+        paddingBottom: 'max(env(safe-area-inset-bottom, 20px), 6px)',
+        transition: 'background 0.4s',
+      }}>
+        {([
+          { key: 'games' as TabKey, icon: Icons.grid, label: 'Games' },
+          { key: 'favorites' as TabKey, icon: Icons.starOutline, label: 'Favorites' },
+          { key: 'recents' as TabKey, icon: Icons.clock, label: 'Recent' },
+          { key: 'settings' as TabKey, icon: Icons.settings, label: 'Settings' },
+        ]).map(t => (
+          <button key={t.key} onClick={() => {
+            if (t.key === 'settings') { setSettingsOpen(true); return; }
+            setCurrentTab(t.key);
+          }} style={{
+            flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+            background: 'none', border: 'none',
+            color: currentTab === t.key ? 'var(--accent)' : 'var(--text-secondary)',
+            cursor: 'pointer', padding: '4px 0', fontFamily: 'inherit',
+          }}>
+            {t.icon}
+            <span style={{ fontSize: 10, fontWeight: 600 }}>{t.label}</span>
+          </button>
+        ))}
+      </nav>
+
+      {/* SHEET OVERLAY */}
+      <div onClick={() => setSheetOpen(false)} style={{
+        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+        zIndex: 200, opacity: sheetOpen ? 1 : 0, pointerEvents: sheetOpen ? 'auto' : 'none',
+        transition: 'opacity 0.3s', backdropFilter: 'blur(4px)',
+      }} />
+
+      {/* BOTTOM SHEET */}
+      <div
+        ref={sheetRef}
+        onTouchStart={handleSheetTouchStart}
+        onTouchMove={handleSheetTouchMove}
+        onTouchEnd={handleSheetTouchEnd}
+        style={{
+          position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 201,
+          background: 'var(--surface)', borderRadius: '20px 20px 0 0',
+          transform: sheetOpen ? 'translateY(0)' : 'translateY(100%)',
+          transition: 'transform 0.35s cubic-bezier(0.32, 0.72, 0, 1)',
+          maxHeight: '92dvh', display: 'flex', flexDirection: 'column',
+        }}>
+        {/* Handle */}
+        <div className="sheet-handle" style={{
+          width: 36, height: 5, borderRadius: 3, background: 'rgba(128,128,128,0.3)',
+          margin: '8px auto', flexShrink: 0,
+        }} />
+
+        {selectedGame && (
+          <>
+            {/* Sheet Header */}
+            <div className="sheet-header-zone" style={{
+              display: 'flex', gap: 14, padding: '8px 20px 16px', alignItems: 'flex-start', flexShrink: 0,
+            }}>
+              <div style={{
+                width: 80, height: 107, borderRadius: 10, overflow: 'hidden',
+                background: 'var(--bg)', flexShrink: 0, boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+              }}>
+                <PlaceholderArt game={selectedGame} consoleName={selectedGame._console as ConsoleKey} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.2, marginBottom: 4 }}>
+                  {selectedGame.title}
+                </div>
+                <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 2 }}>
+                  {CONSOLE_NAMES[selectedGame._console as ConsoleKey]}
+                </div>
+                <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 2 }}>
+                  {selectedGame.year} · {selectedGame.genre}
+                </div>
+                <div style={{ display: 'flex', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
+                  <span style={{ padding: '3px 8px', borderRadius: 6, background: 'rgba(128,128,128,0.12)', fontSize: 11, fontWeight: 500, color: 'var(--text-secondary)' }}>
+                    {selectedGame.genre}
+                  </span>
+                  <span style={{ padding: '3px 8px', borderRadius: 6, background: 'rgba(128,128,128,0.12)', fontSize: 11, fontWeight: 500, color: 'var(--text-secondary)' }}>
+                    {selectedGame.year}
+                  </span>
+                  {selectedGame.fav && (
+                    <span style={{ padding: '3px 8px', borderRadius: 6, background: 'rgba(128,128,128,0.12)', fontSize: 11, fontWeight: 500, color: 'var(--text-secondary)' }}>
+                      ⭐ Fav
+                    </span>
+                  )}
+                  {selectedGame.hasDisk && (
+                    <span style={{ padding: '3px 8px', borderRadius: 6, background: 'rgba(128,128,128,0.12)', fontSize: 11, fontWeight: 500, color: 'var(--text-secondary)' }}>
+                      💿 CD
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Sheet Tabs */}
+            <div style={{
+              display: 'flex', borderBottom: '1px solid rgba(128,128,128,0.12)',
+              padding: '0 20px', flexShrink: 0,
+            }}>
+              {(['info', 'library', 'controls'] as SheetTab[]).map(t => (
+                <button key={t} onClick={() => setSheetTab(t)} style={{
+                  flex: 1, padding: '10px 0', textAlign: 'center',
+                  fontSize: 13, fontWeight: 600,
+                  color: sheetTab === t ? 'var(--accent)' : 'var(--text-secondary)',
+                  border: 'none', background: 'none', cursor: 'pointer',
+                  position: 'relative', fontFamily: 'inherit',
+                  borderBottom: sheetTab === t ? '2.5px solid var(--accent)' : '2.5px solid transparent',
+                }}>
+                  {t.charAt(0).toUpperCase() + t.slice(1)}
+                </button>
+              ))}
+            </div>
+
+            {/* Sheet Content */}
+            <div style={{
+              flex: 1, overflowY: 'auto', padding: '16px 20px calc(20px + env(safe-area-inset-bottom, 20px))',
+              scrollbarWidth: 'none',
+            }}>
+              {/* INFO PANEL */}
+              {sheetTab === 'info' && (
+                <div>
+                  <p style={{ fontSize: 14, lineHeight: 1.6, color: 'var(--text-secondary)', marginBottom: 16 }}>
+                    {selectedGame.desc}
+                  </p>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
+                    {[
+                      { label: 'Play Time', value: selectedGame.time },
+                      { label: 'Last Played', value: selectedGame.last },
+                      { label: 'Times Played', value: String(selectedGame.plays) },
+                      { label: 'Save States', value: String(selectedGame.saves) },
+                    ].map(s => (
+                      <div key={s.label} style={{ background: 'rgba(128,128,128,0.08)', borderRadius: 10, padding: 12 }}>
+                        <div style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                          {s.label}
+                        </div>
+                        <div style={{ fontSize: 16, fontWeight: 700, marginTop: 2 }}>{s.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* LIBRARY PANEL */}
+              {sheetTab === 'library' && (
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+                    <div onClick={() => setBoxFlipped(!boxFlipped)} style={{
+                      width: 220, height: 293, perspective: 800, cursor: 'pointer',
+                    }}>
+                      <div style={{
+                        position: 'relative', width: '100%', height: '100%',
+                        transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                        transformStyle: 'preserve-3d',
+                        transform: boxFlipped ? 'rotateY(180deg)' : 'rotateY(0)',
+                      }}>
+                        <div style={{
+                          position: 'absolute', inset: 0, backfaceVisibility: 'hidden',
+                          borderRadius: 14, overflow: 'hidden', boxShadow: '0 8px 30px rgba(0,0,0,0.25)',
+                        }}>
+                          <PlaceholderArt game={selectedGame} consoleName={selectedGame._console as ConsoleKey} size="large" />
+                        </div>
+                        <div style={{
+                          position: 'absolute', inset: 0, backfaceVisibility: 'hidden',
+                          borderRadius: 14, overflow: 'hidden', boxShadow: '0 8px 30px rgba(0,0,0,0.25)',
+                          transform: 'rotateY(180deg)',
+                        }}>
+                          <BackCoverArt game={selectedGame} consoleName={selectedGame._console as ConsoleKey} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-secondary)', marginTop: 10 }}>
+                    👆 Tap box art to flip
+                  </p>
+                  <button onClick={() => showToast('📖 Opening manual...')} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                    width: '100%', padding: 14, borderRadius: 10,
+                    border: '1.5px solid rgba(128,128,128,0.15)',
+                    background: 'rgba(128,128,128,0.06)',
+                    color: 'var(--text)', fontFamily: 'inherit', fontSize: 14, fontWeight: 600,
+                    cursor: 'pointer', marginTop: 12,
+                  }}>
+                    {Icons.book} View Manual
+                  </button>
+                </div>
+              )}
+
+              {/* CONTROLS PANEL */}
+              {sheetTab === 'controls' && (
+                <div>
+                  <button onClick={launchGame} disabled={launching} style={{
+                    width: '100%', padding: 16, borderRadius: 14, border: 'none',
+                    background: 'var(--accent)', color: '#fff',
+                    fontFamily: 'inherit', fontSize: 16, fontWeight: 700, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.2)', marginBottom: 14,
+                    opacity: launching ? 0.7 : 1,
+                  }}>
+                    {launching ? '⏳ Launching...' : <>{Icons.playLarge} Launch Game</>}
+                  </button>
+
+                  {/* System Controls */}
+                  <div style={{ marginBottom: 14 }}>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
+                      System Controls
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                      {[
+                        { icon: Icons.reset, label: 'Reset', action: '🔄 Resetting core...' },
+                        { icon: Icons.save, label: 'Save State', action: '💾 State saved!' },
+                        { icon: Icons.load, label: 'Load State', action: '📂 State loaded!' },
+                        { icon: Icons.screenshot, label: 'Screenshot', action: '📸 Screenshot!' },
+                      ].map(b => (
+                        <button key={b.label} onClick={() => showToast(b.action)} style={{
+                          padding: 12, borderRadius: 10, border: '1.5px solid rgba(128,128,128,0.15)',
+                          background: 'rgba(128,128,128,0.06)', color: 'var(--text)',
+                          fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                        }}>
+                          {b.icon} {b.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Disk Controls */}
+                  {selectedGame.hasDisk && (
+                    <div style={{ marginBottom: 14 }}>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
+                        Disk Controls
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                        <button onClick={() => showToast('💿 Swapped to Disk 2')} style={{
+                          padding: 12, borderRadius: 10, border: '1.5px solid rgba(128,128,128,0.15)',
+                          background: 'rgba(128,128,128,0.06)', color: 'var(--text)',
+                          fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                        }}>
+                          {Icons.disk} Swap Disk
+                        </button>
+                        <button onClick={() => showToast('⏏️ Disk ejected')} style={{
+                          padding: 12, borderRadius: 10, border: '1.5px solid rgba(128,128,128,0.15)',
+                          background: 'rgba(128,128,128,0.06)', color: 'var(--text)',
+                          fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                        }}>
+                          {Icons.eject} Eject
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* MiSTer */}
+                  <div style={{ marginBottom: 14 }}>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
+                      MiSTer
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                      <button onClick={() => showToast('📺 OSD opened')} style={{
+                        padding: 12, borderRadius: 10, border: '1.5px solid rgba(128,128,128,0.15)',
+                        background: 'rgba(128,128,128,0.06)', color: 'var(--text)',
+                        fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                      }}>
+                        {Icons.monitor} Open OSD
+                      </button>
+                      <button onClick={toggleFavorite} style={{
+                        padding: 12, borderRadius: 10, border: '1.5px solid rgba(128,128,128,0.15)',
+                        background: 'rgba(128,128,128,0.06)', color: 'var(--text)',
+                        fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                      }}>
+                        {Icons.starOutline} Favorite
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Danger Zone */}
+                  <div style={{ marginBottom: 14 }}>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
+                      Danger Zone
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                      <button onClick={() => showToast('⏹️ Core stopped')} style={{
+                        padding: 12, borderRadius: 10, border: '1.5px solid rgba(239,68,68,0.25)',
+                        background: 'rgba(128,128,128,0.06)', color: '#ef4444',
+                        fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                      }}>
+                        {Icons.stop} Stop Core
+                      </button>
+                      <button onClick={() => showToast('🔌 Rebooting...')} style={{
+                        padding: 12, borderRadius: 10, border: '1.5px solid rgba(239,68,68,0.25)',
+                        background: 'rgba(128,128,128,0.06)', color: '#ef4444',
+                        fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                      }}>
+                        {Icons.reboot} Reboot
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Save States */}
+                  <div style={{ marginBottom: 14 }}>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
+                      Save States
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
+                      {selectedGame.saves > 0 ? (
+                        Array.from({ length: Math.min(selectedGame.saves, 5) }, (_, i) => (
+                          <div key={i} onClick={() => showToast(`📂 Loaded Slot ${i + 1}`)} style={{
+                            display: 'flex', alignItems: 'center', gap: 12, padding: 10,
+                            borderRadius: 10, background: 'rgba(128,128,128,0.06)', cursor: 'pointer',
+                          }}>
+                            <div style={{
+                              width: 50, height: 38, borderRadius: 6, background: 'var(--bg)',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0,
+                            }}>
+                              {GAME_ICONS[selectedGame.id] || '🎮'}
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: 13, fontWeight: 600 }}>Slot {i + 1}</div>
+                              <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
+                                {saveDates[i] || 'Long ago'}
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <p style={{ fontSize: 13, color: 'var(--text-secondary)', padding: '8px 0' }}>
+                          No save states yet
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* SETTINGS */}
+      <div style={{
+        position: 'fixed', inset: 0, zIndex: 250, background: 'var(--bg)',
+        transform: settingsOpen ? 'translateX(0)' : 'translateX(100%)',
+        transition: 'transform 0.35s cubic-bezier(0.32, 0.72, 0, 1)',
+        overflowY: 'auto',
+      }}>
+        <div style={{
+          position: 'sticky', top: 0, zIndex: 10, background: 'var(--surface)',
+          padding: 'env(safe-area-inset-top, 20px) 16px 0',
+          borderBottom: '1px solid rgba(128,128,128,0.1)',
+        }}>
+          <div style={{ height: 54, display: 'flex', alignItems: 'center', gap: 12 }}>
+            <button onClick={() => setSettingsOpen(false)} style={{
+              width: 36, height: 36, borderRadius: 10, border: 'none',
+              background: 'rgba(128,128,128,0.12)', color: 'var(--text)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+            }}>
+              {Icons.back}
+            </button>
+            <h2 style={{ fontSize: 18, fontWeight: 700 }}>Settings</h2>
+          </div>
+        </div>
+        <div style={{ padding: '20px 16px calc(40px + env(safe-area-inset-bottom, 20px))' }}>
+          {/* Connection */}
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>
+              Connection
+            </div>
+            <SettingRow label="MiSTer IP">
+              <input value={ipAddress} onChange={e => setIpAddress(e.target.value)} style={{
+                height: 38, borderRadius: 8, border: '1.5px solid rgba(128,128,128,0.2)',
+                background: 'var(--bg)', color: 'var(--text)', fontFamily: 'inherit',
+                fontSize: 14, padding: '0 10px', width: 160, textAlign: 'right', outline: 'none',
+              }} />
+            </SettingRow>
+            <SettingRow label="Port">
+              <input value={port} onChange={e => setPort(e.target.value)} style={{
+                height: 38, borderRadius: 8, border: '1.5px solid rgba(128,128,128,0.2)',
+                background: 'var(--bg)', color: 'var(--text)', fontFamily: 'inherit',
+                fontSize: 14, padding: '0 10px', width: 80, textAlign: 'right', outline: 'none',
+              }} />
+            </SettingRow>
+            <SettingRow label="Auto-connect">
+              <Toggle on={autoConnect} onToggle={() => setAutoConnect(!autoConnect)} />
+            </SettingRow>
+          </div>
+
+          {/* Appearance */}
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>
+              Appearance
+            </div>
+            <SettingRow label="Dynamic Themes">
+              <Toggle on={dynamicThemes} onToggle={() => setDynamicThemes(!dynamicThemes)} />
+            </SettingRow>
+            <SettingRow label="Grid Columns">
+              <span onClick={() => setGridCols(gridCols === 3 ? 2 : gridCols === 2 ? 4 : 3)} style={{
+                fontSize: 13, color: 'var(--text-secondary)', cursor: 'pointer',
+              }}>
+                {gridCols}
+              </span>
+            </SettingRow>
+            <SettingRow label="Show Titles">
+              <Toggle on={showTitles} onToggle={() => setShowTitles(!showTitles)} />
+            </SettingRow>
+          </div>
+
+          {/* Library */}
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>
+              Library
+            </div>
+            <SettingRow label="Scan for Games">
+              <button onClick={() => showToast('🔍 Scanning...')} style={{
+                padding: '8px 14px', borderRadius: 10, border: '1.5px solid rgba(128,128,128,0.15)',
+                background: 'rgba(128,128,128,0.06)', color: 'var(--text)',
+                fontFamily: 'inherit', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+              }}>
+                Scan
+              </button>
+            </SettingRow>
+            <SettingRow label="Clear Cache">
+              <button onClick={() => showToast('🗑️ Cache cleared')} style={{
+                padding: '8px 14px', borderRadius: 10, border: '1.5px solid rgba(239,68,68,0.25)',
+                background: 'rgba(128,128,128,0.06)', color: '#ef4444',
+                fontFamily: 'inherit', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+              }}>
+                Clear
+              </button>
+            </SettingRow>
+          </div>
+
+          {/* About */}
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>
+              About
+            </div>
+            <SettingRow label="Version">
+              <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>1.0.0</span>
+            </SettingRow>
+          </div>
+        </div>
+      </div>
+
+      {/* TOAST */}
+      <Toast message={toast.message} visible={toast.visible} />
+
+      {/* GLOBAL STYLES */}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+        :root {
+          --bg: #1a1a2e; --surface: #16213e; --surface2: #0f3460; --card: #1c2541;
+          --text: #e8e8e8; --text-secondary: #8892b0; --accent: #e94560; --accent2: #0ea5e9;
+          --radius: 14px; --radius-sm: 10px;
+        }
+
+        .theme-nes { --bg:#f0e8d8;--surface:#e0d5c0;--surface2:#d4c9a8;--card:#fff8ee;--text:#2c2c2c;--text-secondary:#6b6b6b;--accent:#c0392b;--accent2:#2980b9; }
+        .theme-snes { --bg:#e8e0f0;--surface:#d8cfe8;--surface2:#c0b8d8;--card:#f5f0ff;--text:#2a2040;--text-secondary:#6b6190;--accent:#6c3fb5;--accent2:#2ecc71; }
+        .theme-genesis { --bg:#0a0a0a;--surface:#1a1a1a;--surface2:#2a2a2a;--card:#222;--text:#e0e0e0;--text-secondary:#888;--accent:#e74c3c;--accent2:#3498db; }
+        .theme-gb { --bg:#9bbc0f;--surface:#8bac0f;--surface2:#306230;--card:#c8de6f;--text:#0f380f;--text-secondary:#306230;--accent:#0f380f;--accent2:#306230; }
+        .theme-gba { --bg:#1b0533;--surface:#2d0a5e;--surface2:#3f1088;--card:#260845;--text:#e8d8f8;--text-secondary:#9b7cc0;--accent:#a855f7;--accent2:#06b6d4; }
+        .theme-ps1 { --bg:#0c0e1a;--surface:#141830;--surface2:#1c2248;--card:#181e38;--text:#e0e4f0;--text-secondary:#7880a0;--accent:#2563eb;--accent2:#f59e0b; }
+        .theme-tg16 { --bg:#1a0a00;--surface:#2d1800;--surface2:#442800;--card:#331c00;--text:#ffe0c0;--text-secondary:#b08860;--accent:#f97316;--accent2:#ef4444; }
+        .theme-neogeo { --bg:#18181b;--surface:#27272a;--surface2:#3f3f46;--card:#222225;--text:#fafafa;--text-secondary:#a1a1aa;--accent:#eab308;--accent2:#ef4444; }
+
+        * { margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent; }
+        body { font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;transition:background 0.4s,color 0.4s; }
+
+        @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.5} }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+        ::-webkit-scrollbar { display: none; }
+        * { scrollbar-width: none; }
+
+        input::placeholder { color: var(--text-secondary); }
+      `}</style>
+    </div>
+  );
+}
+
+// ── HELPER COMPONENTS ──
+const SettingRow: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
+  <div style={{
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+    padding: 14, background: 'var(--surface)', borderRadius: 10, marginBottom: 6,
+  }}>
+    <span style={{ fontSize: 14, fontWeight: 500 }}>{label}</span>
+    {children}
+  </div>
+);
+
+const Toggle: React.FC<{ on: boolean; onToggle: () => void }> = ({ on, onToggle }) => (
+  <button onClick={onToggle} style={{
+    width: 44, height: 26, borderRadius: 13,
+    background: on ? 'var(--accent)' : 'rgba(128,128,128,0.25)',
+    border: 'none', cursor: 'pointer', position: 'relative',
+    transition: 'background 0.2s',
+  }}>
+    <span style={{
+      display: 'block', width: 22, height: 22, borderRadius: '50%',
+      background: '#fff', position: 'absolute', top: 2, left: 2,
+      transition: 'transform 0.2s', boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
+      transform: on ? 'translateX(18px)' : 'translateX(0)',
+    }} />
+  </button>
+);
