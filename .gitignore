@@ -30,4 +30,3 @@ scraperAPI
 .cache
 .env
 .npmrc
-yarn.lock
