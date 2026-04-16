@@ -26,3 +26,4 @@ dist-ssr
 .claude
 public/launchbox
 .cache
+.scrapercreds

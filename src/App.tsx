@@ -1,4 +1,7 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import Lightbox from 'yet-another-react-lightbox';
+import Zoom from 'yet-another-react-lightbox/plugins/zoom';
+import 'yet-another-react-lightbox/styles.css';
 import './App.css';
 import { WizzoApi, KEYBOARD_KEYS } from './services/wizzoApi';
 
@@ -23,7 +26,7 @@ interface SampleGame {
 
 // ── Image CDN ──
 const CDN = 'https://images.launchbox-app.com';
-const THUMB_WIDTH = 300;
+const THUMB_WIDTH = 200;
 const THUMB_PROXY = 'https://wsrv.nl';
 
 // ── Console definitions ──
@@ -297,6 +300,8 @@ export default function MisterRemote() {
   const [sheetTab, setSheetTab] = useState<SheetTab>('info');
   const [connected, setConnected] = useState(false);
   const [misterHost] = useState(() => localStorage.getItem('mister_host') || 'mister.local');
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [galleryIndex, setGalleryIndex] = useState(0);
 
   const api = useMemo(() => new WizzoApi(misterHost), [misterHost]);
   const wsRef = useRef<WebSocket | null>(null);
@@ -475,9 +480,18 @@ export default function MisterRemote() {
 
       {/* ── Bottom Sheet ── */}
       {selectedGame && (() => {
-        const frontUrl = resolveImage(selectedGame, console_.imageRegions, 'front');
-        const backUrl = resolveImage(selectedGame, console_.imageRegions, 'back');
-        const bgUrl = resolveImage(selectedGame, console_.imageRegions, 'front');
+        const frontUrl = resolveImage(selectedGame, console_.imageRegions, 'front', true);
+        const backUrl = resolveImage(selectedGame, console_.imageRegions, 'back', true);
+        const bgUrl = resolveImage(selectedGame, console_.imageRegions, 'front', true);
+
+        // Full-res URLs for gallery (no thumb proxy)
+        const frontFull = resolveImage(selectedGame, console_.imageRegions, 'front');
+        const backFull = resolveImage(selectedGame, console_.imageRegions, 'back');
+        const gallerySlides: { src: string }[] = [];
+        if (frontFull) gallerySlides.push({ src: frontFull });
+        if (backFull) gallerySlides.push({ src: backFull });
+        const frontGalleryIdx = 0;
+        const backGalleryIdx = frontFull ? 1 : 0;
         return (
           <div className="sheet-overlay" onClick={closeSheet}>
             <div className="sheet" onClick={(e) => e.stopPropagation()}>
@@ -551,7 +565,10 @@ export default function MisterRemote() {
                 {sheetTab === 'library' && (
                   <div className="sheet-panel">
                     <div className="library-covers">
-                      <div className="library-cover">
+                      <div
+                        className={`library-cover${frontUrl ? ' library-cover-clickable' : ''}`}
+                        onClick={() => { if (frontUrl) { setGalleryIndex(frontGalleryIdx); setGalleryOpen(true); } }}
+                      >
                         <div className="library-cover-label">Front</div>
                         <div className="library-cover-frame">
                           {frontUrl
@@ -559,7 +576,10 @@ export default function MisterRemote() {
                             : <div className="library-cover-empty">No image</div>}
                         </div>
                       </div>
-                      <div className="library-cover">
+                      <div
+                        className={`library-cover${backUrl ? ' library-cover-clickable' : ''}`}
+                        onClick={() => { if (backUrl) { setGalleryIndex(backGalleryIdx); setGalleryOpen(true); } }}
+                      >
                         <div className="library-cover-label">Back</div>
                         <div className="library-cover-frame">
                           {backUrl
@@ -621,6 +641,21 @@ export default function MisterRemote() {
           </div>
         );
       })()}
+
+      <Lightbox
+        open={galleryOpen}
+        close={() => setGalleryOpen(false)}
+        index={galleryIndex}
+        plugins={[Zoom]}
+        slides={selectedGame ? (() => {
+          const slides: { src: string }[] = [];
+          const f = resolveImage(selectedGame, console_.imageRegions, 'front');
+          const b = resolveImage(selectedGame, console_.imageRegions, 'back');
+          if (f) slides.push({ src: f });
+          if (b) slides.push({ src: b });
+          return slides;
+        })() : []}
+      />
     </div>
   );
 }
