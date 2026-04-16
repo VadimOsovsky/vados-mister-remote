@@ -28,3 +28,4 @@ public/launchbox
 public/screenscraper
 scraperAPI
 .cache
+.env

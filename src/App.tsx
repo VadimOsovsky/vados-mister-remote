@@ -23,11 +23,10 @@ type AppTab = 'collection' | 'store' | 'settings';
 type SheetTab = 'main' | 'library' | 'controls';
 
 // ── Init ScreenScraper API ──
-// Dev credentials from env (set in .env.local)
-const SS_DEVID = import.meta.env.VITE_SS_DEVID || '';
-const SS_DEVPASS = import.meta.env.VITE_SS_DEVPASS || '';
-if (SS_DEVID && SS_DEVPASS) {
-    initApi(SS_DEVID, SS_DEVPASS);
+const authData = localStorage.getItem('mister_auth');
+if (authData) {
+    const { login, password } = JSON.parse(authData);
+    if (login && password) initApi(login, password);
 }
 
 // ── SVG Icons (inline, no deps) ──
@@ -703,7 +702,7 @@ export default function MisterRemote() {
                                         {/* Control grid */}
                                         <div className="ctrl-grid">
                                             <button className="ctrl-btn"
-                                                    onClick={() => api.sendKey(KEYBOARD_KEYS.reset)}>
+                                                    onClick={() => api.sendKey(KEYBOARD_KEYS.user)}>
                                                 {Icons.reset}
                                                 <span>Reset</span>
                                             </button>
@@ -711,25 +710,10 @@ export default function MisterRemote() {
                                                 {Icons.osd}
                                                 <span>OSD Menu</span>
                                             </button>
-                                            <button className="ctrl-btn" onClick={() => api.takeScreenshot()}>
-                                                {Icons.screenshot}
-                                                <span>Screenshot</span>
-                                            </button>
-                                            <button className="ctrl-btn"
-                                                    onClick={() => api.sendKey(KEYBOARD_KEYS.saveState)}>
-                                                {Icons.save}
-                                                <span>Save State</span>
-                                            </button>
-                                            <button className="ctrl-btn"
-                                                    onClick={() => api.sendKey(KEYBOARD_KEYS.user)}>
-                                                {Icons.disk}
-                                                <span>Swap Disk</span>
-                                            </button>
-                                            <button className="ctrl-btn"
-                                                    onClick={() => api.sendKey(KEYBOARD_KEYS.loadState)}>
-                                                {Icons.load}
-                                                <span>Load State</span>
-                                            </button>
+                                            {/*<button className="ctrl-btn" onClick={() => api.takeScreenshot()}>*/}
+                                            {/*    {Icons.screenshot}*/}
+                                            {/*    <span>Screenshot</span>*/}
+                                            {/*</button>*/}
                                         </div>
                                     </div>
                                 )}
