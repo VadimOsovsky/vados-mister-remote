@@ -22,10 +22,21 @@ import {
 type AppTab = 'collection' | 'store' | 'settings';
 type SheetTab = 'main' | 'library' | 'controls';
 
+// ── LocalStorage keys ──
+const AUTH_KEY = 'mister_auth';
+const HOST_KEY = 'mister_host';
+
+function readAuth(): { login: string; password: string } {
+    try {
+        const raw = localStorage.getItem(AUTH_KEY);
+        if (raw) return JSON.parse(raw);
+    } catch { /* corrupted */ }
+    return { login: '', password: '' };
+}
+
 // ── Init ScreenScraper API ──
-const authData = localStorage.getItem('mister_auth');
-if (authData) {
-    const { login, password } = JSON.parse(authData);
+{
+    const { login, password } = readAuth();
     if (login && password) initApi(login, password);
 }
 
@@ -213,7 +224,7 @@ export default function MisterRemote() {
     const [sheetTab, setSheetTab] = useState<SheetTab>('main');
     const [connected, setConnected] = useState(false);
     console.log('VO: connected', connected)
-    const [misterHost] = useState(() => localStorage.getItem('mister_host') || import.meta.env.VITE_WIZZO_ADDRESS || '');
+    const [misterHost, setMisterHost] = useState(() => localStorage.getItem(HOST_KEY) || import.meta.env.VITE_WIZZO_ADDRESS || '');
     const [galleryOpen, setGalleryOpen] = useState(false);
     const [galleryIndex, setGalleryIndex] = useState(0);
     const [games, setGames] = useState<SSGame[]>([]);
@@ -223,6 +234,21 @@ export default function MisterRemote() {
     const [romSearchResults, setRomSearchResults] = useState<WizzoGameSearchResult[]>([]);
     const [romSearchLoading, setRomSearchLoading] = useState(false);
     const [romSearchError, setRomSearchError] = useState<string | null>(null);
+
+    // ── Settings state ──
+    const [settingsLogin, setSettingsLogin] = useState(() => readAuth().login);
+    const [settingsPassword, setSettingsPassword] = useState(() => readAuth().password);
+    const [settingsHost, setSettingsHost] = useState(misterHost);
+    const [settingsSaved, setSettingsSaved] = useState(false);
+
+    const saveSettings = useCallback(() => {
+        localStorage.setItem(AUTH_KEY, JSON.stringify({ login: settingsLogin, password: settingsPassword }));
+        localStorage.setItem(HOST_KEY, settingsHost);
+        setMisterHost(settingsHost);
+        if (settingsLogin && settingsPassword) initApi(settingsLogin, settingsPassword);
+        setSettingsSaved(true);
+        setTimeout(() => setSettingsSaved(false), 2000);
+    }, [settingsLogin, settingsPassword, settingsHost]);
 
     const api = useMemo(() => new WizzoApi(misterHost), [misterHost]);
     const platform = PLATFORMS[activeConsole];
@@ -373,6 +399,58 @@ export default function MisterRemote() {
     return (
         <div className={`app ${platform.theme}`}>
             <div className="app-content">
+                {activeTab === 'settings' ? (
+                    /* ── Settings Panel ── */
+                    <div className="settings-panel">
+                        <div className="settings-header">Settings</div>
+                        <div className="settings-section">
+                            <div className="settings-section-title">Connection</div>
+                            <label className="settings-field">
+                                <span className="settings-label">MiSTer IP</span>
+                                <input
+                                    className="settings-input"
+                                    type="text"
+                                    placeholder="192.168.0.111"
+                                    value={settingsHost}
+                                    onChange={(e) => setSettingsHost(e.target.value)}
+                                    autoComplete="off"
+                                />
+                            </label>
+                        </div>
+                        <div className="settings-section">
+                            <div className="settings-section-title">ScreenScraper API</div>
+                            <label className="settings-field">
+                                <span className="settings-label">Developer ID</span>
+                                <input
+                                    className="settings-input"
+                                    type="text"
+                                    placeholder="Developer ID"
+                                    value={settingsLogin}
+                                    onChange={(e) => setSettingsLogin(e.target.value)}
+                                    autoComplete="off"
+                                />
+                            </label>
+                            <label className="settings-field">
+                                <span className="settings-label">Developer Password</span>
+                                <input
+                                    className="settings-input"
+                                    type="password"
+                                    placeholder="Developer Password"
+                                    value={settingsPassword}
+                                    onChange={(e) => setSettingsPassword(e.target.value)}
+                                    autoComplete="off"
+                                />
+                            </label>
+                        </div>
+                        <button className="settings-save" onClick={saveSettings}>
+                            {settingsSaved ? 'Saved!' : 'Save'}
+                        </button>
+                        <div className="settings-hint">
+                            Credentials are stored locally on this device only.
+                        </div>
+                    </div>
+                ) : (
+                    <>
                 {/* ── Header ── */}
                 <div className="header">
                     <div className="header-top">
@@ -445,6 +523,8 @@ export default function MisterRemote() {
                     <span className="branding-text">{platform.branding}</span>
                     <div className="branding-line"/>
                 </div>
+                    </>
+                )}
             </div>
 
             {/* ── Bottom Tab Bar ── */}
