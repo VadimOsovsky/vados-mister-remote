@@ -50,7 +50,6 @@ Configured via `vite-plugin-pwa` in `vite.config.ts` — auto-updating service w
 
 ## MVP Checklist
 
-[] Save/Load tab with 4 slots (2x2 grid) + screenshots when saved (like in nes classic mini)
+[] Save/Load in controls tab with 4 slots (2x2 grid) + screenshots when saved (like in nes classic mini)
 [] Indicating if a game is beaten (start in the top-right corner of the game in the list)
-[] Reset game (not mister itself, probably User button)
 

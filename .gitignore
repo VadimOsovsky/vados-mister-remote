@@ -29,3 +29,4 @@ public/screenscraper
 scraperAPI
 .cache
 .env
+.npmrc
