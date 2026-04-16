@@ -32,6 +32,7 @@ export interface PlatformDef {
   branding: string;
   colors: string[];
   ssSystemId: number;        // ScreenScraper system ID
+  wizzoSystemId: string;     // MiSTer/Wizzo system ID for searchGames() API
   mediaRegions: string[];    // Priority order for media region resolution (SS short codes: 'us', 'eu', 'jp', 'wor')
   collection: number[];      // ScreenScraper game IDs in user's collection
 }

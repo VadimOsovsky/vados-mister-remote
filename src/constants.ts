@@ -16,6 +16,7 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     branding: 'Nintendo Entertainment System',
     colors: ['#c0392b', '#e74c3c', '#d35400', '#e67e22'],
     ssSystemId: 3,
+    wizzoSystemId: 'NES',
     mediaRegions: ['us', 'wor', 'ss'],
     collection: [],
   },
@@ -26,6 +27,7 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     branding: 'Nintendo Entertainment System',
     colors: ['#2c3e50', '#34495e', '#c0392b', '#e74c3c'],
     ssSystemId: 3,
+    wizzoSystemId: 'NES',
     mediaRegions: ['eu', 'wor', 'ss'],
     collection: [],
   },
@@ -36,6 +38,7 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     branding: 'Family Computer',
     colors: ['#c0392b', '#a93226', '#922B21', '#7B241C'],
     ssSystemId: 3,
+    wizzoSystemId: 'NES',
     mediaRegions: ['jp', 'wor', 'ss'],
     collection: [1245],  // Super Mario Bros.
   },
@@ -46,6 +49,7 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     branding: 'New Famicom',
     colors: ['#636e72', '#2d3436', '#b2bec3', '#dfe6e9'],
     ssSystemId: 3,
+    wizzoSystemId: 'NES',
     mediaRegions: ['jp', 'wor', 'ss'],
     collection: [1245],  // Super Mario Bros.
   },

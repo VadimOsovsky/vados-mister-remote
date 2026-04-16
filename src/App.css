@@ -641,13 +641,14 @@ body {
 
 /* ── Sheet Panel (tab content) ── */
 .sheet-panel {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
 /* ── Info tab ── */
-.sheet-info-layout {
+.sheet-main-layout {
   display: flex;
   align-items: start;
   gap: 14px;
@@ -673,7 +674,7 @@ body {
   object-fit: contain;
 }
 
-.sheet-info-details {
+.sheet-main-details {
   flex: 1;
   min-width: 0;
   display: flex;
@@ -681,13 +682,13 @@ body {
   gap: 8px;
 }
 
-.sheet-info-row {
+.sheet-main-row {
   display: flex;
   flex-direction: column;
   gap: 1px;
 }
 
-.sheet-info-label {
+.sheet-main-label {
   font-family: 'Sora', sans-serif;
   font-size: 9px;
   font-weight: 700;
@@ -696,7 +697,7 @@ body {
   letter-spacing: 0.08em;
 }
 
-.sheet-info-value {
+.sheet-main-value {
   font-family: 'DM Sans', sans-serif;
   font-size: 13px;
   color: rgba(255, 255, 255, 0.9);
@@ -845,6 +846,12 @@ body {
   color: #ffffff;
 }
 
+.sheet-btn-primary:disabled {
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.3);
+  cursor: default;
+}
+
 .sheet-btn-secondary {
   background: rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 0.85);
@@ -852,3 +859,153 @@ body {
 
 /* ── SCROLLBAR ── */
 .app-content::-webkit-scrollbar { width: 0; }
+
+/* ── ROM Picker ── */
+.rom-picker-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  border-radius: 8px;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+}
+
+.rom-picker {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 12px;
+  gap: 10px;
+}
+
+.rom-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rom-picker-title {
+  font-family: 'Sora', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.rom-picker-close {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rom-picker-search {
+  display: flex;
+  gap: 8px;
+}
+
+.rom-picker-input {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  outline: none;
+}
+
+.rom-picker-input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.rom-picker-input:focus {
+  border-color: var(--accent);
+}
+
+.rom-picker-search-btn {
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  background: var(--accent);
+  color: #fff;
+  font-family: 'Sora', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.rom-picker-search-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.rom-picker-results {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 120px;
+}
+
+.rom-picker-status {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+  padding: 20px 0;
+}
+
+.rom-picker-error {
+  color: #ef4444;
+}
+
+.rom-picker-result {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  text-align: left;
+}
+
+.rom-picker-result:active {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: var(--accent);
+}
+
+.rom-picker-result-name {
+  font-family: 'Sora', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.rom-picker-result-path {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.35);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

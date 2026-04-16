@@ -155,11 +155,13 @@ export class WizzoApi {
     if (!res.ok) {
       throw new Error(`Wizzo API error: ${res.status} ${res.statusText} on ${path}`);
     }
-    const contentType = res.headers.get('content-type');
-    if (contentType?.includes('application/json')) {
-      return res.json();
+    const text = await res.text();
+    if (!text) return undefined as T;
+    try {
+      return JSON.parse(text);
+    } catch {
+      return undefined as T;
     }
-    return undefined as T;
   }
 
   private post<T>(path: string, body?: unknown): Promise<T> {

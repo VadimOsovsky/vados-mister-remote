@@ -47,3 +47,10 @@ Configured via `vite-plugin-pwa` in `vite.config.ts` — auto-updating service w
 - `erasableSyntaxOnly: true` — use type-only imports/exports
 - `noUnusedLocals` and `noUnusedParameters` enabled
 - Multi-config setup: `tsconfig.app.json` (app code) and `tsconfig.node.json` (build tooling) composed via project references in `tsconfig.json`
+
+## MVP Checklist
+
+[] Save/Load tab with 4 slots (2x2 grid) + screenshots when saved (like in nes classic mini)
+[] Indicating if a game is beaten (start in the top-right corner of the game in the list)
+[] Reset game (not mister itself, probably User button)
+
