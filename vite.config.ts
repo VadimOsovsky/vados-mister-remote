@@ -56,12 +56,12 @@ export default defineConfig({
             },
           },
           {
-            urlPattern: /^https:\/\/images\.launchbox-app\.com\/.*/i,
+            urlPattern: /^https:\/\/(?:www\.)?screenscraper\.fr\/.*/i,
             handler: 'CacheFirst',
             options: {
               cacheName: 'game-covers',
               expiration: {
-                maxEntries: 200,
+                maxEntries: 500,
                 maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
               },
             },

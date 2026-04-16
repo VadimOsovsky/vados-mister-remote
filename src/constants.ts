@@ -1,42 +1,53 @@
 import type { ConsoleKey, PlatformDef, SortMode } from './types';
 
 // ── PLATFORMS ──
+// ssSystemId values from ScreenScraper API (systemesListe.php)
+// mediaRegions use SS short codes from regionsListe.php
+// collection contains ScreenScraper game IDs (discover via scripts/discover-ss-ids.ts)
+//
+// TODO: Run discover-ss-ids.ts and fetch-screenscraper.ts to populate
+// collection IDs and generate static JSON data.
+
 export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
   nes_ntsc: {
     name: 'NES',
     icon: '🎮',
     theme: 'theme-nes-ntsc',
+    branding: 'Nintendo Entertainment System',
     colors: ['#c0392b', '#e74c3c', '#d35400', '#e67e22'],
-    lbPlatform: 'nes',
-    imageRegions: ['North America', 'United States', 'Canada', 'World'],
-    collection: ['140', '361', '1258'],  // Super Mario Bros., Mega Man 2, Contra
+    ssSystemId: 3,
+    mediaRegions: ['us', 'wor', 'ss'],
+    collection: [],
   },
   nes_pal: {
     name: 'NES (PAL)',
     icon: '🎮',
     theme: 'theme-nes-pal',
+    branding: 'Nintendo Entertainment System',
     colors: ['#2c3e50', '#34495e', '#c0392b', '#e74c3c'],
-    lbPlatform: 'nes',
-    imageRegions: ['Europe', 'United Kingdom', 'Germany', 'France', 'Spain', 'Italy', 'Australia', 'World'],
-    collection: ['135', '112', '121'],  // Castlevania, Super Mario Bros. 3, Kirby's Adventure
+    ssSystemId: 3,
+    mediaRegions: ['eu', 'wor', 'ss'],
+    collection: [],
   },
   famicom: {
     name: 'Famicom',
     icon: '🟥',
     theme: 'theme-famicom',
+    branding: 'Family Computer',
     colors: ['#c0392b', '#a93226', '#922B21', '#7B241C'],
-    lbPlatform: 'nes',
-    imageRegions: ['Japan', 'Asia', 'World'],
-    collection: ['140', '1258', '135'],  // Super Mario Bros., Contra, Castlevania
+    ssSystemId: 3,
+    mediaRegions: ['jp', 'wor', 'ss'],
+    collection: [1245],  // Super Mario Bros.
   },
   av_famicom: {
     name: 'AV Famicom',
     icon: '⬜',
     theme: 'theme-av-famicom',
+    branding: 'New Famicom',
     colors: ['#636e72', '#2d3436', '#b2bec3', '#dfe6e9'],
-    lbPlatform: 'nes',
-    imageRegions: ['Japan', 'Asia', 'World'],
-    collection: ['112', '361', '121'],  // Super Mario Bros. 3, Mega Man 2, Kirby's Adventure
+    ssSystemId: 3,
+    mediaRegions: ['jp', 'wor', 'ss'],
+    collection: [1245],  // Super Mario Bros.
   },
 };
 

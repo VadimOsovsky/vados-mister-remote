@@ -29,27 +29,33 @@ export interface PlatformDef {
   name: string;
   icon: string;
   theme: string;
+  branding: string;
   colors: string[];
-  lbPlatform: string;        // LaunchBox JSON file name (without .json)
-  imageRegions: string[];    // Priority order for image region resolution
-  collection: string[];      // LaunchBox game IDs in user's "collection"
+  ssSystemId: number;        // ScreenScraper system ID
+  mediaRegions: string[];    // Priority order for media region resolution (SS short codes: 'us', 'eu', 'jp', 'wor')
+  collection: number[];      // ScreenScraper game IDs in user's collection
 }
 
-// ── LAUNCHBOX ──
-export interface LaunchBoxImages {
-  front?: string;
-  back?: string;
-  screenshot?: string;
+// ── SCREENSCRAPER ──
+
+/** A single media asset from ScreenScraper */
+export interface SSMedia {
+  type: string;       // e.g. 'box-2D', 'box-2D-back', 'screenshot', 'wheel', 'wheel-hd', 'fanart', 'support-2D', 'manuel'
+  url: string;        // Direct image URL
+  region: string;     // 'us', 'eu', 'jp', 'wor', 'ss', etc.
+  format?: string;    // e.g. 'png', 'jpg', 'pdf'
 }
 
-export interface LaunchBoxGame {
-  id: string;
-  title: string;
-  year: string;
-  genre: string;
-  desc: string;
-  developer: string;
+/** Normalized game data from ScreenScraper API */
+export interface SSGame {
+  id: number;
+  name: string;               // Resolved name (preferred region/language)
+  synopsis: string;            // Resolved description
   publisher: string;
-  maxPlayers: string;
-  images: Record<string, LaunchBoxImages>;
+  developer: string;
+  players: string;
+  rating: string;              // Note out of 20
+  genre: string;
+  releaseDate: string;         // yyyy-mm-dd or yyyy
+  medias: SSMedia[];
 }

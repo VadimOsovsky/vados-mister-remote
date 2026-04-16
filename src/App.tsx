@@ -4,178 +4,30 @@ import Zoom from 'yet-another-react-lightbox/plugins/zoom';
 import 'yet-another-react-lightbox/styles.css';
 import './App.css';
 import { WizzoApi, KEYBOARD_KEYS } from './services/wizzoApi';
+import { PLATFORMS } from './constants';
+import type { ConsoleKey, SSGame } from './types';
+import {
+  initApi,
+  loadCollectionGames,
+  resolveFrontThumb,
+  resolveBackThumb,
+  resolveCartridgeThumb,
+  resolveManualUrl,
+  resolveMediaUrl,
+  buildGallerySlides,
+  searchLocal, searchGames,
+} from './services/screenscraper';
 
 // ── Types ──
-type ConsoleKey = 'nes_ntsc' | 'famicom';
 type AppTab = 'collection' | 'store' | 'settings';
 type SheetTab = 'info' | 'library' | 'controls';
 
-interface SampleGame {
-  id: string;
-  title: string;
-  year: string;
-  genre: string;
-  developer: string;
-  publisher: string;
-  maxPlayers: string;
-  desc: string;
-  fav: boolean;
-  romPath: string;
-  images: Record<string, { front?: string; back?: string }>;
-}
-
-// ── Image CDN ──
-const CDN = 'https://images.launchbox-app.com';
-const THUMB_WIDTH = 200;
-const THUMB_PROXY = 'https://wsrv.nl';
-
-// ── Console definitions ──
-const CONSOLES: Record<ConsoleKey, {
-  name: string;
-  icon: string;
-  theme: string;
-  branding: string;
-  imageRegions: string[];
-}> = {
-  nes_ntsc: {
-    name: 'NES',
-    icon: '🎮',
-    theme: 'theme-nes-ntsc',
-    branding: 'Nintendo Entertainment System',
-    imageRegions: ['North America', 'United States', 'Canada', 'World'],
-  },
-  famicom: {
-    name: 'Famicom',
-    icon: '🟥',
-    theme: 'theme-famicom',
-    branding: 'Family Computer',
-    imageRegions: ['Japan', 'Asia', 'World'],
-  },
-};
-
-// ── Sample game data (hardcoded for design phase) ──
-const SAMPLE_GAMES: SampleGame[] = [
-  {
-    id: '140',
-    title: 'Super Mario Bros.',
-    year: '1985',
-    genre: 'Platform',
-    developer: 'Nintendo EAD',
-    publisher: 'Nintendo',
-    maxPlayers: '2',
-    desc: 'Do you have what it takes to save the Mushroom Princess? You\'ll have to think fast and move even faster to complete this quest! The Mushroom Princess is being held captive by the evil Koopa tribe of turtles. It\'s up to you to rescue her from the clutches of the Koopa King before time runs out.',
-    fav: true,
-    romPath: '/media/fat/games/NES/Super Mario Bros. (World).nes',
-    images: {
-      'North America': { front: 'e078d459-a166-47a2-9b5a-26a9fd7cd924.jpg', back: '829fc885-7b63-4e64-934d-104f5e939340.jpg' },
-      'Japan': { front: '08fe10d4-66a3-4356-869c-44c9f9dc7bd0.jpg', back: '38f219b6-544a-4207-b6a0-73bba43665f1.jpg' },
-    },
-  },
-  {
-    id: '361',
-    title: 'Mega Man 2',
-    year: '1988',
-    genre: 'Platform; Shooter',
-    developer: 'Capcom',
-    publisher: 'Capcom',
-    maxPlayers: '1',
-    desc: 'He\'s Back! And this time the evil Dr. Wily has created even more sinister robots to mount his attack. But as MegaMan, you\'ve also grown in power and ability. Can you save mankind from the evil Dr. Wily?',
-    fav: false,
-    romPath: '/media/fat/games/NES/Mega Man II (USA).nes',
-    images: {
-      'North America': { front: '49efb7ec-6ad8-4d35-aeeb-d1654dd6f8bb.png', back: '776e2e85-a032-44d2-b34c-2498dab9c90d.png' },
-      'Japan': { front: '2dbfa696-0237-4b11-8f60-2c6321fc9de3.jpg', back: 'r2_1f3d28bd-e70e-47f8-8728-c335437078a0.png' },
-    },
-  },
-  {
-    id: '1258',
-    title: 'Contra',
-    year: '1988',
-    genre: 'Platform; Shooter',
-    developer: 'Konami',
-    publisher: 'Konami',
-    maxPlayers: '2',
-    desc: 'The universe teeters on the brink of total annihilation at the hands of the vile alien warmonger, Red Falcon. Earth\'s only hope rests with you, a courageous member of the Special Forces elite commando squad.',
-    fav: true,
-    romPath: '/media/fat/games/NES/Contra (USA).nes',
-    images: {
-      'North America': { front: '3c70d940-5dfe-45ea-a957-9a8e6d2d00f8.jpg', back: '6bedbe54-d6db-4812-8222-c3fa87246572.jpg' },
-      'Japan': { front: 'r2_0ebcca2a-9889-496f-b8c7-0c70e19aa394.jpg', back: '0e8fbded-44e6-438a-bb04-7a43c9104349.jpg' },
-    },
-  },
-  {
-    id: '135',
-    title: 'Castlevania',
-    year: '1986',
-    genre: 'Platform',
-    developer: 'Konami',
-    publisher: 'Konami',
-    maxPlayers: '1',
-    desc: 'You\'re in for the longest night of your life. Ghosts, goblins, demons, wolves, bats — creatures lurking around every corner. As you discover the path, you\'ll find weapons and food to sustain your strength.',
-    fav: false,
-    romPath: '/media/fat/games/NES/Castlevania (USA) (Rev A).nes',
-    images: {
-      'North America': { front: '2aa41ec3-5ef4-4f43-b9dd-5150a3ef9f8b.jpg', back: '31aa0d67-0fa0-4111-98d1-d4aac78f69c5.jpg' },
-      'Japan': { front: '88d781f3-1ae6-4e6b-955a-76ee55e916c0.png', back: '451a187c-ee0d-4678-9cb7-a27428466b29.jpg' },
-    },
-  },
-  {
-    id: '112',
-    title: 'Super Mario Bros. 3',
-    year: '1988',
-    genre: 'Platform',
-    developer: 'Nintendo EAD',
-    publisher: 'Nintendo',
-    maxPlayers: '2',
-    desc: 'Fight monsters and mini-bosses, avoid ghosts and the burning sun. Make your way through water and quicksand. Dodge cannon balls and bullets and rescue the King\'s wand!',
-    fav: true,
-    romPath: '/media/fat/games/NES/Super Mario Bros. 3 (USA) (Rev A).nes',
-    images: {
-      'North America': { front: '500ae7d7-0c4a-41bf-a91c-747623e894a5.jpg', back: '25d45104-f557-4a8c-a963-590ff7cac0dc.jpg' },
-      'Japan': { front: '46e903e2-fbea-4a3b-b8fa-eec4ec6d6a1d.jpg', back: 'aab1347e-1079-4047-8976-143f532b2239.jpg' },
-    },
-  },
-  {
-    id: '121',
-    title: 'Kirby\'s Adventure',
-    year: '1993',
-    genre: 'Action; Platform',
-    developer: 'HAL Laboratory',
-    publisher: 'Nintendo',
-    maxPlayers: '1',
-    desc: 'What would Dream Land be without dreams? A nightmare! The Dream Spring, source of all dreams, has dried up. It\'s up to Kirby, the bombastic blimp, to battle King Dedede and restore sweet dreams.',
-    fav: false,
-    romPath: '/media/fat/games/NES/Kirby\'s Adventure (USA).nes',
-    images: {
-      'North America': { front: '0bdcf9f7-572e-4311-b600-6a7cabdf9a0a.jpg', back: 'e5d2fce6-9d3c-4f54-b79e-0d31229f6e7e.jpg' },
-      'Japan': { front: 'bf593bb0-79a4-4fc5-ade9-6f5952d6056f.jpg', back: 'ad6b2812-ad60-48b9-8af7-1cd8713ccaaf.png' },
-    },
-  },
-];
-
-// ── Resolve best image for a region set ──
-function resolveImage(
-  game: SampleGame,
-  regions: string[],
-  side: 'front' | 'back',
-  thumb?: boolean,
-): string | undefined {
-  let raw: string | undefined;
-  for (const region of regions) {
-    const img = game.images[region]?.[side];
-    if (img) { raw = img; break; }
-  }
-  if (!raw) {
-    for (const regionImgs of Object.values(game.images)) {
-      if (regionImgs[side]) { raw = regionImgs[side]; break; }
-    }
-  }
-  if (!raw) return undefined;
-  const fullUrl = `${CDN}/${raw}`;
-  if (thumb) {
-    return `${THUMB_PROXY}/?url=${encodeURIComponent(fullUrl)}&w=${THUMB_WIDTH}&fit=contain&output=webp`;
-  }
-  return fullUrl;
+// ── Init ScreenScraper API ──
+// Dev credentials from env (set in .env.local)
+const SS_DEVID = import.meta.env.VITE_SS_DEVID || '';
+const SS_DEVPASS = import.meta.env.VITE_SS_DEVPASS || '';
+if (SS_DEVID && SS_DEVPASS) {
+  initApi(SS_DEVID, SS_DEVPASS);
 }
 
 // ── SVG Icons (inline, no deps) ──
@@ -270,7 +122,7 @@ const Icons = {
 };
 
 // ── LazyImage component ──
-function LazyImage({ src, alt, className }: { src?: string; alt: string; className?: string }) {
+function LazyImage({ src, alt, className, style }: { src?: string; alt: string; className?: string; style?: React.CSSProperties }) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
 
@@ -283,6 +135,7 @@ function LazyImage({ src, alt, className }: { src?: string; alt: string; classNa
       src={src}
       alt={alt}
       className={`${className || ''} ${loaded ? 'loaded' : ''}`}
+      style={style}
       loading="lazy"
       decoding="async"
       onLoad={() => setLoaded(true)}
@@ -296,16 +149,30 @@ export default function MisterRemote() {
   const [activeConsole, setActiveConsole] = useState<ConsoleKey>('nes_ntsc');
   const [activeTab, setActiveTab] = useState<AppTab>('collection');
   const [search, setSearch] = useState('');
-  const [selectedGame, setSelectedGame] = useState<SampleGame | null>(null);
+  const [selectedGame, setSelectedGame] = useState<SSGame | null>(null);
   const [sheetTab, setSheetTab] = useState<SheetTab>('info');
   const [connected, setConnected] = useState(false);
-  const [misterHost] = useState(() => localStorage.getItem('mister_host') || 'mister.local');
+  const [misterHost] = useState(() => localStorage.getItem('mister_host') || '');
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
+  const [games, setGames] = useState<SSGame[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const api = useMemo(() => new WizzoApi(misterHost), [misterHost]);
   const wsRef = useRef<WebSocket | null>(null);
-  const console_ = CONSOLES[activeConsole];
+  const platform = PLATFORMS[activeConsole];
+
+  // ── Load collection games when console changes ──
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    loadCollectionGames(activeConsole).then(data => {
+      if (!cancelled) setGames(data);
+    }).finally(() => {
+      if (!cancelled) setLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [activeConsole]);
 
   // ── Connection: WebSocket + heartbeat polling ──
   useEffect(() => {
@@ -358,19 +225,17 @@ export default function MisterRemote() {
     };
   }, [api]);
 
-  // Filter games by search
-  const filteredGames = SAMPLE_GAMES.filter(
-    (g) =>
-      !search ||
-      g.title.toLowerCase().includes(search.toLowerCase()) ||
-      g.genre.toLowerCase().includes(search.toLowerCase()),
-  );
+  // Filter games by search (local)
+  const filteredGames = search
+    ? searchLocal(games, search)
+    : games;
 
   const switchConsole = useCallback((key: ConsoleKey) => {
     setActiveConsole(key);
+    setSearch('');
   }, []);
 
-  const openSheet = useCallback((game: SampleGame) => {
+  const openSheet = useCallback((game: SSGame) => {
     setSelectedGame(game);
     setSheetTab('info');
   }, []);
@@ -380,7 +245,7 @@ export default function MisterRemote() {
   }, []);
 
   return (
-    <div className={`app ${console_.theme}`}>
+    <div className={`app ${platform.theme}`}>
       <div className="app-content">
         {/* ── Header ── */}
         <div className="header">
@@ -394,14 +259,14 @@ export default function MisterRemote() {
 
           {/* Console Switcher */}
           <div className="console-switcher">
-            {(Object.keys(CONSOLES) as ConsoleKey[]).map((key) => (
+            {(Object.keys(PLATFORMS) as ConsoleKey[]).map((key) => (
               <button
                 key={key}
                 className={`console-pill ${activeConsole === key ? 'active' : ''}`}
                 onClick={() => switchConsole(key)}
               >
-                <span>{CONSOLES[key].icon}</span>
-                <span>{CONSOLES[key].name}</span>
+                <span>{PLATFORMS[key].icon}</span>
+                <span>{PLATFORMS[key].name}</span>
               </button>
             ))}
           </div>
@@ -426,19 +291,22 @@ export default function MisterRemote() {
         </div>
 
         {/* ── Collection Grid ── */}
+        <div className="loading-bar-wrap">
+          {loading && <div className="loading-bar" />}
+        </div>
         <div className="section-label">Collection · {filteredGames.length} games</div>
         <div className="game-grid">
           {filteredGames.map((game) => {
-            const frontUrl = resolveImage(game, console_.imageRegions, 'front', true);
+            const front = resolveFrontThumb(game, platform.mediaRegions);
+            const rotStyle = front?.rotation ? { transform: `rotate(${front.rotation}deg)` } : undefined;
             return (
               <div key={game.id} className="game-card" onClick={() => openSheet(game)}>
                 <div className="card-art-wrap">
-                  <LazyImage src={frontUrl} alt={game.title} className="card-art" />
-                  {game.fav && <div className="card-fav">⭐</div>}
+                  <LazyImage src={front?.src} alt={game.name} className="card-art" style={rotStyle} />
                 </div>
                 <div className="card-badge">
-                  <div className="card-title">{game.title}</div>
-                  <div className="card-year">{game.year}</div>
+                  <div className="card-title">{game.name}</div>
+                  <div className="card-year">{String(game.releaseDate ?? '').substring(0, 4)}</div>
                 </div>
               </div>
             );
@@ -448,7 +316,7 @@ export default function MisterRemote() {
         {/* ── Console Branding ── */}
         <div className="branding-bar">
           <div className="branding-line" />
-          <span className="branding-text">{console_.branding}</span>
+          <span className="branding-text">{platform.branding}</span>
           <div className="branding-line" />
         </div>
       </div>
@@ -480,24 +348,28 @@ export default function MisterRemote() {
 
       {/* ── Bottom Sheet ── */}
       {selectedGame && (() => {
-        const frontUrl = resolveImage(selectedGame, console_.imageRegions, 'front', true);
-        const backUrl = resolveImage(selectedGame, console_.imageRegions, 'back', true);
-        const bgUrl = resolveImage(selectedGame, console_.imageRegions, 'front', true);
+        const regions = platform.mediaRegions;
+        const front = resolveFrontThumb(selectedGame, regions);
+        const back = resolveBackThumb(selectedGame, regions);
+        const cartridge = resolveCartridgeThumb(selectedGame, regions);
+        const manualUrl = resolveManualUrl(selectedGame, regions);
+        const frontRotStyle = front?.rotation ? { transform: `rotate(${front.rotation}deg)` } : undefined;
+        const backRotStyle = back?.rotation ? { transform: `rotate(${back.rotation}deg)` } : undefined;
+        const cartRotStyle = cartridge?.rotation ? { transform: `rotate(${cartridge.rotation}deg)` } : undefined;
 
-        // Full-res URLs for gallery (no thumb proxy)
-        const frontFull = resolveImage(selectedGame, console_.imageRegions, 'front');
-        const backFull = resolveImage(selectedGame, console_.imageRegions, 'back');
-        const gallerySlides: { src: string }[] = [];
-        if (frontFull) gallerySlides.push({ src: frontFull });
-        if (backFull) gallerySlides.push({ src: backFull });
+        // Gallery slide order matches buildGallerySlides(): front, back, cartridge, screenshot
+        const hasFront = !!resolveMediaUrl(selectedGame, regions, 'box-2D');
+        const hasBack = !!resolveMediaUrl(selectedGame, regions, 'box-2D-back');
         const frontGalleryIdx = 0;
-        const backGalleryIdx = frontFull ? 1 : 0;
+        const backGalleryIdx = hasFront ? 1 : 0;
+        const cartGalleryIdx = (hasFront ? 1 : 0) + (hasBack ? 1 : 0);
+
         return (
           <div className="sheet-overlay" onClick={closeSheet}>
             <div className="sheet" onClick={(e) => e.stopPropagation()}>
               {/* Blurred background */}
               <div className="sheet-bg">
-                {bgUrl && <img src={bgUrl} alt="" className="sheet-bg-img" />}
+                {front && <img src={front.src} alt="" className="sheet-bg-img" />}
               </div>
 
               {/* Handle */}
@@ -507,9 +379,9 @@ export default function MisterRemote() {
               <div className="sheet-content">
                 {/* Title bar */}
                 <div className="sheet-title-bar">
-                  <div className="sheet-title">{selectedGame.title}</div>
+                  <div className="sheet-title">{selectedGame.name}</div>
                   <div className="sheet-subtitle">
-                    {selectedGame.year} · {selectedGame.genre}
+                    {String(selectedGame.releaseDate ?? '').substring(0, 4)} · {selectedGame.genre}
                   </div>
                 </div>
 
@@ -536,7 +408,7 @@ export default function MisterRemote() {
                   <div className="sheet-panel">
                     <div className="sheet-info-layout">
                       <div className="sheet-art">
-                        {frontUrl && <img src={frontUrl} alt={selectedGame.title} />}
+                        {front && <img src={front.src} alt={selectedGame.name} style={frontRotStyle} />}
                       </div>
                       <div className="sheet-info-details">
                         <div className="sheet-info-row">
@@ -549,15 +421,21 @@ export default function MisterRemote() {
                         </div>
                         <div className="sheet-info-row">
                           <span className="sheet-info-label">Players</span>
-                          <span className="sheet-info-value">{selectedGame.maxPlayers}</span>
+                          <span className="sheet-info-value">{selectedGame.players}</span>
                         </div>
                         <div className="sheet-info-row">
                           <span className="sheet-info-label">Genre</span>
                           <span className="sheet-info-value">{selectedGame.genre}</span>
                         </div>
+                        {selectedGame.rating && (
+                          <div className="sheet-info-row">
+                            <span className="sheet-info-label">Rating</span>
+                            <span className="sheet-info-value">{selectedGame.rating}/20</span>
+                          </div>
+                        )}
                       </div>
                     </div>
-                    <div className="sheet-desc">{selectedGame.desc}</div>
+                    <div className="sheet-desc">{selectedGame.synopsis}</div>
                   </div>
                 )}
 
@@ -566,32 +444,51 @@ export default function MisterRemote() {
                   <div className="sheet-panel">
                     <div className="library-covers">
                       <div
-                        className={`library-cover${frontUrl ? ' library-cover-clickable' : ''}`}
-                        onClick={() => { if (frontUrl) { setGalleryIndex(frontGalleryIdx); setGalleryOpen(true); } }}
+                        className={`library-cover${front ? ' library-cover-clickable' : ''}`}
+                        onClick={() => { if (front) { setGalleryIndex(frontGalleryIdx); setGalleryOpen(true); } }}
                       >
                         <div className="library-cover-label">Front</div>
                         <div className="library-cover-frame">
-                          {frontUrl
-                            ? <img src={frontUrl} alt="Front cover" />
+                          {front
+                            ? <img src={front.src} alt="Front cover" style={frontRotStyle} />
                             : <div className="library-cover-empty">No image</div>}
                         </div>
                       </div>
                       <div
-                        className={`library-cover${backUrl ? ' library-cover-clickable' : ''}`}
-                        onClick={() => { if (backUrl) { setGalleryIndex(backGalleryIdx); setGalleryOpen(true); } }}
+                        className={`library-cover${back ? ' library-cover-clickable' : ''}`}
+                        onClick={() => { if (back) { setGalleryIndex(backGalleryIdx); setGalleryOpen(true); } }}
                       >
                         <div className="library-cover-label">Back</div>
                         <div className="library-cover-frame">
-                          {backUrl
-                            ? <img src={backUrl} alt="Back cover" />
+                          {back
+                            ? <img src={back.src} alt="Back cover" style={backRotStyle} />
                             : <div className="library-cover-empty">No image</div>}
                         </div>
                       </div>
                     </div>
-                    <button className="sheet-btn sheet-btn-secondary library-manual-btn">
-                      {Icons.book}
-                      <span>View Manual</span>
-                    </button>
+                    <div className="library-covers">
+                      <div
+                        className={`library-cover${cartridge ? ' library-cover-clickable' : ''}`}
+                        onClick={() => { if (cartridge) { setGalleryIndex(cartGalleryIdx); setGalleryOpen(true); } }}
+                      >
+                        <div className="library-cover-label">Cartridge</div>
+                        <div className="library-cover-frame">
+                          {cartridge
+                            ? <img src={cartridge.src} alt="Cartridge" style={cartRotStyle} />
+                            : <div className="library-cover-empty">No image</div>}
+                        </div>
+                      </div>
+                      <div className="library-cover" />
+                    </div>
+                    {manualUrl && (
+                      <button
+                        className="sheet-btn sheet-btn-secondary library-manual-btn"
+                        onClick={() => window.open(`https://docs.google.com/gview?url=${encodeURIComponent(manualUrl)}`, '_blank')}
+                      >
+                        {Icons.book}
+                        <span>View Manual</span>
+                      </button>
+                    )}
                   </div>
                 )}
 
@@ -601,7 +498,9 @@ export default function MisterRemote() {
                     {/* Primary action */}
                     <button
                       className="sheet-btn sheet-btn-primary ctrl-launch-btn"
-                      onClick={() => api.launchGame(selectedGame.romPath)}
+                      onClick={() => {
+                        // TODO: need romPath — not available from SS, must come from MiSTer
+                      }}
                     >
                       {Icons.play}
                       <span>Launch Game</span>
@@ -647,14 +546,7 @@ export default function MisterRemote() {
         close={() => setGalleryOpen(false)}
         index={galleryIndex}
         plugins={[Zoom]}
-        slides={selectedGame ? (() => {
-          const slides: { src: string }[] = [];
-          const f = resolveImage(selectedGame, console_.imageRegions, 'front');
-          const b = resolveImage(selectedGame, console_.imageRegions, 'back');
-          if (f) slides.push({ src: f });
-          if (b) slides.push({ src: b });
-          return slides;
-        })() : []}
+        slides={selectedGame ? buildGallerySlides(selectedGame, platform.mediaRegions) : []}
       />
     </div>
   );

@@ -1,0 +1,1370 @@
+Liste des requêtes
+ssinfraInfos.php : Informations sur l'infrastructure ScreenScraper
+ssuserInfos.php : Informations sur l'utilisateur ScreenScraper
+userlevelsListe.php : Liste des niveaux utilisateurs de ScreenScraper
+nbJoueursListe.php : Liste des nombres de joueurs
+supportTypesListe.php : Liste des types de supports
+romTypesListe.php : Liste des types de roms
+regionsListe.php : Liste des regions
+languesListe.php : Liste des langues
+genresListe.php : Liste des genres
+famillesListe.php : Liste des familles
+classificationsListe.php : Liste des Classifications (Game Rating)
+mediasSystemeListe.php : Liste des médias pour les systèmes
+mediasJeuListe.php : Liste des médias pour les jeux
+infosJeuListe.php : Liste des infos pour les jeux
+infosRomListe.php : Liste des infos pour les roms
+mediaGroup.php : Téléchargement des médias images des groupes de jeux
+mediaCompagnie.php : Téléchargement des médias images des groupes de jeux
+systemesListe.php : Liste des systèmes / informations systèmes / informations médias systèmes
+mediaSysteme.php : Téléchargement des médias images des systèmes
+mediaVideoSysteme.php : Téléchargement des médias vidéos des systèmes
+jeuRecherche.php : Recherche d'un jeu avec son nom (retourne une table de jeux (limité a 30 jeux) classés par probabilité)
+jeuInfos.php : Informations sur un jeu / Médias d'un jeu
+mediaJeu.php : Téléchargement des médias images des jeux
+mediaVideoJeu.php : Téléchargement des médias vidéos des jeux
+mediaManuelJeu.php : Téléchargement des manuels des jeux
+botNote.php : Système pour l'automatisation d'envoi de note de jeu d'un membre ScreenScraper
+botProposition.php : Système pour automatisation d'envoi de propositions d'infos ou de médias a ScreenScraper
+ssinfraInfos.php : Informations sur l'infrastructure ScreenScraper
+Paramètres d'entrées :
+devid : votre identifiant développeur
+devpassword : votre mot de passe développeur
+softname : nom du logiciel appelant
+output : xml(par defaut),json
+Item : serveurs (informations serveurs ScreenScraper)
+
+Elements Retournés :
+cpu1 : % d'utilisation du CPU du serveur 1 (moyenne des 5 dernières minutes)
+cpu2 : % d'utilisation du CPU du serveur 2 (moyenne des 5 dernières minutes)
+cpu3 : % d'utilisation du CPU du serveur 3 (moyenne des 5 dernières minutes)
+threadsmin : Nombre d'accés a l'api depuis la dernière minute
+nbscrapeurs : Nombre de scrapeurs utilisant l'api depuis la dernière minute
+apiacces : Nombre d'accés a l'api dans la journée en cours (GMT+1)
+
+Status
+closefornomember : API fermée pour les anonymes (non inscrits ou non identifiés) (0 : ouvert / 1 : fermé)
+closeforleecher : API fermée pour les membres non participant (aucune proposition validé) (0 : ouvert / 1 : fermé)
+
+Quota
+maxthreadfornonmember : Nombre maximum de threads ouverts pour les anonymes (non inscrits ou non identifiés) en même temps par l'api
+threadfornonmember : Nombre actuel de threads ouverts par les anonymes (non inscrits ou non identifiés) en même temps par l'api
+maxthreadformember : Nombre maximum de threads ouverts pour les membres en même temps par l'api
+threadformember : Nombre actuel de threads ouverts par les membres en même temps par l'api
+Exemple d'appel
+https://api.screenscraper.fr/api2/ssinfraInfos.php?devid=xxx&devpassword=yyy&softname=zzz&output=xml
+ssuserInfos.php : Informations sur l'utilisateur ScreenScraper
+Paramètres d'entrées :
+devid : votre identifiant développeur
+devpassword : votre mot de passe développeur
+softname : nom du logiciel appelant
+output : xml(par defaut),json
+ssid : identifiant ScreenScraper de l'utilisateur
+sspassword : Mot de passe ScreenScraper de l'utilisateur
+Item : ssuser (informations utilisateurs ScreenScraper)
+
+Elements Retournés :
+id : pseudo de l'utilisateur sur ScreenScraper
+numid : identifiant numérique de l'utilisateur sur ScreenScraper
+niveau : niveau de l'utilisateur sur ScreenScraper
+contribution : niveau de contribution financière sur ScreenScraper (2 = 1 Thread Supplémentaire / 3 et + = 5 Threads Supplémentaires)
+uploadsysteme : Compteur de contributions valides (média de système) proposés par l'utilisateur
+uploadinfos : Compteur de contributions valides (infos texte) proposés par l'utilisateur
+romasso : Compteur de contributions valides (association de rom) proposés par l'utilisateur
+uploadmedia : Compteur de contributions valides (média de jeu) proposés par l'utilisateur
+propositionok : Nombre de propositions de l'utilisateur validées par un modérateur
+propositionko : Nombre de propositions de l'utilisateur refusées par un modérateur
+quotarefu : Pourcentage de refu de proposition de l'utilisateur
+
+Threads
+maxthreads : Nombre de threads autorisés pour l'utilisateur (également indiqué pour les non-inscrits)
+maxdownloadspeed : Vitesse de téléchargement (en Ko/s) autorisée pour l'utilisateur (également indiqué pour les non-inscrits)
+
+Quotas
+requeststoday : Nombre d'appel total a l'api pendant la journée en court
+requestskotoday : Nombre d'appel a l'api avec un retour négatif (rom/jeu non trouvé) pendant la journée en court
+maxrequestspermin : Nombre d'appel a l'api maximum autorisé par minute pour l'utilisateur (voir F.A.Q.)
+maxrequestsperday : Nombre d'appel a l'api maximum autorisé par jour pour l'utilisateur (voir F.A.Q.)
+maxrequestskoperday : Nombre d'appel a l'api avec un retour négatif (rom/jeu non trouvé) maximum autorisé par jour pour l'utilisateur (voir F.A.Q.)
+
+visites : nombre de visites de l'utilisateur sur ScreenScraper
+datedernierevisite : date de la dernière visite de l'utilisateur sur ScreenScraper (format : yyyy-mm-jj hh:mm:ss)
+favregion : région favorite de visites de l'utilisateur sur ScreenScraper (france,europe,usa,japon)
+Exemple d'appel
+https://api.screenscraper.fr/api2/ssuserInfos.php?devid=xxx&devpassword=yyy&softname=zzz&output=xml&ssid=&sspassword=
+userlevelsListe.php : Liste des niveaux utilisateurs de ScreenScraper
+Paramètres d'entrées :
+devid : votre identifiant développeur
+devpassword : votre mot de passe développeur
+softname : nom du logiciel appelant
+output : xml(par defaut),json
+ssid(non obligatoire) : identifiant ScreenScraper de l'utilisateur
+sspassword(non obligatoire) : Mot de passe ScreenScraper de l'utilisateur
+Items : userlevels
+
+Elements Retournés :
+userlevel (xml) / id (json) {
+  id : identifiant numérique du niveau
+  nom_fr : nom du niveau en français
+}
+Exemple d'appel
+https://api.screenscraper.fr/api2/userlevelsListe.php?devid=xxx&devpassword=yyy&softname=zzz&output=xml&ssid=test&sspassword=test
+nbJoueursListe.php : Liste des nombres de joueurs
+Paramètres d'entrées :
+devid : votre identifiant développeur
+devpassword : votre mot de passe développeur
+softname : nom du logiciel appelant
+output : xml(par defaut),json
+ssid(non obligatoire) : identifiant ScreenScraper de l'utilisateur
+sspassword(non obligatoire) : Mot de passe ScreenScraper de l'utilisateur
+Items : nbjoueur
+
+Elements Retournés :
+id : identifiant numérique du nombre de joueurs
+nom : Désignation du nombre de joueurs
+parent : identifiant numérique du nombre de joueurs parent (0 si aucun parent)
+Exemple d'appel
+https://api.screenscraper.fr/api2/nbJoueursListe.php?devid=xxx&devpassword=yyy&softname=zzz&output=XML&ssid=test&sspassword=test
+supportTypesListe.php : Liste des types de supports
+Paramètres d'entrées :
+devid : votre identifiant développeur
+devpassword : votre mot de passe développeur
+softname : nom du logiciel appelant
+output : xml(par defaut),json
+ssid(non obligatoire) : identifiant ScreenScraper de l'utilisateur
+sspassword(non obligatoire) : Mot de passe ScreenScraper de l'utilisateur
+Items : supporttypes
+
+Elements Retournés :
+nom : Désignation du ou des supports
+Exemple d'appel
+https://api.screenscraper.fr/api2/supportTypesListe.php?devid=xxx&devpassword=yyy&softname=zzz&output=XML&ssid=test&sspassword=test
+romTypesListe.php : Liste des types de roms
+Paramètres d'entrées :
+devid : votre identifiant développeur
+devpassword : votre mot de passe développeur
+softname : nom du logiciel appelant
+output : xml(par defaut),json
+ssid(non obligatoire) : identifiant ScreenScraper de l'utilisateur
+sspassword(non obligatoire) : Mot de passe ScreenScraper de l'utilisateur
+Items : romtypes
+
+Elements Retournés :
+nom : Désignation du ou des types de roms
+Exemple d'appel
+https://api.screenscraper.fr/api2/romTypesListe.php?devid=xxx&devpassword=yyy&softname=zzz&output=xml&ssid=test&sspassword=test
+genresListe.php : Liste des genres
+Paramètres d'entrées :
+devid : votre identifiant développeur
+devpassword : votre mot de passe développeur
+softname : nom du logiciel appelant
+output : xml(par defaut),json
+ssid(non obligatoire) : identifiant ScreenScraper de l'utilisateur
+sspassword(non obligatoire) : Mot de passe ScreenScraper de l'utilisateur
+Items : genres
+
+Elements Retournés :
+genre (xml) / id (json) {
+  id : identifiant numérique du genre
+  nom_de : nom du genre en Allemand
+  nom_en : nom du genre en Anglais
+  nom_es : nom du genre en Espagnol
+  nom_fr : nom du genre en Français
+  nom_it : nom du genre en Italien
+  nom_pt : nom du genre en Portugais
+  parent : id du genre parent (0 si genre principal)
+  medias {
+    media_pictomonochrome : url de téléchargement du média : Pictogramme Monochrome
+    media_pictomonochromesvg : url de téléchargement du média : Pictogramme Monochrome Vectoriel
+    media_pictocouleur : url de téléchargement du média : Pictogramme Couleur
+    media_pictocouleursvg : url de téléchargement du média : Pictogramme Couleur Vectoriel
+    media_background : url de téléchargement du média : Fond d'écran
+  }
+}
+Exemple d'appel
+https://api.screenscraper.fr/api2/genresListe.php?devid=xxx&devpassword=yyy&softname=zzz&output=xml&ssid=test&sspassword=test
+famillesListe.php : Liste des familles
+Paramètres d'entrées :
+devid : votre identifiant développeur
+devpassword : votre mot de passe développeur
+softname : nom du logiciel appelant
+output : xml(par defaut),json
+ssid(non obligatoire) : identifiant ScreenScraper de l'utilisateur
+sspassword(non obligatoire) : Mot de passe ScreenScraper de l'utilisateur
+Items : familles
+
+Elements Retournés :
+famille (xml) / id (json) {
+  id : identifiant numérique de la famille
+  nom : nom de la famille
+  medias {
+    media_pictomonochrome : url de téléchargement du média : Pictogramme Monochrome
+    media_pictomonochromesvg : url de téléchargement du média : Pictogramme Monochrome Vectoriel
+    media_pictocouleur : url de téléchargement du média : Pictogramme Couleur
+    media_pictocouleursvg : url de téléchargement du média : Pictogramme Couleur Vectoriel
+    media_background : url de téléchargement du média : Fond d'écran
+    media_figurine : url de téléchargement du média : Figurine
+  }
+}
+Exemple d'appel
+https://api.screenscraper.fr/api2/famillesListe.php?devid=xxx&devpassword=yyy&softname=zzz&output=xml&ssid=test&sspassword=test
+regionsListe.php : Liste des regions
+Paramètres d'entrées :
+devid : votre identifiant développeur
+devpassword : votre mot de passe développeur
+softname : nom du logiciel appelant
+output : xml(par defaut),json
+ssid(non obligatoire) : identifiant ScreenScraper de l'utilisateur
+sspassword(non obligatoire) : Mot de passe ScreenScraper de l'utilisateur
+Items : regions
+
+Elements Retournés :
+region (xml) / id (json) {
+  id : identifiant numérique de la region
+  nomcourt : nom court de la region
+  nom_de : nom de la region en Allemand
+  nom_en : nom de la region en Anglais
+  nom_es : nom de la region en Espagnol
+  nom_fr : nom de la region en Français
+  nom_it : nom de la region en Italien
+  nom_pt : nom de la region en Portugais
+  parent : id de la region parent (0 si genre principal)
+  medias {
+    media_pictomonochrome : url de téléchargement du média : Pictogramme Monochrome
+    media_pictomonochromesvg : url de téléchargement du média : Pictogramme Monochrome Vectoriel
+    media_pictocouleur : url de téléchargement du média : Pictogramme Couleur
+    media_pictocouleursvg : url de téléchargement du média : Pictogramme Couleur Vectoriel
+    media_background : url de téléchargement du média : Fond d'écran
+  }
+}
+Exemple d'appel
+https://api.screenscraper.fr/api2/regionsListe.php?devid=xxx&devpassword=yyy&softname=zzz&output=xml&ssid=test&sspassword=test
+languesListe.php : Liste des langues
+Paramètres d'entrées :
+devid : votre identifiant développeur
+devpassword : votre mot de passe développeur
+softname : nom du logiciel appelant
+output : xml(par defaut),json
+ssid(non obligatoire) : identifiant ScreenScraper de l'utilisateur
+sspassword(non obligatoire) : Mot de passe ScreenScraper de l'utilisateur
+Items : langues
+
+Elements Retournés :
+langue (xml) / id (json) {
+  id : identifiant numérique de la langue
+  nomcourt : nom court de la langue
+  nom_de : nom de la langue en Allemand
+  nom_en : nom de la langue en Anglais
+  nom_es : nom de la langue en Espagnol
+  nom_fr : nom de la langue en Français
+  nom_it : nom de la langue en Italien
+  nom_pt : nom de la langue en Portugais
+  parent : id de la langue parent (0 si genre principal)
+  medias {
+    media_pictomonochrome : url de téléchargement du média : Pictogramme Monochrome
+    media_pictomonochromesvg : url de téléchargement du média : Pictogramme Monochrome Vectoriel
+    media_pictocouleur : url de téléchargement du média : Pictogramme Couleur
+    media_pictocouleursvg : url de téléchargement du média : Pictogramme Couleur Vectoriel
+    media_background : url de téléchargement du média : Fond d'écran
+  }
+}
+Exemple d'appel
+https://api.screenscraper.fr/api2/languesListe.php?devid=xxx&devpassword=yyy&softname=zzz&output=xml&ssid=test&sspassword=test
+classificationsListe.php : Liste des Classifications (Game Rating)
+Paramètres d'entrées :
+devid : votre identifiant développeur
+devpassword : votre mot de passe développeur
+softname : nom du logiciel appelant
+output : xml(par defaut),json
+ssid(non obligatoire) : identifiant ScreenScraper de l'utilisateur
+sspassword(non obligatoire) : Mot de passe ScreenScraper de l'utilisateur
+Items : classifications
+
+Elements Retournés :
+langue (xml) / id (json) {
+  id : identifiant numérique de la classification
+  nomcourt : nom court de la classification
+  nom_de : nom de la classification en Allemand (si existante)
+  nom_en : nom de la classification en Anglais (si existante)
+  nom_es : nom de la classification en Espagnol (si existante)
+  nom_fr : nom de la classification en Français (si existante)
+  nom_it : nom de la classification en Italien (si existante)
+  nom_pt : nom de la classification en Portugais (si existante)
+  parent : id de la classification parent (0 si genre principal)
+  medias {
+    media_pictomonochrome : url de téléchargement du média : Pictogramme Monochrome
+    media_pictomonochromesvg : url de téléchargement du média : Pictogramme Monochrome Vectoriel
+    media_pictocouleur : url de téléchargement du média : Pictogramme Couleur
+    media_pictocouleursvg : url de téléchargement du média : Pictogramme Couleur Vectoriel
+    media_background : url de téléchargement du média : Fond d'écran
+  }
+}
+Exemple d'appel
+https://api.screenscraper.fr/api2/classificationsListe.php?devid=xxx&devpassword=yyy&softname=zzz&output=xml&ssid=test&sspassword=test
+mediasSystemeListe.php : Liste des médias pour les systèmes
+Paramètres d'entrées :
+devid : votre identifiant développeur
+devpassword : votre mot de passe développeur
+softname : nom du logiciel appelant
+output : xml(par defaut),json
+ssid(non obligatoire) : identifiant ScreenScraper de l'utilisateur
+sspassword(non obligatoire) : Mot de passe ScreenScraper de l'utilisateur
+Items : medias
+
+Elements Retournés :
+media (xml) / id (json) {
+  id : identifiant numérique du média
+  nomcourt : nom court du média
+  nom : nom long du média
+  categorie : catégorie du média
+  plateformtypes : liste des types de systéme ou le média est présent (id du type de système séparé par des | , si vide = tout types de système)
+  plateforms : liste des systémes ou le média est présent (id du type de système séparé par des | , si vide = tout systèmes)
+  type : type de média
+  fileformat : format de fichier du média
+  fileformat2 : 2eme format de fichier du média accepté a la proposition
+  autogen : média auto-généré (0=non,1=oui)
+  multiregions : média multi-regions (0=non,1=oui)
+  multisupports : média multi-supports (0=non,1=oui)
+  multiversions : média multi-versions (0=non,1=oui)
+  extrainfostxt : informations complémentaires du média
+}
+Exemple d'appel
+https://api.screenscraper.fr/api2/mediasSystemeListe.php?devid=xxx&devpassword=yyy&softname=zzz&output=xml&ssid=test&sspassword=test
+mediasJeuListe.php : Liste des médias pour les jeux
+Paramètres d'entrées :
+devid : votre identifiant développeur
+devpassword : votre mot de passe développeur
+softname : nom du logiciel appelant
+output : xml(par defaut),json
+ssid(non obligatoire) : identifiant ScreenScraper de l'utilisateur
+sspassword(non obligatoire) : Mot de passe ScreenScraper de l'utilisateur
+Items : medias
+
+Elements Retournés :
+media (xml) / id (json) {
+  id : identifiant numérique du média
+  nomcourt : nom court du média
+  nom : nom long du média
+  categorie : catégorie du média
+  plateformtypes : liste des types de systéme ou le média est présent (id du type de système séparé par des | , si vide = tout types de système)
+  plateforms : liste des systémes ou le média est présent (id du type de système séparé par des | , si vide = tout systèmes)
+  type : type de média
+  fileformat : format de fichier du média
+  fileformat2 : 2eme format de fichier du média accepté a la proposition
+  autogen : média auto-généré (0=non,1=oui)
+  multiregions : média multi-regions (0=non,1=oui)
+  multisupports : média multi-supports (0=non,1=oui)
+  multiversions : média multi-versions (0=non,1=oui)
+  extrainfostxt : informations complémentaires du média
+}
+Exemple d'appel
+https://api.screenscraper.fr/api2/mediasJeuListe.php?devid=xxx&devpassword=yyy&softname=zzz&output=xml&ssid=test&sspassword=test
+infosJeuListe.php : Liste des infos pour les jeux
+Paramètres d'entrées :
+devid : votre identifiant développeur
+devpassword : votre mot de passe développeur
+softname : nom du logiciel appelant
+output : xml(par defaut),json
+ssid(non obligatoire) : identifiant ScreenScraper de l'utilisateur
+sspassword(non obligatoire) : Mot de passe ScreenScraper de l'utilisateur
+Items : infos
+
+Elements Retournés :
+info (xml) / id (json) {
+  id : identifiant numérique de l'info
+  nomcourt : nom court de l'info
+  nom : nom long de l'info
+  categorie : catégorie de l'info
+  plateformtypes : liste des types de systéme ou l'info est présent (id du type de système séparé par des | , si vide = tout types de système)
+  plateforms : liste des systémes ou l'info est présent (id du type de système séparé par des | , si vide = tout systèmes)
+  type : type d'info
+  autogen : info auto-généré (0=non,1=oui)
+  multiregions : info multi-regions (0=non,1=oui)
+  multisupports : info multi-supports (0=non,1=oui)
+  multiversions : info multi-versions (0=non,1=oui)
+  multichoix : info multi-choix (0=non,1=oui)
+}
+Exemple d'appel
+https://api.screenscraper.fr/api2/infosJeuListe.php?devid=xxx&devpassword=yyy&softname=zzz&output=xml&ssid=test&sspassword=test
+infosRomListe.php : Liste des infos pour les roms
+Paramètres d'entrées :
+devid : votre identifiant développeur
+devpassword : votre mot de passe développeur
+softname : nom du logiciel appelant
+output : xml(par defaut),json
+ssid(non obligatoire) : identifiant ScreenScraper de l'utilisateur
+sspassword(non obligatoire) : Mot de passe ScreenScraper de l'utilisateur
+Items : infos
+
+Elements Retournés :
+info (xml) / id (json) {
+  id : identifiant numérique de l'info
+  nomcourt : nom court de l'info
+  nom : nom long de l'info
+  categorie : catégorie de l'info
+  plateformtypes : liste des types de systéme ou l'info est présent (id du type de système séparé par des | , si vide = tout types de système)
+  plateforms : liste des systémes ou l'info est présent (id du type de système séparé par des | , si vide = tout systèmes)
+  type : type d'info
+  autogen : info auto-généré (0=non,1=oui)
+  multiregions : info multi-regions (0=non,1=oui)
+  multisupports : info multi-supports (0=non,1=oui)
+  multiversions : info multi-versions (0=non,1=oui)
+  multichoix : info multi-choix (0=non,1=oui)
+}
+Exemple d'appel
+https://api.screenscraper.fr/api2/infosRomListe.php?devid=xxx&devpassword=yyy&softname=zzz&output=xml&ssid=test&sspassword=test
+mediaGroup.php : Téléchargement des médias images des groupes de jeux
+Paramètres d'entrées :
+devid : votre identifiant développeur
+devpassword : votre mot de passe développeur
+softname : nom du logiciel appelant
+ssid(non obligatoire) : identifiant ScreenScraper de l'utilisateur
+sspassword(non obligatoire) : Mot de passe ScreenScraper de l'utilisateur
+crc : calcul crc de l'image existante en local
+md5 : calcul md5 de l'image existante en local
+sha1 : calcul sha1 de l'image existante en local
+groupid : identifiant numérique du groupes (voir genreListe.php, modeListe.php,... / type de groupes = genre, mode, famille, theme, style)
+media : identifiant texte du média à retourner (voir genreListe.php, modeListe.php,... / type de groupes = genre, mode, famille, theme, style)
+mediaformat(non obligatoire) : format (extension) du media : ex : jpg, png, mp4, zip, mp3, ... ( donnée informative : ne retourne pas le média au format spécifié)
+Paramètres de sortie :
+maxwidth(non obligatoire) : Largeur Maximum en pixels de l'image retournée
+maxheight(non obligatoire) : Hauteur Maximum en pixels de l'image retournée
+outputformat(non obligatoire) : Format (extension) de l'image retournée : png ou jpg
+Element Retourné : Image PNG
+ou
+Texte CRCOK ou MD5OK ou SHA1OK si le paramètres crc, md5 ou sha1 est identique au calcul crc, md5 ou sha1 de l'image du serveur (optimisation des mises à jour)
+ou
+Texte NOMEDIA si le fichier média n'a pas été trouvé
+Exemple d'appel
+https://api.screenscraper.fr/api2/mediaGroup.php?devid=xxx&devpassword=yyy&softname=zzz&ssid=test&sspassword=test&crc=&md5=&sha1=&groupid=1&media=logo-monochrome
+mediaCompagnie.php : Téléchargement des médias images des Compagnies de jeux
+Paramètres d'entrées :
+devid : votre identifiant développeur
+devpassword : votre mot de passe développeur
+softname : nom du logiciel appelant
+ssid(non obligatoire) : identifiant ScreenScraper de l'utilisateur
+sspassword(non obligatoire) : Mot de passe ScreenScraper de l'utilisateur
+crc : calcul crc de l'image existante en local
+md5 : calcul md5 de l'image existante en local
+sha1 : calcul sha1 de l'image existante en local
+companyid : identifiant numérique de la compagnie
+media : identifiant texte du média à retourner
+mediaformat(non obligatoire) : format (extension) du media : ex : jpg, png, mp4, zip, mp3, ... ( donnée informative : ne retourne pas le média au format spécifié)
+Paramètres de sortie :
+maxwidth(non obligatoire) : Largeur Maximum en pixels de l'image retournée
+maxheight(non obligatoire) : Hauteur Maximum en pixels de l'image retournée
+outputformat(non obligatoire) : Format (extension) de l'image retournée : png ou jpg
+Element Retourné : Image PNG
+ou
+Texte CRCOK ou MD5OK ou SHA1OK si le paramètres crc, md5 ou sha1 est identique au calcul crc, md5 ou sha1 de l'image du serveur (optimisation des mises à jour)
+ou
+Texte NOMEDIA si le fichier média n'a pas été trouvé
+Exemple d'appel
+https://api.screenscraper.fr/api2/mediaCompagnie.php?devid=xxx&devpassword=yyy&softname=zzz&ssid=test&sspassword=test&crc=&md5=&sha1=&companyid=3&media=logo-monochrome
+systemesListe.php : Liste des systèmes / informations systèmes / informations médias systèmes
+Paramètres d'entrées :
+devid : votre identifiant développeur
+devpassword : votre mot de passe développeur
+softname : nom du logiciel appelant
+output : xml(par defaut),json
+ssid(non obligatoire) : identifiant ScreenScraper de l'utilisateur
+sspassword(non obligatoire) : Mot de passe ScreenScraper de l'utilisateur
+Item : ssuser (informations utilisateurs ScreenScraper)
+
+Elements Retournés :
+id : pseudo de l'utilisateur sur ScreenScraper
+niveau : niveau de l'utilisateur sur ScreenScraper
+contribution : niveau de contribution financière sur ScreenScraper (2 = 1 Thread Supplémentaire/3 et + = 5 Threads Supplémentaires)
+uploadsysteme : Compteur de contributions valides (média de système) proposés par l'utilisateur
+uploadinfos : Compteur de contributions valides (infos texte) proposés par l'utilisateur
+romasso : Compteur de contributions valides (association de rom) proposés par l'utilisateur
+uploadmedia : Compteur de contributions valides (média de jeu) proposés par l'utilisateur
+maxthreads : Nombre de threads autorisés pour l'utilisateur (également indiqué pour les non-inscrits)
+maxdownloadspeed : Vitesse de téléchargement (en Ko/s) autorisée pour l'utilisateur (également indiqué pour les non-inscrits)
+requeststoday : Nombre d'appel a l'api pendant la journée en court
+requestskotoday : Nombre d'appel a l'api avec un retour négatif (rom/jeu non trouvé) pendant la journée en court
+maxrequestsperdmin : Nombre d'appel a l'api maximum autorisé par minute pour l'utilisateur (voir F.A.Q.)
+maxrequestsperday : Nombre d'appel a l'api maximum autorisé par jour pour l'utilisateur (voir F.A.Q.)
+maxrequestskoperday : Nombre d'appel a l'api avec un retour négatif (rom/jeu non trouvé) maximum autorisé par jour pour l'utilisateur (voir F.A.Q.)
+visites : nombre de visites de l'utilisateur sur ScreenScraper
+datedernierevisite : date de la dernière visite de l'utilisateur sur ScreenScraper (format : yyyy-mm-jj hh:mm:ss)
+favregion : région favorite de visites de l'utilisateur sur ScreenScraper (france,europe,usa,japon)
+Items : systeme (xml) / systemes (json)
+
+Elements Retournés :
+id : identifiant numérique du système (à refournir dans les autres requêtes de l’api)
+parentid : identifiant numérique du système parent
+noms {
+  nom_xx : Nom du système Région xx (xx = variable "nomcourt" de l'API regionsListe.php)
+  ...
+  nom_recalbox : Nom du système dans le front-end Recalbox
+  nom_retropie : Nom du système dans le front-end Retropie
+  nom_launchbox : Nom du système dans le front-end Launchbox
+  nom_hyperspin : Nom du système dans le front-end Hyperspin
+  noms_commun : Noms commun donnée au système en général
+}
+extensions : extensions des fichiers de roms utilisables (tous emulateurs confondus)
+compagnie : Nom de la société de production du système
+type : Type de système (Arcade,Console,Console Portable,Emulation Arcade,Flipper,Online,Ordinateur,Smartphone)
+datedebut : Année de début de production
+datefin : Année de fin de production
+romtype : Type(s) de roms (voir requête romTypesListe)
+supporttype : Type du ou des supports d’origines du système (voir requête supportTypesListe)
+medias {
+media_logosmonochrome {
+  media_logomonochrome_xx : url de téléchargement du média : Logo Monochrome région xx (xx = variable "nomcourt" de l'API regionsListe.php)
+  media_logomonochrome_xx_crc : identifiant CRC32 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  media_logomonochrome_xx_md5 : identifiant md5 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  media_logomonochrome_xx_sha1 : identifiant sha1 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  ...
+}
+media_wheels {
+  media_wheel_xx : url de téléchargement du média : Logo Couleur région xx (xx = variable "nomcourt" de l'API regionsListe.php)
+  media_wheel_xx_crc : identifiant CRC32 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  media_wheel_xx_md5 : identifiant md5 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  media_wheel_xx_sha1 : identifiant sha1 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  ...
+}
+media_wheelscarbon {
+  media_wheelcarbon_xx : url de téléchargement du média : Wheel Carbon région xx (xx = variable "nomcourt" de l'API regionsListe.php)
+  media_wheelcarbon_xx_crc : identifiant CRC32 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  media_wheelcarbon_xx_md5 : identifiant md5 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  media_wheelcarbon_xx_sha1 : identifiant sha1 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  ...
+}
+media_wheelscarbonvierge {
+  media_wheelcarbonvierge_xx : url de téléchargement du média : Wheel Carbon vierge région xx (xx = variable "nomcourt" de l'API regionsListe.php)
+  media_wheelcarbonvierge_xx_crc : identifiant CRC32 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  media_wheelcarbonvierge_xx_md5 : identifiant md5 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  media_wheelcarbonvierge_xx_sha1 : identifiant sha1 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  ...
+}
+media_wheelssteel {
+  media_wheelsteel_xx : url de téléchargement du média : Wheel Steel région xx (xx = variable "nomcourt" de l'API regionsListe.php)
+  media_wheelsteel_xx_crc : identifiant CRC32 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  media_wheelsteel_xx_md5 : identifiant md5 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  media_wheelsteel_xx_sha1 : identifiant sha1 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  ..
+}
+media_wheelssteelvierge {
+  media_wheelsteelvierge_xx : url de téléchargement du média : Wheel Steel vierge région xx (xx = variable "nomcourt" de l'API regionsListe.php)
+  media_wheelsteelvierge_xx_crc : identifiant CRC32 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  media_wheelsteelvierge_xx_md5 : identifiant md5 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  media_wheelsteelvierge_xx_sha1 : identifiant sha1 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  ...
+}
+media_photos {
+  media_photo_xx : url de téléchargement du média : Photo du système région xx (xx = variable "nomcourt" de l'API regionsListe.php)
+  media_photo_xx_crc : identifiant CRC32 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  media_photo_xx_md5 : identifiant md5 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  media_photo_xx_sha1 : identifiant sha1 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  ...
+}
+media_video : url de téléchargement du média : Vidéo de présentation du système
+  media_video_crc : identifiant CRC32 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  media_video_md5 : identifiant md5 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  media_video_sha1 : identifiant sha1 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+
+media_fanart : url de téléchargement du média : Fanart du jeux (fond d'écran personnalisé)
+  media_fanart_crc : identifiant CRC32 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  media_fanart_md5 : identifiant md5 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  media_fanart_sha1 : identifiant sha1 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+media_bezels {
+  media_bezels4-3 {
+    media_bezel4-3_xx : url de téléchargement du média : Bezel 4:3 pour jeux horizontaux région xx (xx = variable "nomcourt" de l'API regionsListe.php)
+    media_bezel4-3_xx_crc : identifiant CRC32 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+    media_bezel4-3_xx_md5 : identifiant md5 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+    media_bezel4-3_xx_sha1 : identifiant sha1 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+    ...
+  }
+  media_bezels4-3v {
+    media_bezel4-3v_xx : url de téléchargement du média : Bezel 4:3 pour jeux verticaux région xx (xx = variable "nomcourt" de l'API regionsListe.php)
+    media_bezel4-3v_xx_crc : identifiant CRC32 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+    media_bezel4-3v_xx_md5 : identifiant md5 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+    media_bezel4-3v_xx_sha1 : identifiant sha1 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+    ...
+  }
+  media_bezels16-9 {
+    media_bezel16-9_xx : url de téléchargement du média : Bezel 16:9 pour jeux horizontaux région xx (xx = variable "nomcourt" de l'API regionsListe.php)
+    media_bezel16-9_xx_crc : identifiant CRC32 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+    media_bezel16-9_xx_md5 : identifiant md5 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+    media_bezel16-9_xx_sha1 : identifiant sha1 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+    ...
+  }
+  media_bezels16-9v {
+    media_bezel16-9v_xx : url de téléchargement du média : Bezel 16:9 pour jeux verticaux région xx (xx = variable "nomcourt" de l'API regionsListe.php)
+    media_bezel16-9v_xx_crc : identifiant CRC32 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+    media_bezel16-9v_xx_md5 : identifiant md5 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+    media_bezel16-9v_xx_sha1 : identifiant sha1 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+    ...
+  }
+  media_bezels16-10 {
+    media_bezel16-10_xx : url de téléchargement du média : Bezel 16:10 pour jeux horizontaux région xx (xx = variable "nomcourt" de l'API regionsListe.php)
+    media_bezel16-10_xx_crc : identifiant CRC32 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+    media_bezel16-10_xx_md5 : identifiant md5 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+    media_bezel16-10_xx_sha1 : identifiant sha1 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+    ...
+  }
+  media_bezels16-10 {
+    media_bezel16-10v_xx : url de téléchargement du média : Bezel 16:10 pour jeux verticaux région xx (xx = variable "nomcourt" de l'API regionsListe.php)
+    media_bezel16-10v_xx_crc : identifiant CRC32 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+    media_bezel16-10v_xx_md5 : identifiant md5 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+    media_bezel16-10v_xx_sha1 : identifiant sha1 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+    ...
+  }
+}
+media_backgrounds {
+  media_background_xx : url de téléchargement du média : Background du système région xx (xx = variable "nomcourt" de l'API regionsListe.php)
+  media_background_crc : identifiant CRC32 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  media_background_md5 : identifiant md5 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  media_background_sha1 : identifiant sha1 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  ...
+  }
+media_screenmarquees {
+  media_screenmarquee_xx : url de téléchargement du média : ScreenMarquee du système région xx (xx = variable "nomcourt" de l'API regionsListe.php)
+  media_screenmarquee_crc : identifiant CRC32 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  media_screenmarquee_md5 : identifiant md5 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  media_screenmarquee_sha1 : identifiant sha1 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  ...
+  }
+media_screenmarqueevierges {
+  media_screenmarqueevierge_xx : url de téléchargement du média : ScreenMarquee Vierge du système région vierge
+  media_screenmarqueevierge_crc : identifiant CRC32 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  media_screenmarqueevierge_md5 : identifiant md5 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  media_screenmarqueevierge_sha1 : identifiant sha1 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  ...
+  }
+media_boxs3dvierge {
+  media_box3dvierge_xx : url de téléchargement du média : Image du boitier en vue 3D vierge région xx (xx = variable "nomcourt" de l'API regionsListe.php)
+  media_box3dvierge_crc : identifiant CRC32 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  media_box3dvierge_md5 : identifiant md5 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  media_box3dvierge_sha1 : identifiant sha1 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  ...
+}
+media_supports2dvierge {
+  media_support2dvierge_xx : url de téléchargement du média : Image du support en vue de face vierge région xx (xx = variable "nomcourt" de l'API regionsListe.php)
+  media_support2dvierge_crc : identifiant CRC32 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  media_support2dvierge_md5 : identifiant md5 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  media_support2dvierge_sha1 : identifiant sha1 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  ...
+}
+media_controleur {
+  media_controleur_xx : url de téléchargement du média : Image du controleur (ou de la console portable entière) en vue de face région xx (xx = variable "nomcourt" de l'API regionsListe.php)
+  media_controleur_crc : identifiant CRC32 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  media_controleur_md5 : identifiant md5 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  media_controleur_sha1 : identifiant sha1 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  ...
+}
+media_illustration {
+  media_illustration_xx : url de téléchargement du média : Image du système en vue isométrique dessus/avant région xx (xx = variable "nomcourt" de l'API regionsListe.php)
+  media_illustration_crc : identifiant CRC32 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  media_illustration_md5 : identifiant md5 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  media_illustration_sha1 : identifiant sha1 du fichier média (vous permet de checker si le média en ligne et le même qu'en local avant de la télécharger)
+  ...
+}
+Exemple d'appel
+https://api.screenscraper.fr/api2/systemesListe.php?devid=xxx&devpassword=yyy&softname=zzz&output=XML&ssid=test&sspassword=test
+mediaSysteme.php : Téléchargement des médias images des systèmes
+Paramètres d'entrées :
+devid : votre identifiant développeur
+devpassword : votre mot de passe développeur
+softname : nom du logiciel appelant
+ssid(non obligatoire) : identifiant ScreenScraper de l'utilisateur
+sspassword(non obligatoire) : Mot de passe ScreenScraper de l'utilisateur
+crc : calcul crc de l'image existante en local
+md5 : calcul md5 de l'image existante en local
+sha1 : calcul sha1 de l'image existante en local
+systemeid : identifiant numérique du système (voir systemesListe.php)
+media : identifiant texte du média à retourner (voir systemesListe.php)
+mediaformat(non obligatoire) : format (extension) du media : ex : jpg, png, mp4, zip, mp3, ... ( donnée informative : ne retourne pas le média au format spécifié)
+Paramètres de sortie :
+maxwidth(non obligatoire) : Largeur Maximum en pixels de l'image retournée
+maxheight(non obligatoire) : Hauteur Maximum en pixels de l'image retournée
+outputformat(non obligatoire) : Format (extension) de l'image retournée : png ou jpg
+Element Retourné : Image PNG
+ou
+Texte CRCOK ou MD5OK ou SHA1OK si le paramètres crc, md5 ou sha1 est identique au calcul crc, md5 ou sha1 de l'image du serveur (optimisation des mises à jour)
+ou
+Texte NOMEDIA si le fichier média n'a pas été trouvé
+Exemple d'appel
+https://api.screenscraper.fr/api2/mediaSysteme.php?devid=xxx&devpassword=yyy&softname=zzz&ssid=test&sspassword=test&crc=&md5=&sha1=&systemeid=1&media=wheel(wor)
+mediaVideoSysteme.php : Téléchargement des médias vidéos des systèmes
+Paramètres d'entrées :
+devid : votre identifiant développeur
+devpassword : votre mot de passe développeur
+softname : nom du logiciel appelant
+ssid(non obligatoire) : identifiant ScreenScraper de l'utilisateur
+sspassword(non obligatoire) : Mot de passe ScreenScraper de l'utilisateur
+crc : calcul crc de la video existante en local
+md5 : calcul md5 de la video existante en local
+sha1 : calcul sha1 de la video existante en local
+systemeid : identifiant numérique du système (voir systemesListe.php)
+media : identifiant texte du média à retourner (voir systemesListe.php)
+mediaformat : format (extension) du media : ex : jpg, png, mp4, zip, mp3, ... (non obligatoire, donnée informative : ne retourne pas le média au format spécifié)
+Element Retourné : Video MP4
+ou
+Texte CRCOK ou MD5OK ou SHA1OK si le paramètres crc, md5 ou sha1 est identique au calcul crc, md5 ou sha1 de la vidéo du serveur (optimisation des mises à jour)
+ou
+Texte NOMEDIA si le fichier média n'a pas été trouvé
+
+Exemple d'appel
+https://api.screenscraper.fr/api2/mediaVideoSysteme.php?devid=xxx&devpassword=yyy&softname=zzz&ssid=test&sspassword=test&crc=&md5=&sha1=&systemeid=1&media=video
+jeuRecherche.php : Recherche d'un jeu avec son nom (retourne une table de jeux (limité a 30 jeux) classés par probabilité)
+Paramètres d'entrées :
+devid : votre identifiant développeur
+devpassword : votre mot de passe développeur
+softname : nom du logiciel appelant
+output : xml(par defaut),json
+ssid(non obligatoire) : identifiant ScreenScraper de l'utilisateur
+sspassword(non obligatoire) : Mot de passe ScreenScraper de l'utilisateur
+systemeid(non obligatoire) : identifiant numérique du système (voir systemesListe.php)
+recherche : nom du jeu recherché
+Item : serveurs (informations serveurs ScreenScraper)
+
+Elements Retournés :
+serveurcpu1 : % d'utilisateur CPUs sur le serveur principal actuel
+serveurcpu2 : % d'utilisateur CPUs sur le serveur secondaire actuel
+threadsmin : nombre d'accés a l'API depuis les 60 dernières secondes
+nbscrapeurs : nombre d'utilisateurs de l'API actuellement
+apiacces : nombre d'accés a l'API aujourd'hui (heure Française)
+Item : ssuser (informations utilisateurs ScreenScraper)
+
+Elements Retournés :
+id : pseudo de l'utilisateur sur ScreenScraper
+niveau : niveau de l'utilisateur sur ScreenScraper
+contribution : niveau de contribution financière sur ScreenScraper (2 = 1 Thread Supplémentaire/3 et + = 5 Threads Supplémentaires)
+uploadsysteme : Compteur de contributions valides (média de système) proposés par l'utilisateur
+uploadinfos : Compteur de contributions valides (infos texte) proposés par l'utilisateur
+romasso : Compteur de contributions valides (association de rom) proposés par l'utilisateur
+uploadmedia : Compteur de contributions valides (média de jeu) proposés par l'utilisateur
+maxthreads : Nombre de threads autorisés pour l'utilisateur (également indiqué pour les non-inscrits)
+maxdownloadspeed : Vitesse de téléchargement (en Ko/s) autorisée pour l'utilisateur (également indiqué pour les non-inscrits)
+requeststoday : Nombre d'appel a l'api pendant la journée en court
+requestskotoday : Nombre d'appel a l'api avec un retour négatif (rom/jeu non trouvé) pendant la journée en court
+maxrequestsperdmin : Nombre d'appel a l'api maximum autorisé par minute pour l'utilisateur (voir F.A.Q.)
+maxrequestsperday : Nombre d'appel a l'api maximum autorisé par jour pour l'utilisateur (voir F.A.Q.)
+maxrequestskoperday : Nombre d'appel a l'api avec un retour négatif (rom/jeu non trouvé) maximum autorisé par jour pour l'utilisateur (voir F.A.Q.)
+visites : nombre de visites de l'utilisateur sur ScreenScraper
+datedernierevisite : date de la dernière visite de l'utilisateur sur ScreenScraper (format : yyyy-mm-jj hh:mm:ss)
+favregion : région favorite de visites de l'utilisateur sur ScreenScraper (france,europe,usa,japon)
+Item XML : jeux (table) puis jeu
+Item JSON : jeux (table)
+
+Elements Retournés :
+Identique a l'API jeuInfos mais sans les infos sur les roms
+
+Exemple d'appel
+https://api.screenscraper.fr/api2/jeuRecherche.php?devid=xxx&devpassword=yyy&softname=zzz&output=xml&ssid=test&sspassword=test&systemeid=1&recherche=sonic
+jeuInfos.php : Informations sur un jeu / Médias d'un jeu
+Paramètres d'entrées :
+devid : votre identifiant développeur
+devpassword : votre mot de passe développeur
+softname : nom du logiciel appelant
+output : xml(par defaut),json
+ssid(non obligatoire) : identifiant ScreenScraper de l'utilisateur
+sspassword(non obligatoire) : Mot de passe ScreenScraper de l'utilisateur
+crc* : calcul crc du fichier rom/iso/dossier existant en local
+md5* : calcul md5 du fichier rom/iso/dossier existant en local
+sha1* : calcul sha1 du fichier rom/iso/dossier existant en local
+systemeid : identifiant numérique du système (voir systemesListe.php)
+romtype : Type de "rom" : fichier rom unique / fichier iso unique / dossier
+romnom : nom du fichier (avec extension) ou nom du dossier
+romtaille* : Taille en octet du fichier ou du dossier
+serialnum : Forcer la recherche du jeu avec le numero de série de la rom (iso) associé
+gameid** : Forcer la recherche du jeu avec son identifiant numérique
+* a moins d'une dérogation, vous devez envoyer au moins un (le mieux serait les 3) de ces calculs (crc,md5,sha1) d'identification de fichier rom/iso ou dossier avec votre requete ET la taille (on octect du fichier ou du dossier).
+** Aucune information sur la rom n'est envoyée dans ce cas.
+Item : serveurs (informations serveurs ScreenScraper)
+
+Elements Retournés :
+serveurcpu1 : % d'utilisateur CPUs sur le serveur principal actuel
+serveurcpu2 : % d'utilisateur CPUs sur le serveur secondaire actuel
+threadsmin : nombre d'accés a l'API depuis les 60 dernières secondes
+nbscrapeurs : nombre d'utilisateurs de l'API actuellement
+apiacces : nombre d'accés a l'API aujourd'hui (heure Française)
+Item : ssuser (informations utilisateurs ScreenScraper)
+
+Elements Retournés :
+id : pseudo de l'utilisateur sur ScreenScraper
+niveau : niveau de l'utilisateur sur ScreenScraper
+contribution : niveau de contribution financière sur ScreenScraper (2 = 1 Thread Supplémentaire/3 et + = 5 Threads Supplémentaires)
+uploadsysteme : Compteur de contributions valides (média de système) proposés par l'utilisateur
+uploadinfos : Compteur de contributions valides (infos texte) proposés par l'utilisateur
+romasso : Compteur de contributions valides (association de rom) proposés par l'utilisateur
+uploadmedia : Compteur de contributions valides (média de jeu) proposés par l'utilisateur
+maxthreads : Nombre de threads autorisés pour l'utilisateur (également indiqué pour les non-inscrits)
+maxdownloadspeed : Vitesse de téléchargement (en Ko/s) autorisée pour l'utilisateur (également indiqué pour les non-inscrits)
+requeststoday : Nombre d'appel a l'api pendant la journée en court
+requestskotoday : Nombre d'appel a l'api avec un retour négatif (rom/jeu non trouvé) pendant la journée en court
+maxrequestsperdmin : Nombre d'appel a l'api maximum autorisé par minute pour l'utilisateur (voir F.A.Q.)
+maxrequestsperday : Nombre d'appel a l'api maximum autorisé par jour pour l'utilisateur (voir F.A.Q.)
+maxrequestskoperday : Nombre d'appel a l'api avec un retour négatif (rom/jeu non trouvé) maximum autorisé par jour pour l'utilisateur (voir F.A.Q.)
+visites : nombre de visites de l'utilisateur sur ScreenScraper
+datedernierevisite : date de la dernière visite de l'utilisateur sur ScreenScraper (format : yyyy-mm-jj hh:mm:ss)
+favregion : région favorite de visites de l'utilisateur sur ScreenScraper (france,europe,usa,japon)
+Item : jeu
+
+Elements Retournés :
+id : identifiant numérique du jeu
+romid : identifiant numérique de la rom
+notgame : (true/false) indique si la rom est assigner a un jeu ou a un NON jeu (demo/appli/...)
+nom : Nom du jeu (interne ScreenScraper)
+noms {
+  nom_ss : Nom du jeu (interne ScreenScraper)
+  nom_xx : Titre du jeu région xx (xx = variable "nomcourt" de l'API regionsListe.php)
+  ...
+}
+
+Si la rom est assigné a un NON jeu, le tag "ZZZ(notgame):" est ajouté a l'avant du nom interne ScreenScraper et les noms par région
+
+regionshortnames {
+  regionshortname : Nom court de la region de la rom (si dispo)
+}
+cloneof : ID du Clone (si dispo)
+systeme {
+  id : Identifiant numérique du systeme du jeu
+  nom : Nom du systeme du jeu
+  parentid : Identifiant numérique du systeme parent du systeme du jeu
+}
+editeur : Nom de l'editeur
+editeurmedias {
+  editeurmedia_pictomonochrome : url de téléchargement du média : Logo Monochrome de l'éditeur
+  editeurmedia_pictocouleur : url de téléchargement du média : Logo Couleur de l'éditeur
+}
+
+developpeur : Nom du developpeur
+developpeurmedias {
+  developpeurmedia_pictomonochrome : url de téléchargement du média : Logo Monochrome du developpeur
+  developpeurmedia_pictocouleur : url de téléchargement du média : Logo Couleur du developpeur
+}
+
+joueurs : Nombre de joueurs
+notemedias {
+  joueursmedia_pictoliste : url de téléchargement du média : Pictogramme de liste
+  joueursmedia_pictomonochrome : url de téléchargement du média : Pictogramme Monochrome
+  joueursmedia_pictocouleur : url de téléchargement du média : Pictogramme Couleur
+}
+note : Note sur 20
+notemedias {
+  notemedia_pictoliste : url de téléchargement du média : Pictogramme de liste
+  notemedia_pictomonochrome : url de téléchargement du média : Logo Monochrome
+  notemedia_pictocouleur : url de téléchargement du média : Logo Couleur
+}
+
+topstaff : Jeu inclu dans le TOP Staff ScreenScraper (0: non inclu, 1: inclu)
+rotation : rotation de l'écran de jeu (uniquement pour les jeux arcade)
+resolution : résolution du jeu (uniquement pour les jeux arcade)
+synopsis {
+  synopsis_xx : Description du jeu en langue xx (xx = variable "nomcourt" de l'API languesListe.php)
+  ...
+}
+classifications {
+  classifications_organisme Classification du jeu
+  classifications_organisme_medias {
+    classifications_organisme_media_pictoliste : url de téléchargement du média : Pictogramme de liste
+    classifications_organisme_media_pictomonochrome : url de téléchargement du média : Pictogramme Monochrome
+    classifications_organisme_media_pictocouleur : url de téléchargement du média : Pictogramme Couleur
+  }
+}
+dates {
+  id texte region (france=date_fr,europe=date_eu,usa=date_us,japon=date_jp,...) : Date de sortie dans la région indiquées
+}
+genres {
+  genres_id [
+    genre_id : Identifiant Numérique du genre du jeu (Voir genresListe.php)
+    nomcourt : Identifiant Numérique version "genres normalisés" (Voir wikipedia + 20 : genre = "Adulte")
+    principale : Genre Principale (0: non principale, 1: Principale)
+    parentid : Identifiant Numérique du genre principale du genre (Voir genresListe.php)
+  ]
+
+  genre_id_medias { id : identifiant numerique du genre (Voir genresListe.php)
+    genre_id_media_pictoliste : url de téléchargement du média : Pictogramme de liste
+    genre_id_media_pictomonochrome : url de téléchargement du média : Pictogramme Monochrome
+    genre_id_media_pictocouleur : url de téléchargement du média : Pictogramme Couleur
+  }
+
+  genres_xx [
+    genre_xx : Genre du jeu en langue xx (xx = variable "nomcourt" de l'API languesListe.php) (Voir genresListe.php)
+  ]
+  ...
+}
+modes {
+  modes_id [
+    mode_id : Identifiant Numérique du mode de jeu
+  ]
+
+  mode_id_medias { id : identifiant numerique du mode de jeu
+    mode_id_media_pictoliste : url de téléchargement du média : Pictogramme de liste
+    mode_id_media_pictomonochrome : url de téléchargement du média : Pictogramme Monochrome
+    mode_id_media_pictocouleur : url de téléchargement du média : Pictogramme Couleur
+  }
+
+  modes_xx [
+    mode_xx : Mode de jeu en langue xx (xx = variable "nomcourt" de l'API languesListe.php)
+  ]
+  ...
+}
+familles {
+  familles_id [
+    famille_id : Identifiant Numérique de la famille du jeu
+  ]
+
+  famille_id_medias { id : identifiant numerique de la famille de jeux
+    famille_id_media_pictoliste : url de téléchargement du média : Pictogramme de liste
+    famille_id_media_pictomonochrome : url de téléchargement du média : Pictogramme Monochrome
+    famille_id_media_pictocouleur : url de téléchargement du média : Pictogramme Couleur
+  }
+
+  familles_xx [
+    famille_xx : Famille du jeu en langue xx (xx = variable "nomcourt" de l'API languesListe.php) (ex: "Sonic & Knuckles" Famille : "Sonic the Hedgehog")
+  ]
+  ...
+}
+numeros {
+  numeros_id [
+    numero_id : Identifiant Numérique du numero du jeu
+  ]
+
+  numero_id_medias { id : identifiant numerique du numero du jeu
+    numero_id_media_pictoliste : url de téléchargement du média : Pictogramme de liste
+    numero_id_media_pictomonochrome : url de téléchargement du média : Pictogramme Monochrome
+    numero_id_media_pictocouleur : url de téléchargement du média : Pictogramme Couleur
+  }
+
+  numeros_xx [
+    numero_xx : Numéro dans la série du jeu en langue xx (xx = variable "nomcourt" de l'API languesListe.php)
+  ]
+  ...
+}
+themes {
+  themes_id [
+    theme_id : Identifiant Numérique du theme du jeu
+  ]
+
+  theme_id_medias { id : identifiant numerique du theme du jeu
+    theme_id_media_pictoliste : url de téléchargement du média : Pictogramme de liste
+    theme_id_media_pictomonochrome : url de téléchargement du média : Pictogramme Monochrome
+    theme_id_media_pictocouleur : url de téléchargement du média : Pictogramme Couleur
+  }
+
+  themes_xx [
+    theme_xx : Theme du jeu en langue xx (xx = variable "nomcourt" de l'API languesListe.php)
+  ]
+  ...
+}
+styles {
+  styles_id [
+    style_id : Identifiant Numérique du style du jeu en français (Voir genresListe.php)
+  ]
+
+  style_id_medias { id : identifiant numerique du style du jeu
+    style_id_media_pictoliste : url de téléchargement du média : Pictogramme de liste
+    style_id_media_pictomonochrome : url de téléchargement du média : Pictogramme Monochrome
+    style_id_media_pictocouleur : url de téléchargement du média : Pictogramme Couleur
+  }
+
+  styles_xx [
+    style_xx : Style du jeu en langue xx (xx = variable "nomcourt" de l'API languesListe.php)
+  ]
+  ...
+}
+sp2kcfg : Contenu texte du fichier de config .p2k (Pad2Keyboard) recalbox
+
+tips [
+  tip {
+    id : Identifiant numérique du tip
+    langue : Langue du tip
+    titre : Titre du tip dans la langue indiquée
+    description : Description du tip dans la langue indiquée
+  }
+  ...
+]
+
+actions [
+  action {
+    id : Identifiant numérique de l'action
+    controle [
+      langue : Langue de l'action
+      text : Texte de l'action dans la langue indiquée
+      recalboxtext : Texte de l'action dans la langue indiquée et boutons standardisés recalbox
+    ]
+  }
+  ...
+]
+
+couleurs [
+  couleur {
+    id : Identifiant numérique de la couleur
+    controle : identifiant textuel du controle
+    hexa : code hexadécimal de la couleur
+  }
+  ...
+]
+
+medias {
+  media_screenshot : url de téléchargement du média : Capture d'écran
+  media_fanart : url de téléchargement du média : Fanart du jeux (fond d'écran personnalisé)
+  media_video : url de téléchargement du média : Capture Vidéo du jeu
+  media_marquee : url de téléchargement du média : Marquee
+  media_screenmarquee : url de téléchargement du média : Screen Marquee
+media_wheels {
+  media_wheel_xx : url de téléchargement du média : Logo Couleur région région xx (xx = variable "nomcourt" de l'API regionsListe.php)
+  ...
+}
+media_wheelscarbon {
+  media_wheelcarbon_xx : url de téléchargement du média : Wheel version Carbon région région xx (xx = variable "nomcourt" de l'API regionsListe.php)
+  ...
+}
+media_wheelssteel {
+  media_wheelsteel_xx : url de téléchargement du média : Wheel version Steel région région xx (xx = variable "nomcourt" de l'API regionsListe.php)
+  ...
+}
+media_boitiers {
+  media_boitiers_texture {
+    media_boitier_texture_xx : url de téléchargement du média : Image Texture du boitier région région xx (xx = variable "nomcourt" de l'API regionsListe.php)
+    ...
+  }
+  media_boitiers_2d {
+    media_boitier_2d_xx : url de téléchargement du média : Image Boitier version 2D région région xx (xx = variable "nomcourt" de l'API regionsListe.php)
+    ...
+  }
+  media_boitiers_3d {
+    media_boitier_3d_xx : url de téléchargement du média : Image Boitier version 3D région région xx (xx = variable "nomcourt" de l'API regionsListe.php)
+    ...
+  }
+}
+media_supports {
+  media_supports_texture {
+    media_support_texture_xx : url de téléchargement du média : Image Texture du support région région xx (xx = variable "nomcourt" de l'API regionsListe.php)
+    ...
+  }
+  media_supports_2d {
+    media_support_2d_xx : url de téléchargement du média : Image Support version 2D région xx (xx = variable "nomcourt" de l'API regionsListe.php)
+    ...
+  }
+}
+
+Pour les Jeux multi-support (exemple sur plusieurs CD), ajouter le numéro de support, exemple : media_support_texture_fr1 ou media_support_2d_eu2
+
+media_flyer {
+  media_flyer_xx : url de téléchargement du média : Image du flyer région xx (xx = variable "nomcourt" de l'API regionsListe.php)
+  ...
+}
+
+Pour les Flyers multi-pages, ajouter le numéro de page, exemple : media_flyer_wor1, media_flyer_wor2, ...
+
+media_manuel {
+  media_manuel_xx : url de téléchargement du média : Manuel format PDF - région xx (xx = variable "nomcourt" de l'API regionsListe.php)
+  ...
+}
+media_bezels {
+  media_bezel4-3 {
+    media_bezel4-3_xx : url de téléchargement du média : Bezel 4:3 du jeu région xx (xx = variable "nomcourt" de l'API regionsListe.php)
+    ...
+  }
+  media_bezel16-9 {
+    media_bezel16-9_xx : url de téléchargement du média : Bezel 16:9 du jeu région xx (xx = variable "nomcourt" de l'API regionsListe.php)
+    ...
+  }
+  media_bezel16-10 {
+    media_bezel16-10_xx : url de téléchargement du média : Bezel 16:10 du jeu région xx (xx = variable "nomcourt" de l'API regionsListe.php)
+    ...
+  }
+}
+
+roms [ Liste des roms connus associées au jeu
+  rom (xml) / romid (json) {
+    id : identifiant numérique de la rom
+    romnumsupport : numero de support (ex : 1 = disquette 01 ou CD 01)
+    romtotalsupport : nombre total de support (ex : 2 = 2 disquettes ou 2 CDs)
+    romfilename : nom du ficher rom ou du dossier
+    romsize : taille en octect du fichier rom ou taille du contenu du dossier
+    romcrc : résultat du calcul CRC32 du fichier rom ou du fichier le plus gros du dossier "rom"
+    rommd5 : résultat du calcul MD5 du fichier rom ou du fichier le plus gros du dossier "rom"
+    romsha1 : résultat du calcul SHA1 du fichier rom ou du fichier le plus gros du dossier "rom"
+    romcloneof : identifiant numérique de la rom parent si la rom est un clone (Systèmes Arcade)
+    beta : Version Beta du jeu (0=non / 1=oui)
+    demo : Version Demo du jeu (0=non / 1=oui)
+    trad : Version Traduite du jeu (0=non / 1=oui)
+    hack : Version Modifiée du jeu (0=non / 1=oui)
+    unl : Jeu non "Officiel" (0=non / 1=oui)
+    alt : Version Alternative du jeu (0=non / 1=oui)
+    best : Meilleur Version du jeu (0=non / 1=oui)
+    retroachievement : Compatible Retro Achievement (0=non / 1=oui)
+    gamelink : Compatible Gamelink (0=non / 1=oui)
+    nbscrap : Nombre de fois total scrapée
+]
+
+rom { Informations sur la rom scrapé (si trouvé dans la base de données)
+  rom (xml) / romid (json) {
+    id : identifiant numérique de la rom
+    romnumsupport : numero de support (ex : 1 = disquette 01 ou CD 01)
+    romtotalsupport : nombre total de support (ex : 2 = 2 disquettes ou 2 CDs)
+    romfilename : nom du ficher rom ou du dossier
+    romserial : numero de série du fabriquant
+    romregions : region(s) de la rom ou du dossier (ex : "fr,us,sp" )
+    romlangues : langue(s) de la rom ou du dossier (ex : "fr,en,es" )
+    romtype : type de rom
+    romsupporttype : type de support
+    romsize : taille en octect du fichier rom ou taille du contenu du dossier
+    romcrc : résultat du calcul CRC32 du fichier rom ou du fichier le plus gros du dossier "rom"
+    rommd5 : résultat du calcul MD5 du fichier rom ou du fichier le plus gros du dossier "rom"
+    romsha1 : résultat du calcul SHA1 du fichier rom ou du fichier le plus gros du dossier "rom"
+    romcloneof : identifiant numérique de la rom parent si la rom est un clone (Systèmes Arcade)
+    beta : Version Beta du jeu (0=non / 1=oui)
+    demo : Version Demo du jeu (0=non / 1=oui)
+    trad : Version Traduite du jeu (0=non / 1=oui)
+    hack : Version Modifiée du jeu (0=non / 1=oui)
+    unl : Jeu non "Officiel" (0=non / 1=oui)
+    alt : Version Alternative du jeu (0=non / 1=oui)
+    best : Meilleur Version du jeu (0=non / 1=oui)
+    retroachievement : Compatible Retro Achievement (0=non / 1=oui)
+    gamelink : Compatible Gamelink (0=non / 1=oui)
+    nbscrap : Nombre de fois total scrapée
+    joueurs : Nombre de joueurs spécifique a la rom (si différente du jeu "d'origine")
+    dates {
+      id texte region (france=date_fr,europe=date_eu,usa=date_us,japon=date_jp,...) : Date de sortie spécifique a la rom (si différente du jeu "d'origine") dans la région indiquées
+    }
+    editeur : Nom de l'editeur spécifique a la rom (si différente du jeu "d'origine")
+    developpeur : Nom du developpeur spécifique a la rom (si différente du jeu "d'origine")
+    synopsis {
+      synopsis_xx : Description spécifique a la rom (si différente du jeu "d'origine") en langue xx (xx = variable "nomcourt" de l'API languesListe.php)
+      ...
+    }
+    clonetypes {
+      clonetypes_id : identifiant numérique du type de clone
+      clonetypes_xx : désignation du type de hack région xx (xx = variable "nomcourt" de l'API regionsListe.php)
+      ...
+    }
+    hacktypes {
+      hacktypes_id : identifiant numérique du type de hack
+      hacktypes_xx : désignation du type de hack région xx (xx = variable "nomcourt" de l'API regionsListe.php)
+      ...
+    }
+  }
+}
+
+Exemple d'appel
+https://api.screenscraper.fr/api2/jeuInfos.php?devid=xxx&devpassword=yyy&softname=zzz&output=xml&ssid=test&sspassword=test&crc=50ABC90A&systemeid=1&romtype=rom&romnom=Sonic%20The%20Hedgehog%202%20(World).zip&romtaille=749652
+mediaJeu.php : Téléchargement des médias images des jeux
+Paramètres d'entrées :
+devid : votre identifiant développeur
+devpassword : votre mot de passe développeur
+softname : nom du logiciel appelant
+ssid(non obligatoire) : identifiant ScreenScraper de l'utilisateur
+sspassword(non obligatoire) : Mot de passe ScreenScraper de l'utilisateu
+crc : calcul crc de l'image existante en local
+md5 : calcul md5 de l'image existante en local
+sha1 : calcul sha1 de l'image existante en local
+systemeid : identifiant numérique du système (voir systemesListe.php)
+jeuid : identifiant numérique du jeux (voir jeuInfos.php)
+media : identifiant texte du média à retourner (voir jeuInfos.php)
+mediaformat(non obligatoire) : format (extension) du media : ex : jpg, png, mp4, zip, mp3, ... ( donnée informative : ne retourne pas le média au format spécifié)
+Paramètres de sortie :
+maxwidth(non obligatoire) : Largeur Maximum en pixels de l'image retournée
+maxheight(non obligatoire) : Hauteur Maximum en pixels de l'image retournée
+outputformat(non obligatoire) : Format (extrension) de l'image retournée : png ou jpg
+Element Retourné : Image PNG
+ou
+Texte CRCOK ou MD5OK ou SHA1OK si le paramètres crc, md5 ou sha1 est identique au calcul crc, md5 ou sha1 de l'image du serveur (optimisation des mises à jour)
+ou
+Texte NOMEDIA si le fichier média n'a pas été trouvé
+Exemple d'appel
+https://api.screenscraper.fr/api2/mediaJeu.php?devid=xxx&devpassword=yyy&softname=zzz&ssid=test&sspassword=test&crc=&md5=&sha1=&systemeid=1&jeuid=3&media=wheel-hd(wor)
+mediaVideoJeu.php : Téléchargement des médias vidéos des jeux
+Paramètres :
+devid : votre identifiant développeur
+devpassword : votre mot de passe développeur
+softname : nom du logiciel appelant
+ssid : identifiant ScreenScraper de l'utilisateur (optionel)
+sspassword : Mot de passe ScreenScraper de l'utilisateur (optionel)
+crc : calcul crc de la video existante en local
+md5 : calcul md5 de la video existante en local
+sha1 : calcul sha1 de la video existante en local
+systemeid : identifiant numérique du système (voir systemesListe.php)
+jeuid : identifiant numérique du système (voir jeuInfos.php)
+media : identifiant texte du média à retourner (voir jeuInfos.php)
+mediaformat : format (extension) du media : ex : jpg, png, mp4, zip, mp3, ... (non obligatoire, donnée informative : ne retourne pas le média au format spécifié)
+Element Retourné : Video MP4
+ou
+Texte CRCOK ou MD5OK ou SHA1OK si le paramètres crc, md5 ou sha1 est identique au calcul crc, md5 ou sha1 de la vidéo du serveur (optimisation des mises à jour)
+ou
+Texte NOMEDIA si le fichier média n'a pas été trouvé
+Exemple d'appel
+https://api.screenscraper.fr/api2/mediaVideoJeu.php?devid=xxx&devpassword=yyy&softname=zzz&ssid=test&sspassword=test&crc=&md5=&sha1=&systemeid=1&jeuid=3&media=video
+mediaManuelJeu.php : Téléchargement des manuels des jeux
+Paramètres :
+devid : votre identifiant développeur
+devpassword : votre mot de passe développeur
+softname : nom du logiciel appelant
+ssid : identifiant ScreenScraper de l'utilisateur (optionel)
+sspassword : Mot de passe ScreenScraper de l'utilisateur (optionel)
+crc : calcul crc du fichier manuel existant en local
+md5 : calcul md5 du fichier manuel existant en local
+sha1 : calcul sha1 du fichier manuel existant en local
+systemeid : identifiant numérique du système (voir systemesListe.php)
+jeuid : identifiant numérique du système (voir jeuInfos.php)
+media : identifiant texte du média à retourner (voir jeuInfos.php)
+mediaformat : format (extension) du media : ex : jpg, png, mp4, zip, mp3, pdf, ... (non obligatoire, donnée informative : ne retourne pas le média au format spécifié)
+Element Retourné : Manuel PDF
+ou
+Texte CRCOK ou MD5OK ou SHA1OK si le paramètres crc, md5 ou sha1 est identique au calcul crc, md5 ou sha1 de la vidéo du serveur (optimisation des mises à jour)
+ou
+Texte NOMEDIA si le fichier média n'a pas été trouvé
+Exemple d'appel
+https://api.screenscraper.fr/api2/mediaManuelJeu.php?devid=xxx&devpassword=yyy&softname=zzz&ssid=test&sspassword=test&crc=&md5=&sha1=&systemeid=1&jeuid=3&media=manuel(eu)
+
+botNote.php : Système pour l'automatisation d'envoi de note de jeu d'un membre ScreenScraper
+La requête doit être envoyée sous forme d'une requête html avec la methode "GET".
+
+Paramètres :
+ssid : (type "text") identifiant ScreenScraper de l'utilisateur
+sspassword : (type "text") Mot de passe ScreenScraper de l'utilisateur
+gameid : (type "text") identifiant numérique du jeu sur ScreenScraper
+note : (type "nombre entier de 1 a 20") Note sur 20 du jeu
+
+Element Retourné :
+Renvoi une information textuelle sur le bon ou mauvais fonctionnement de la procédure
+Exemple d'appel
+https://api.screenscraper.fr/api2/botNote.php?devid=xxx&devpassword=yyy&softname=zzz&ssid=test&sspassword=test&gameid=3&note=18
+
+botProposition.php : Système pour automatisation d'envoi de propositions d'infos ou de médias a ScreenScraper
+La requête doit être envoyée sous forme d'un formulaire html de type "multipart/form-data" avec la methode "POST".
+
+Paramètres d'entrées :
+ssid : (type "text") identifiant ScreenScraper de l'utilisateur
+sspassword : (type "text") Mot de passe ScreenScraper de l'utilisateur
+gameid : (type "text") identifiant numérique du jeu sur ScreenScraper
+ou
+romid : (type "text") identifiant numérique de la rom sur ScreenScraper
+
+Pour proposer une info textuelle :
+modiftypeinfo : (type "text") type d'info envoyé (voir liste "modiftypeinfo")
+modifregion : (type "text") nom court de la region de l'information (optionel: voir liste "modiftypeinfo" / liste des régions "regionsListe.php")
+modiflangue : (type "text") nom court de la langue de l'information (optionel: voir liste "modiftypeinfo" / liste des régions "languesListe.php")
+modifversion : (type "text") version de l'information (optionel: voir liste "modiftypeinfo")
+modiftexte : (type "text") Information proprement dite
+modifsource : (type "text") (optionel) Source (url de la page internet, scan du support original, auteur, ...) de l'information
+
+Exemple de formulaire html :
+<html>
+  <head>
+  <META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <META http-equiv="content-language" content="fr">
+  <title></title>
+  </head>
+  <body>
+    <form name="myform" id="myform" method="post" enctype="multipart/form-data" action="https://api.screenscraper.fr/api2/botProposition.php?ssid=xxx&sspassword=yyy">
+      <input type="text" name="gameid" value="3">
+      <input type="text" name="modiftypeinfo" value="description">
+      <input type="text" name="modifregion" value="">
+      <input type="text" name="modiflangue" value="fr">
+      <input type="text" name="modifversion" value="">
+      <input type="text" name="modiftexte" value="ici, le synopsis du jeu ! ne pas valider, c'est un test ;)">
+      <input type="text" name="modifsource" value="botProposition / source de l'info">
+      <input type="submit" value="envoyer">
+    </form>
+
+  <script>
+    document.getElementById("myform").submit();
+    </script>
+
+  </body>
+</html>
+
+
+Pour proposer un média :
+modiftypemedia : (type "text") type de média envoyé (voir liste "modiftypemedia")
+modifmediafile : (type "file") Fichier (Format du fichier : voir liste "modiftypemedia")
+modifmediafileurl : (type "text") url du média a télécharger (Format du fichier : voir liste "modiftypemedia")
+modiftyperegion : (type "text") nom court de la region de l'information (optionel: voir liste "modiftypemedia" / liste des régions "regionsListe.php")
+modiftypenumsupport : (type "text") numero de support (optionel: voir liste "modiftypemedia" / numéro de 0 a 10)
+modiftypeversion : (type "text") version de l'information (optionel: voir liste "modiftypemedia")
+modifmediasource : (type "text") (optionel) Source (url de la page internet, scan du support original, auteur, ...) de l'information
+
+Elements Retournés :
+Renvoi une information textuelle sur le bon ou mauvais fonctionnement de la procédure
+Liste des types d'infos textuelles pour les jeux (modiftypeinfo)
+Type	Designation	Région	Langue	Choix Multiple	Format
+name	Nom du jeux (par Région)	obligatoire			Texte
+editeur	Editeur				Texte
+developpeur	Developpeur				Texte
+players	Nombre de Joueur(s)				Nom du groupe (voir groupes)
+score	Note				Note sur 20 de 0 a 20
+rating	Classification			oui	Nom du groupe (voir groupes)
+genres	Genre(s)			oui	Nom français du groupe (voir groupes)
+datessortie	Date(s) de sortie	obligatoire			Format : aaaa-mm-jj ("xxxx-01-01" si année seulement)
+rotation	Rotation				0 a 360
+resolution	Resolution				Texte : Largeur x hauteur en pixels ( ex : 320x240)
+modes	Mode(s) de Jeux			oui	Texte
+familles	Famille(s)			oui	Nom de la famille (ex: "Sonic" pour "Sonic 3D pinball")
+numero	Numero			oui	Nom de la serie + Numero dans la série (ex : "sonic the Hedgehog 2")
+styles	Style(s)			oui	Texte : Style graphique
+themes	Theme(s)				Texte : Thème du jeu (ex : "Vampire")
+description	Synopsis		obligatoire		Texte
+p2kcfg	Config p2k				fichier de config "p2k" Pad to Keyboard Recalbox
+trucsetastuces	Trucs & Astuces		obligatoire	oui	Texte
+controls	Infos Controles				Texte Formaté
+colors	Couleurs Control Panel				Texte Formaté
+Liste des types d'infos textuelles pour les roms (modiftypeinfo)
+Type	Designation	Région	Langue	Choix Multiple	Format
+developpeur	Developpeur				Texte
+editeur	Editeur				Texte
+datessortie	Date(s) de sortie	obligatoire			Format : aaaa-mm-jj ("xxxx-01-01" si année seulement)
+players	Nombre de Joueur(s)				Nom du groupe (voir groupes)
+regions	Région(s)			oui	Nom français du groupe (voir groupes)
+langues	Langue(s)			oui	Nom français du groupe (voir groupes)
+clonetype	Type(s) de Clone			oui	Texte
+hacktype	Type(s) de Hack			oui	Texte
+friendly	Ami avec...			oui	Texte
+serial	Numero de série constructeur			oui	Texte
+description	Synopsis		obligatoire		Texte
+Liste des types de média (regionsListe)
+Type	Designation	Format	Région	Num Support	Multi-Version
+sstitle	Screenshot Titre	jpg	obligatoire
+ss	Screenshot	jpg	obligatoire
+fanart	Fan Art	jpg
+video	Vidéo	mp4
+overlay	Overlay	png	obligatoire
+steamgrid	Steam Grid	jpg
+wheel	Wheel	png	obligatoire
+wheel-hd	Logos HD	png	obligatoire
+marquee	Marquee	png
+screenmarquee	ScreenMarquee	png	obligatoire
+box-2D	Boitier : Avant	png	obligatoire	obligatoire
+box-2D-side	Boitier : Tranche	png	obligatoire	obligatoire
+box-2D-back	Boitier : Arrière	png	obligatoire	obligatoire
+box-texture	Boitier : Texture	png	obligatoire	obligatoire
+manuel	Manuel	pdf	obligatoire
+flyer	Flyer	jpg	obligatoire	obligatoire
+maps	Maps	jpg			oui
+figurine	Figurine	png
+support-texture	Support : Texture	png	obligatoire	obligatoire
+box-scan	Boitier : Source(s)	png	obligatoire	obligatoire	oui
+support-scan	Support : Source(s)	png	obligatoire	obligatoire	oui
+bezel-4-3	Bezel 4:3 Horizontal	png	obligatoire
+bezel-4-3-v	Bezel 4:3 Vertical	png	obligatoire
+bezel-4-3-cocktail	Bezel 4:3 Cocktail	png	obligatoire
+bezel-16-9	Bezel 16:9 Horizontal	png	obligatoire
+bezel-16-9-v	Bezel 16:9 Vertical	png	obligatoire
+bezel-16-9-cocktail	Bezel 16:9 Cocktail	png	obligatoire
+wheel-tarcisios	Wheel Tarcisio's	png
+videotable	Vidéo Table (FullHD)	mp4
+videotable4k	Vidéo Table (4k)	mp4
+videofronton16-9	Vidéo Fronton (3 Ecrans)	mp4
+videofronton4-3	Vidéo Fronton (2 Ecrans)	mp4
+videodmd	Vidéo DMD	mp4
+videotopper	Vidéo Topper	mp4
+sstable	Screenshot Table	jpg
+ssfronton1-1	Screenshot Fronton 1:1	jpg
+ssfronton4-3	Screenshot Fronton 4:3	jpg
+ssfronton16-9	Screenshot Fronton 16:9	jpg
+ssdmd	Screenshot DMD	jpg
+sstopper	Screenshot Topper	jpg
+themehs	Thème Hyperspin	zip
+themehb	Thème HyperBat	zip
+  Licence Creative Commons	licensed under the terms of Creative Commons
+Attribution-NonCommercial-ShareAlike 4.0 International
+
+General credits : Hereafter, sources 'Creative Commons' of information and media providers.
+Infos : Community ScreenScraper. Wikipedia . Gamefaqs . jeuxvideo . gametronik . gametdb . mobygames . Boxes Texture : Community ScreenScraper . Community The Cover Project . Community gbatemp . Community Hyperspin . Southtown-Homebrew . 2D / 3D Boxes : Community ScreenScraper . Community Hyperspin . Community Emumovies . gametdb . flyers.arcade-museum.com . videos : Community ScreenScraper . Community Emumovies Screenshots / Marquees : ScreenScraper . Progetto Snaps . musee des jeux video .

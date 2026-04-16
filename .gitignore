@@ -25,5 +25,6 @@ dist-ssr
 .nessy
 .claude
 public/launchbox
+public/screenscraper
+scraperAPI
 .cache
-.scrapercreds
