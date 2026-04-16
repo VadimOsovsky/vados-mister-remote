@@ -25,6 +25,7 @@ jobs:
           node-version: 22
           cache: npm
 
+      - run: npm install -g npm@10.9.2
       - run: npm ci --legacy-peer-deps
 
       - run: npm run build
