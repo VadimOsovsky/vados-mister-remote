@@ -1,0 +1,71 @@
+/* ── THEME: NES NTSC ──
+   Dark charcoal grey + Nintendo red accents.
+   Based on NES Classic Mini UI. */
+.theme-nes-ntsc {
+  --bg-primary: #0a1030;
+  --bg-secondary: #101840;
+  --bg-card: #787888;
+  --bg-card-inner: #6a6a78;
+  --bg-input: #2a2a30;
+  --bg-pill: #2a2a30;
+  --bg-pill-active: #cc0000;
+  --bg-tab-bar: #111115;
+  --bg-overlay: rgba(10, 10, 14, 0.85);
+
+  --text-primary: #e0e0e0;
+  --text-secondary: #909090;
+  --text-tertiary: #606060;
+  --text-on-accent: #ffffff;
+  --text-on-card: #1a1a1a;
+
+  --accent: #cc0000;
+  --accent-hover: #dd1111;
+  --accent-badge: #787888;
+  --text-badge: #e0e0e0;
+
+  --border-main: #3a3a40;
+  --border-card: 3px solid #4a4a4a;
+  --border-input: 3px solid #3a3a40;
+
+  --pattern-opacity: 0.03;
+  --branding-color: #cc0000;
+  --tab-bar-text: #505055;
+  --tab-bar-active: #dd1111;
+  --tab-bar-border: #2a2a30;
+}
+
+/* ── THEME: Famicom ──
+   Famicom Classic Mini: cream background,
+   red frame accents, white cards, dark maroon bar. */
+.theme-famicom {
+  --bg-primary: #f0e8d8;
+  --bg-secondary: #e8dcc8;
+  --bg-card: #ffffff;
+  --bg-card-inner: #ffffff;
+  --bg-input: #e8dcc8;
+  --bg-pill: #e0d0b8;
+  --bg-pill-active: #cc0000;
+  --bg-tab-bar: #5c1010;
+  --bg-overlay: rgba(10, 10, 14, 0.85);
+
+  --text-primary: #3a2015;
+  --text-secondary: #7a5a40;
+  --text-tertiary: #a08868;
+  --text-on-accent: #ffffff;
+  --text-on-card: #3a2015;
+
+  --accent: #cc0000;
+  --accent-hover: #dd1111;
+  --accent-badge: #f8f8f8;
+  --text-badge: #3a2015;
+
+  --border-main: #c0a888;
+  --border-card: 3px solid #e9d8bc;
+  --border-input: 3px solid #c0a888;
+
+  --pattern-opacity: 0.02;
+  --branding-color: #5c1010;
+  --tab-bar-text: rgba(255, 200, 160, 0.4);
+  --tab-bar-active: #f0d0a0;
+  --tab-bar-border: #4a0c0c;
+}

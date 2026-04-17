@@ -1,0 +1,26 @@
+/* ── CONSOLE BRANDING BAR ── */
+.branding-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 14px;
+  margin: 4px 14px 14px;
+}
+
+.branding-text {
+  font-family: 'Sora', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--branding-color);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  white-space: nowrap;
+}
+
+.branding-line {
+  flex: 1;
+  height: 2px;
+  background: var(--border-main);
+  opacity: 0.3;
+}

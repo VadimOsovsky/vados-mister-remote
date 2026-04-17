@@ -1,0 +1,61 @@
+/* ── Library tab ── */
+.library-covers {
+  display: flex;
+  gap: 12px;
+}
+
+.library-cover {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.library-cover-clickable {
+  cursor: pointer;
+}
+
+.library-cover-clickable .library-cover-frame {
+  transition: border-color 0.15s;
+}
+
+.library-cover-clickable:active .library-cover-frame {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.library-cover-label {
+  font-family: 'Sora', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.library-cover-frame {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.library-cover-frame img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.library-cover-empty {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.25);
+}
+
+.library-manual-btn {
+  margin-top: 2px;
+}

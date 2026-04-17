@@ -1,0 +1,191 @@
+/* ── BOTTOM SHEET OVERLAY ── */
+.sheet-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: var(--bg-overlay);
+}
+
+/* ── BOTTOM SHEET (vaul drawer content) ── */
+.sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 201;
+  max-height: 85vh;
+  border-radius: 16px 16px 0 0;
+  overflow: hidden;
+}
+
+/* Blurred background image */
+.sheet-bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.sheet-bg-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(40px) saturate(1.2);
+  transform: scale(1.3);
+}
+
+.sheet-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+/* Sheet content */
+.sheet-content {
+  position: relative;
+  z-index: 1;
+  padding: 0 16px 16px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  overflow-y: auto;
+  max-height: 85vh;
+}
+
+/* Drag handle */
+.sheet-handle {
+  display: flex;
+  justify-content: center;
+  padding: 2px 0;
+  margin-top: 6px;
+  margin-bottom: 6px;
+  position: relative;
+  z-index: 1;
+  opacity: .4 !important;
+}
+
+/* Title bar */
+.sheet-title-bar {
+  margin-bottom: 12px;
+}
+
+.sheet-title {
+  font-family: 'Sora', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.2;
+}
+
+.sheet-subtitle {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 2px;
+}
+
+/* ── Sheet Tabs (Radix) ── */
+.sheet-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 16px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+}
+
+.sheet-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.45);
+  font-family: 'Sora', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sheet-tab + .sheet-tab {
+  border-left: 2px solid rgba(255, 255, 255, 0.08);
+}
+
+.sheet-tab svg {
+  width: 14px;
+  height: 14px;
+}
+
+.sheet-tab[data-state="active"] {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+}
+
+/* ── Sheet Panel (tab content) ── */
+.sheet-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ── Shared button styles ── */
+.sheet-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 3px solid rgba(255, 255, 255, 0.12);
+  font-family: 'Sora', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sheet-btn:active {
+  transform: scale(0.96);
+}
+
+.sheet-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.sheet-btn-primary {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.sheet-btn-primary:disabled {
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.3);
+  cursor: default;
+}
+
+.sheet-btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Screen reader only */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

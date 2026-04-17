@@ -1,0 +1,67 @@
+/* ── Info tab ── */
+.sheet-main-layout {
+  display: flex;
+  align-items: start;
+  gap: 14px;
+}
+
+.sheet-art {
+  flex-shrink: 0;
+  width: 180px;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sheet-art img {
+  display: block;
+  width: 96%;
+  height: 96%;
+  object-fit: contain;
+}
+
+.sheet-main-details {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sheet-main-row {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.sheet-main-label {
+  font-family: 'Sora', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.35);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.sheet-main-value {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.3;
+}
+
+.sheet-desc {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.6;
+}
+
+.ctrl-launch-btn {
+  width: 100%;
+}
