@@ -5,7 +5,7 @@ import 'yet-another-react-lightbox/styles.css';
 import './App.css';
 import {KEYBOARD_KEYS, WizzoApi, type WizzoGameSearchResult} from './services/wizzoApi';
 import {PLATFORMS} from './constants';
-import type {ConsoleKey, SSGame} from './types';
+import type {ConsoleKey, SaveSlot, SSGame} from './types';
 import {
     buildGallerySlides,
     initApi,
@@ -187,6 +187,31 @@ function setRomMapping(ssGameId: number, consoleKey: ConsoleKey, romPath: string
     } catch { /* localStorage full or unavailable */ }
 }
 
+// ── Save state slots (localStorage) ──
+const SAVE_SLOTS_PREFIX = 'save_slots';
+const EMPTY_SLOTS: (SaveSlot | null)[] = [null, null, null, null];
+
+function getSaveSlots(gameId: number, consoleKey: ConsoleKey): (SaveSlot | null)[] {
+    try {
+        const raw = localStorage.getItem(`${SAVE_SLOTS_PREFIX}_${gameId}_${consoleKey}`);
+        if (!raw) return [...EMPTY_SLOTS];
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return [...EMPTY_SLOTS];
+        return [parsed[0] ?? null, parsed[1] ?? null, parsed[2] ?? null, parsed[3] ?? null];
+    } catch {
+        return [...EMPTY_SLOTS];
+    }
+}
+
+function putSaveSlot(gameId: number, consoleKey: ConsoleKey, slotIndex: number, slot: SaveSlot | null): (SaveSlot | null)[] {
+    const slots = getSaveSlots(gameId, consoleKey);
+    slots[slotIndex] = slot;
+    try {
+        localStorage.setItem(`${SAVE_SLOTS_PREFIX}_${gameId}_${consoleKey}`, JSON.stringify(slots));
+    } catch { /* localStorage full */ }
+    return slots;
+}
+
 // ── LazyImage component ──
 function LazyImage({src, alt, className, style}: {
     src?: string;
@@ -234,6 +259,11 @@ export default function MisterRemote() {
     const [romSearchResults, setRomSearchResults] = useState<WizzoGameSearchResult[]>([]);
     const [romSearchLoading, setRomSearchLoading] = useState(false);
     const [romSearchError, setRomSearchError] = useState<string | null>(null);
+
+    // ── Save state slots ──
+    const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
+    const [saveSlots, setSaveSlots] = useState<(SaveSlot | null)[]>(EMPTY_SLOTS);
+    const [savingSlot, setSavingSlot] = useState(false);
 
     // ── Settings state ──
     const [settingsLogin, setSettingsLogin] = useState(() => readAuth().login);
@@ -290,6 +320,53 @@ export default function MisterRemote() {
         };
     }, [api]);
 
+    // ── Load save slots when controls tab is shown ──
+    useEffect(() => {
+        if (sheetTab === 'controls' && selectedGame) {
+            setSaveSlots(getSaveSlots(selectedGame.id, activeConsole));
+            setSelectedSlot(null);
+        }
+    }, [sheetTab, selectedGame, activeConsole]);
+
+    const handleSave = useCallback(async () => {
+        if (selectedSlot === null || !selectedGame || savingSlot) return;
+        setSavingSlot(true);
+        try {
+            await api.sendKey(KEYBOARD_KEYS.saveState);
+            await new Promise(r => setTimeout(r, 500));
+            await api.takeScreenshot();
+            await new Promise(r => setTimeout(r, 1000));
+            const screenshots = await api.listScreenshots();
+            if (screenshots.length > 0) {
+                const latest = screenshots.sort(
+                    (a, b) => new Date(b.modified).getTime() - new Date(a.modified).getTime()
+                )[0];
+                const slot: SaveSlot = {
+                    slotIndex: selectedSlot,
+                    screenshotCore: latest.core,
+                    screenshotFilename: latest.filename,
+                    savedAt: new Date().toISOString(),
+                    gameName: selectedGame.name,
+                };
+                const updated = putSaveSlot(selectedGame.id, activeConsole, selectedSlot, slot);
+                setSaveSlots(updated);
+            }
+        } catch (err) {
+            console.warn('Save state failed:', err);
+        } finally {
+            setSavingSlot(false);
+        }
+    }, [selectedSlot, selectedGame, savingSlot, api, activeConsole]);
+
+    const handleLoad = useCallback(async () => {
+        if (selectedSlot === null || !saveSlots[selectedSlot]) return;
+        try {
+            await api.sendKey(KEYBOARD_KEYS.loadState);
+        } catch (err) {
+            console.warn('Load state failed:', err);
+        }
+    }, [selectedSlot, saveSlots, api]);
+
     // Filter games by search (local)
     const filteredGames = search
         ? searchLocal(games, search)
@@ -303,6 +380,7 @@ export default function MisterRemote() {
     const openSheet = useCallback((game: SSGame) => {
         setSelectedGame(game);
         setSheetTab('main');
+        setSelectedSlot(null);
     }, []);
 
     const closeSheet = useCallback(() => {
@@ -790,10 +868,44 @@ export default function MisterRemote() {
                                                 {Icons.osd}
                                                 <span>OSD Menu</span>
                                             </button>
-                                            {/*<button className="ctrl-btn" onClick={() => api.takeScreenshot()}>*/}
-                                            {/*    {Icons.screenshot}*/}
-                                            {/*    <span>Screenshot</span>*/}
-                                            {/*</button>*/}
+                                            <button
+                                                className={`ctrl-btn${selectedSlot === null || savingSlot ? ' ctrl-btn-disabled' : ''}`}
+                                                onClick={handleSave}
+                                                disabled={selectedSlot === null || savingSlot}
+                                            >
+                                                {Icons.save}
+                                                <span>{savingSlot ? 'Saving...' : 'Save'}</span>
+                                            </button>
+                                            <button
+                                                className={`ctrl-btn${selectedSlot === null || !saveSlots[selectedSlot ?? 0] ? ' ctrl-btn-disabled' : ''}`}
+                                                onClick={handleLoad}
+                                                disabled={selectedSlot === null || !saveSlots[selectedSlot ?? 0]}
+                                            >
+                                                {Icons.load}
+                                                <span>Load</span>
+                                            </button>
+                                        </div>
+
+                                        {/* Save state slots — 2x2 grid */}
+                                        <div className="slot-grid">
+                                            {saveSlots.map((slot, i) => (
+                                                <button
+                                                    key={i}
+                                                    className={`slot-tile${selectedSlot === i ? ' slot-tile-selected' : ''}${slot ? '' : ' slot-tile-empty'}`}
+                                                    onClick={() => setSelectedSlot(selectedSlot === i ? null : i)}
+                                                >
+                                                    {slot ? (
+                                                        <img
+                                                            src={api.getScreenshotUrl(slot.screenshotCore, slot.screenshotFilename)}
+                                                            alt={`Slot ${i + 1}`}
+                                                            className="slot-screenshot"
+                                                        />
+                                                    ) : (
+                                                        <div className="slot-empty-label">Empty</div>
+                                                    )}
+                                                    <div className="slot-label">Slot {i + 1}</div>
+                                                </button>
+                                            ))}
                                         </div>
                                     </div>
                                 )}
