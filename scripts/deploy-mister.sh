@@ -12,13 +12,29 @@ if [ -z "$MISTER_IP" ]; then
   exit 1
 fi
 
+# Check SSH connectivity
+echo "==> Checking connection to MiSTer ($MISTER_IP)..."
+if ! ssh -o ConnectTimeout=5 "$MISTER_USER@$MISTER_IP" "true" 2>/dev/null; then
+  echo "Error: Cannot connect to $MISTER_USER@$MISTER_IP via SSH"
+  echo "Make sure MiSTer is on and SSH is accessible (default password: 1)"
+  exit 1
+fi
+
+# Check busybox httpd is available
+if ! ssh "$MISTER_USER@$MISTER_IP" "busybox httpd --help" >/dev/null 2>&1; then
+  echo "Error: busybox httpd not available on MiSTer"
+  exit 1
+fi
+
 echo "==> Building..."
 yarn build
 
-echo "==> Uploading to MiSTer ($MISTER_IP)..."
+echo "==> Uploading to MiSTer..."
 ssh "$MISTER_USER@$MISTER_IP" "mkdir -p $REMOTE_DIR"
 # Upload everything except assets/ (those are on CDN)
-rsync -av --delete --exclude='assets/' dist/ "$MISTER_USER@$MISTER_IP:$REMOTE_DIR/"
+scp -r dist/index.html dist/manifest.webmanifest dist/registerSW.js dist/sw.js \
+       dist/favicon.svg dist/icons.svg dist/pwa-192x192.png dist/pwa-512x512.png \
+       "$MISTER_USER@$MISTER_IP:$REMOTE_DIR/"
 
 echo "==> Setting up HTTP server..."
 ssh "$MISTER_USER@$MISTER_IP" bash <<'REMOTE_EOF'
@@ -46,4 +62,4 @@ echo ""
 echo "Ready! Open on your phone:"
 echo "  http://$MISTER_IP:$HTTP_PORT"
 echo ""
-echo "Then: Share → Add to Home Screen"
+echo "Then: Share -> Add to Home Screen"
