@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router';
 
 import { PLATFORMS } from './constants';
@@ -37,6 +37,12 @@ export default function MisterRemote() {
     const platform = PLATFORMS[activeConsole];
 
     const sheet = useGameSheet();
+
+    // Sync theme class onto <body> so portals (vaul Drawer, etc.) inherit CSS variables
+    useEffect(() => {
+        document.body.classList.add(platform.theme);
+        return () => { document.body.classList.remove(platform.theme); };
+    }, [platform.theme]);
 
     const switchConsole = useCallback((key: ConsoleKey) => {
         setActiveConsole(key);

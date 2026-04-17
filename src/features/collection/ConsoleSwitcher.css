@@ -2,7 +2,8 @@
 .console-switcher {
   display: flex;
   gap: 8px;
-  margin-bottom: 12px;
+  margin: 0 -14px 12px -14px;
+  padding: 0 14px;
   overflow-x: auto;
   scrollbar-width: none;
 }

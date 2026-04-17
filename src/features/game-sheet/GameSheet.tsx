@@ -43,7 +43,7 @@ export function GameSheet({ selectedGame, sheetTab, setSheetTab, galleryOpen, se
         <>
             <Drawer.Root
                 open={!!selectedGame}
-                onOpenChange={(open) => { if (!open) onClose(); }}
+                onOpenChange={(open) => { if (!open && !galleryOpen) onClose(); }}
             >
                 <Drawer.Portal>
                     <Drawer.Overlay className="sheet-overlay" />

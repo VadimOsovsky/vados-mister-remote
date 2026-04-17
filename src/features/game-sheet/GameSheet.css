@@ -177,6 +177,19 @@
   color: rgba(255, 255, 255, 0.85);
 }
 
+/* ── Lightbox safe area overrides (iPhone notch / Dynamic Island) ── */
+.yarl__toolbar {
+  padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) 8px 8px;
+}
+
+.yarl__navigation_prev {
+  padding-left: max(16px, env(safe-area-inset-left));
+}
+
+.yarl__navigation_next {
+  padding-right: max(16px, env(safe-area-inset-right));
+}
+
 /* Screen reader only */
 .sr-only {
   position: absolute;
