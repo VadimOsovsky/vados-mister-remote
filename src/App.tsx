@@ -249,7 +249,7 @@ export default function MisterRemote() {
     const [sheetTab, setSheetTab] = useState<SheetTab>('main');
     const [connected, setConnected] = useState(false);
     console.log('VO: connected', connected)
-    const [misterHost, setMisterHost] = useState(() => localStorage.getItem(HOST_KEY) || import.meta.env.VITE_WIZZO_ADDRESS || '');
+    const [misterHost, setMisterHost] = useState(() => localStorage.getItem(HOST_KEY) || import.meta.env.VITE_WIZZO_ADDRESS || window.location.hostname);
     const [galleryOpen, setGalleryOpen] = useState(false);
     const [galleryIndex, setGalleryIndex] = useState(0);
     const [games, setGames] = useState<SSGame[]>([]);

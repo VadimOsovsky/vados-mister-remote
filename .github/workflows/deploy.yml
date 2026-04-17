@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Build & Deploy
 
 on:
   push:
@@ -6,16 +6,14 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
-  group: pages
+  group: deploy
   cancel-in-progress: true
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,16 +27,32 @@ jobs:
 
       - run: yarn build
 
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
+      # Split dist into cdn-assets and mister-files
+      - name: Prepare artifacts
+        run: |
+          mkdir -p cdn-assets mister-files
+          cp -r dist/assets cdn-assets/
+          rsync -a --exclude='assets/' dist/ mister-files/
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+      # Deploy CDN assets to gh-pages branch (jsDelivr source)
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./cdn-assets
+          publish_branch: gh-pages
+          force_orphan: true
+
+      # Purge jsDelivr cache for updated assets
+      - name: Purge jsDelivr cache
+        run: |
+          curl -sf "https://purge.jsdelivr.net/gh/VadimOsovsky/vados-mister-remote@gh-pages/assets/index.js" || true
+          curl -sf "https://purge.jsdelivr.net/gh/VadimOsovsky/vados-mister-remote@gh-pages/assets/index.css" || true
+
+      # Upload MiSTer files as downloadable artifact
+      - name: Upload MiSTer files
+        uses: actions/upload-artifact@v4
+        with:
+          name: mister-remote
+          path: mister-files/
+          retention-days: 90
