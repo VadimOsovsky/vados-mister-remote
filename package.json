@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build && tsx scripts/cdn-rewrite.ts",
     "lint": "eslint .",
     "preview": "vite preview",
-    "discover-ss-ids": "tsx scripts/discover-ss-ids.ts"
+    "discover-ss-ids": "tsx scripts/discover-ss-ids.ts",
+    "deploy-mister": "bash scripts/deploy-mister.sh"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",
