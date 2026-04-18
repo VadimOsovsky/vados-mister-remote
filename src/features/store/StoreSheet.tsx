@@ -1,0 +1,208 @@
+import { useState } from 'react';
+import { Drawer } from 'vaul';
+import * as Tabs from '@radix-ui/react-tabs';
+import Lightbox from 'yet-another-react-lightbox';
+import Zoom from 'yet-another-react-lightbox/plugins/zoom';
+import 'yet-another-react-lightbox/styles.css';
+
+import { useAppContext } from '../../AppContext';
+import type { LaunchBoxGame } from '../../types';
+import { InfoIcon, BookIcon, PlusIcon } from '../../lib/icons';
+import { getImageUrl, resolveImages } from '../../services/launchbox';
+import '../../features/game-sheet/GameSheet.css';
+import '../../features/game-sheet/MainTab.css';
+import '../../features/game-sheet/LibraryTab.css';
+
+type StoreSheetTab = 'main' | 'library';
+
+const TABS: { key: StoreSheetTab; label: string; icon: React.ReactNode }[] = [
+    { key: 'main', label: 'Main', icon: InfoIcon },
+    { key: 'library', label: 'Library', icon: BookIcon },
+];
+
+function StoreMainTab({ game, regions, onAdd }: {
+    game: LaunchBoxGame;
+    regions: string[];
+    onAdd: () => void;
+}) {
+    const images = resolveImages(game, regions);
+    const frontSrc = images.front ? getImageUrl(images.front, 400) : undefined;
+
+    return (
+        <div className="sheet-panel">
+            <div className="sheet-main-layout">
+                <div className="sheet-art">
+                    {frontSrc && <img src={frontSrc} alt={game.title} />}
+                </div>
+                <div className="sheet-main-details">
+                    <div className="sheet-main-row">
+                        <span className="sheet-main-label">Developer</span>
+                        <span className="sheet-main-value">{game.developer}</span>
+                    </div>
+                    <div className="sheet-main-row">
+                        <span className="sheet-main-label">Publisher</span>
+                        <span className="sheet-main-value">{game.publisher}</span>
+                    </div>
+                    <div className="sheet-main-row">
+                        <span className="sheet-main-label">Players</span>
+                        <span className="sheet-main-value">{game.maxPlayers}</span>
+                    </div>
+                    <div className="sheet-main-row">
+                        <span className="sheet-main-label">Genre</span>
+                        <span className="sheet-main-value">{game.genre}</span>
+                    </div>
+                </div>
+            </div>
+            <div className="sheet-desc">{game.desc}</div>
+            <button className="sheet-btn sheet-btn-primary ctrl-launch-btn" onClick={onAdd}>
+                {PlusIcon}
+                <span>Add to Collection</span>
+            </button>
+        </div>
+    );
+}
+
+function StoreLibraryTab({ game, regions, onOpenGallery }: {
+    game: LaunchBoxGame;
+    regions: string[];
+    onOpenGallery: (index: number) => void;
+}) {
+    const images = resolveImages(game, regions);
+    const frontSrc = images.front ? getImageUrl(images.front, 400) : undefined;
+    const backSrc = images.back ? getImageUrl(images.back, 400) : undefined;
+
+    return (
+        <div className="sheet-panel">
+            <div className="library-covers">
+                <div
+                    className={`library-cover${frontSrc ? ' library-cover-clickable' : ''}`}
+                    onClick={() => { if (frontSrc) onOpenGallery(0); }}
+                >
+                    <div className="library-cover-label">Front</div>
+                    <div className="library-cover-frame">
+                        {frontSrc
+                            ? <img src={frontSrc} alt="Front cover" />
+                            : <div className="library-cover-empty">No image</div>}
+                    </div>
+                </div>
+                <div
+                    className={`library-cover${backSrc ? ' library-cover-clickable' : ''}`}
+                    onClick={() => { if (backSrc) onOpenGallery(frontSrc ? 1 : 0); }}
+                >
+                    <div className="library-cover-label">Back</div>
+                    <div className="library-cover-frame">
+                        {backSrc
+                            ? <img src={backSrc} alt="Back cover" />
+                            : <div className="library-cover-empty">No image</div>}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function buildGallerySlides(game: LaunchBoxGame, regions: string[]): { src: string }[] {
+    const slides: { src: string }[] = [];
+    const images = resolveImages(game, regions);
+    if (images.front) slides.push({ src: getImageUrl(images.front) });
+    if (images.back) slides.push({ src: getImageUrl(images.back) });
+    return slides;
+}
+
+export function StoreSheet({ selectedGame, onClose }: {
+    selectedGame: LaunchBoxGame | null;
+    onClose: () => void;
+}) {
+    const { platform, addToCollection } = useAppContext();
+    const [tab, setTab] = useState<StoreSheetTab>('main');
+    const [galleryOpen, setGalleryOpen] = useState(false);
+    const [galleryIndex, setGalleryIndex] = useState(0);
+
+    const regions = platform.imageRegions;
+    const images = selectedGame ? resolveImages(selectedGame, regions) : undefined;
+    const frontSrc = images?.front ? getImageUrl(images.front, 200) : undefined;
+
+    function handleAdd() {
+        if (selectedGame) {
+            addToCollection(selectedGame.id);
+            onClose();
+        }
+    }
+
+    function handleOpenChange(open: boolean) {
+        if (!open && !galleryOpen) onClose();
+    }
+
+    return (
+        <>
+            <Drawer.Root
+                open={!!selectedGame}
+                onOpenChange={handleOpenChange}
+            >
+                <Drawer.Portal>
+                    <Drawer.Overlay className="sheet-overlay" />
+                    <Drawer.Content className="sheet" aria-describedby={undefined}>
+                        <div className="sheet-bg">
+                            {frontSrc && <img src={frontSrc} alt="" className="sheet-bg-img" />}
+                        </div>
+
+                        <Drawer.Handle className="sheet-handle" />
+
+                        <Drawer.Title className="sr-only">
+                            {selectedGame?.title ?? 'Game Details'}
+                        </Drawer.Title>
+
+                        {selectedGame && (
+                            <div className="sheet-content">
+                                <div className="sheet-title-bar">
+                                    <div className="sheet-title">{selectedGame.title}</div>
+                                    <div className="sheet-subtitle">
+                                        {selectedGame.year} · {selectedGame.genre}
+                                    </div>
+                                </div>
+
+                                <Tabs.Root value={tab} onValueChange={(v) => setTab(v as StoreSheetTab)}>
+                                    <Tabs.List className="sheet-tabs">
+                                        {TABS.map((t) => (
+                                            <Tabs.Trigger key={t.key} value={t.key} className="sheet-tab">
+                                                {t.icon}
+                                                <span>{t.label}</span>
+                                            </Tabs.Trigger>
+                                        ))}
+                                    </Tabs.List>
+
+                                    <Tabs.Content value="main">
+                                        <StoreMainTab
+                                            game={selectedGame}
+                                            regions={regions}
+                                            onAdd={handleAdd}
+                                        />
+                                    </Tabs.Content>
+
+                                    <Tabs.Content value="library">
+                                        <StoreLibraryTab
+                                            game={selectedGame}
+                                            regions={regions}
+                                            onOpenGallery={(idx) => {
+                                                setGalleryIndex(idx);
+                                                setGalleryOpen(true);
+                                            }}
+                                        />
+                                    </Tabs.Content>
+                                </Tabs.Root>
+                            </div>
+                        )}
+                    </Drawer.Content>
+                </Drawer.Portal>
+            </Drawer.Root>
+
+            <Lightbox
+                open={galleryOpen}
+                close={() => setGalleryOpen(false)}
+                index={galleryIndex}
+                plugins={[Zoom]}
+                slides={selectedGame ? buildGallerySlides(selectedGame, regions) : []}
+            />
+        </>
+    );
+}
