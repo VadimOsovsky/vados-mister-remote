@@ -5,8 +5,6 @@ import './SettingsPage.css';
 export function SettingsPage() {
     const { misterHost, setMisterHost } = useAppContext();
     const {
-        settingsLogin, setSettingsLogin,
-        settingsPassword, setSettingsPassword,
         settingsHost, setSettingsHost,
         settingsSaved, saveSettings,
     } = useSettings(misterHost, setMisterHost);
@@ -28,36 +26,11 @@ export function SettingsPage() {
                     />
                 </label>
             </div>
-            <div className="settings-section">
-                <div className="settings-section-title">ScreenScraper API</div>
-                <label className="settings-field">
-                    <span className="settings-label">Developer ID</span>
-                    <input
-                        className="settings-input"
-                        type="text"
-                        placeholder="Developer ID"
-                        value={settingsLogin}
-                        onChange={(e) => setSettingsLogin(e.target.value)}
-                        autoComplete="off"
-                    />
-                </label>
-                <label className="settings-field">
-                    <span className="settings-label">Developer Password</span>
-                    <input
-                        className="settings-input"
-                        type="password"
-                        placeholder="Developer Password"
-                        value={settingsPassword}
-                        onChange={(e) => setSettingsPassword(e.target.value)}
-                        autoComplete="off"
-                    />
-                </label>
-            </div>
             <button className="settings-save" onClick={saveSettings}>
                 {settingsSaved ? 'Saved!' : 'Save'}
             </button>
             <div className="settings-hint">
-                Credentials are stored locally on this device only.
+                Settings are stored locally on this device only.
             </div>
         </div>
     );

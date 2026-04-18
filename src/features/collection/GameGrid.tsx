@@ -1,26 +1,26 @@
-import type { SSGame } from '../../types';
+import type { LaunchBoxGame } from '../../types';
 import { LazyImage } from '../../kit/LazyImage';
-import { resolveFrontThumb } from '../../services/screenscraper';
+import { getImageUrl, resolveImages } from '../../services/launchbox';
 import './GameGrid.css';
 
 export function GameGrid({ games, regions, onSelect }: {
-    games: SSGame[];
+    games: LaunchBoxGame[];
     regions: string[];
-    onSelect: (game: SSGame) => void;
+    onSelect: (game: LaunchBoxGame) => void;
 }) {
     return (
         <div className="game-grid">
             {games.map((game) => {
-                const front = resolveFrontThumb(game, regions);
-                const rotStyle = front?.rotation ? { transform: `rotate(${front.rotation}deg)` } : undefined;
+                const images = resolveImages(game, regions);
+                const frontSrc = images.front ? getImageUrl(images.front) : undefined;
                 return (
                     <div key={game.id} className="game-card" onClick={() => onSelect(game)}>
                         <div className="card-art-wrap">
-                            <LazyImage src={front?.src} alt={game.name} className="card-art" style={rotStyle} />
+                            <LazyImage src={frontSrc} alt={game.title} className="card-art" />
                         </div>
                         <div className="card-badge">
-                            <div className="card-title">{game.name}</div>
-                            <div className="card-year">{String(game.releaseDate ?? '').substring(0, 4)}</div>
+                            <div className="card-title">{game.title}</div>
+                            <div className="card-year">{game.year}</div>
                         </div>
                     </div>
                 );

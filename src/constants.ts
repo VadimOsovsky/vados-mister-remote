@@ -1,13 +1,6 @@
 import type { ConsoleKey, PlatformDef, SortMode } from './types';
 
 // ── PLATFORMS ──
-// ssSystemId values from ScreenScraper API (systemesListe.php)
-// mediaRegions use SS short codes from regionsListe.php
-// collection contains ScreenScraper game IDs (discover via scripts/discover-ss-ids.ts)
-//
-// TODO: Run discover-ss-ids.ts and fetch-screenscraper.ts to populate
-// collection IDs and generate static JSON data.
-
 export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
   nes_ntsc: {
     name: 'NES',
@@ -15,10 +8,10 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     theme: 'theme-nes-ntsc',
     branding: 'Nintendo Entertainment System',
     colors: ['#c0392b', '#e74c3c', '#d35400', '#e67e22'],
-    ssSystemId: 3,
+    lbPlatform: 'nes',
     wizzoSystemId: 'NES',
-    mediaRegions: ['us', 'wor', 'ss'],
-    collection: [],
+    imageRegions: ['North America', 'United States', 'Canada', 'World'],
+    collection: ['140', '361', '1258'],  // Super Mario Bros., Mega Man 2, Contra
   },
   nes_pal: {
     name: 'NES (PAL)',
@@ -26,10 +19,10 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     theme: 'theme-nes-pal',
     branding: 'Nintendo Entertainment System',
     colors: ['#2c3e50', '#34495e', '#c0392b', '#e74c3c'],
-    ssSystemId: 3,
+    lbPlatform: 'nes',
     wizzoSystemId: 'NES',
-    mediaRegions: ['eu', 'wor', 'ss'],
-    collection: [],
+    imageRegions: ['Europe', 'United Kingdom', 'Germany', 'France', 'Spain', 'Italy', 'Australia', 'World'],
+    collection: ['135', '112', '121'],  // Castlevania, Super Mario Bros. 3, Kirby's Adventure
   },
   famicom: {
     name: 'Famicom',
@@ -37,10 +30,10 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     theme: 'theme-famicom',
     branding: 'Family Computer',
     colors: ['#c0392b', '#a93226', '#922B21', '#7B241C'],
-    ssSystemId: 3,
+    lbPlatform: 'nes',
     wizzoSystemId: 'NES',
-    mediaRegions: ['jp', 'wor', 'ss'],
-    collection: [1245],  // Super Mario Bros.
+    imageRegions: ['Japan', 'Asia', 'World'],
+    collection: ['140', '1258', '135'],  // Super Mario Bros., Contra, Castlevania
   },
   av_famicom: {
     name: 'AV Famicom',
@@ -48,12 +41,27 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     theme: 'theme-av-famicom',
     branding: 'New Famicom',
     colors: ['#636e72', '#2d3436', '#b2bec3', '#dfe6e9'],
-    ssSystemId: 3,
+    lbPlatform: 'nes',
     wizzoSystemId: 'NES',
-    mediaRegions: ['jp', 'wor', 'ss'],
-    collection: [1245],  // Super Mario Bros.
+    imageRegions: ['Japan', 'Asia', 'World'],
+    collection: ['112', '361', '121'],  // Super Mario Bros. 3, Mega Man 2, Kirby's Adventure
+  },
+  fds: {
+    name: 'FDS',
+    icon: '💾',
+    theme: 'theme-famicom',
+    branding: 'Famicom Disk System',
+    colors: ['#c0392b', '#a93226', '#922B21', '#7B241C'],
+    lbPlatform: 'fds',
+    wizzoSystemId: 'NES',
+    imageRegions: ['Japan', 'Asia', 'World'],
+    collection: [],
   },
 };
+
+// ── PAGE-SPECIFIC KEY ARRAYS ──
+export const COLLECTION_KEYS: ConsoleKey[] = ['nes_ntsc', 'nes_pal', 'famicom', 'av_famicom'];
+export const STORE_KEYS: ConsoleKey[] = ['nes_ntsc', 'nes_pal', 'famicom', 'av_famicom', 'fds'];
 
 // ── DERIVED MAPS (for backward compat) ──
 export const CONSOLE_KEYS = Object.keys(PLATFORMS) as ConsoleKey[];

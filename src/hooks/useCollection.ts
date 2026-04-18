@@ -1,15 +1,14 @@
 import { useEffect, useState } from 'react';
-import type { ConsoleKey, SSGame } from '../types';
-import { loadCollectionGames, searchLocal } from '../services/screenscraper';
+import type { ConsoleKey, LaunchBoxGame } from '../types';
+import { loadCollectionGames, searchGames } from '../services/launchbox';
 
 export function useCollection(activeConsole: ConsoleKey) {
-    const [games, setGames] = useState<SSGame[]>([]);
+    const [games, setGames] = useState<LaunchBoxGame[]>([]);
     const [loading, setLoading] = useState(false);
     const [search, setSearch] = useState('');
 
     useEffect(() => {
         let cancelled = false;
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetching requires loading state toggle
         setLoading(true);
         loadCollectionGames(activeConsole).then(data => {
             if (!cancelled) setGames(data);
@@ -19,7 +18,7 @@ export function useCollection(activeConsole: ConsoleKey) {
         return () => { cancelled = true; };
     }, [activeConsole]);
 
-    const filteredGames = search ? searchLocal(games, search) : games;
+    const filteredGames = search ? searchGames(games, search) : games;
 
     return { games, loading, search, setSearch, filteredGames };
 }

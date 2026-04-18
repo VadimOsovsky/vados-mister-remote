@@ -3,9 +3,8 @@ import { Routes, Route, Navigate } from 'react-router';
 
 import { PLATFORMS } from './constants';
 import type { ConsoleKey } from './types';
-import { readAuth, readHost } from './lib/storage';
+import { readHost } from './lib/storage';
 import { GridIcon, StoreIcon, SettingsIcon } from './lib/icons';
-import { initApi } from './services/screenscraper';
 import { useConnection } from './hooks/useConnection';
 import { useGameSheet } from './hooks/useGameSheet';
 import { AppContext } from './AppContext';
@@ -17,12 +16,6 @@ import { GameSheet } from './features/game-sheet/GameSheet';
 
 import './styles/themes.css';
 import './App.css';
-
-// Init ScreenScraper API on load
-{
-    const { login, password } = readAuth();
-    if (login && password) initApi(login, password);
-}
 
 const TAB_ITEMS = [
     { to: '/collection', icon: GridIcon, label: 'Collection' },

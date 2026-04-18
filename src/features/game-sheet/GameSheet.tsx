@@ -8,9 +8,10 @@ import { useAppContext } from '../../AppContext';
 import { useRomPicker } from '../../hooks/useRomPicker';
 import { useSaveSlots } from '../../hooks/useSaveSlots';
 import type { SheetTab } from '../../hooks/useGameSheet';
-import type { SSGame } from '../../types';
+import type { LaunchBoxGame } from '../../types';
 import { InfoIcon, BookIcon, GamepadIcon } from '../../lib/icons';
-import { resolveFrontThumb, buildGallerySlides } from '../../services/screenscraper';
+import { getImageUrl, resolveImages } from '../../services/launchbox';
+import { getGameOverrides } from '../../lib/storage';
 import { MainTab } from './MainTab';
 import { LibraryTab } from './LibraryTab';
 import { ControlsTab } from './ControlsTab';
@@ -22,8 +23,25 @@ const SHEET_TABS: { key: SheetTab; label: string; icon: React.ReactNode }[] = [
     { key: 'controls', label: 'Controls', icon: GamepadIcon },
 ];
 
+function buildGallerySlides(game: LaunchBoxGame, regions: string[], activeConsole: string): { src: string }[] {
+    const slides: { src: string }[] = [];
+    const overrides = getGameOverrides(game.id, activeConsole as import('../../types').ConsoleKey);
+    const images = resolveImages(game, regions);
+
+    const front = overrides.boxFrontUrl || (images.front ? getImageUrl(images.front) : undefined);
+    const back = overrides.boxBackUrl || (images.back ? getImageUrl(images.back) : undefined);
+    const cartridge = overrides.cartridgeUrl;
+    const manualPhoto = overrides.manualPhotoUrl;
+
+    if (front) slides.push({ src: front });
+    if (back) slides.push({ src: back });
+    if (cartridge) slides.push({ src: cartridge });
+    if (manualPhoto) slides.push({ src: manualPhoto });
+    return slides;
+}
+
 export function GameSheet({ selectedGame, sheetTab, setSheetTab, galleryOpen, setGalleryOpen, galleryIndex, setGalleryIndex, onClose }: {
-    selectedGame: SSGame | null;
+    selectedGame: LaunchBoxGame | null;
     sheetTab: SheetTab;
     setSheetTab: (tab: SheetTab) => void;
     galleryOpen: boolean;
@@ -36,8 +54,9 @@ export function GameSheet({ selectedGame, sheetTab, setSheetTab, galleryOpen, se
     const romPicker = useRomPicker(api, platform, selectedGame, activeConsole);
     const saveState = useSaveSlots(api, selectedGame, activeConsole, sheetTab);
 
-    const regions = platform.mediaRegions;
-    const front = selectedGame ? resolveFrontThumb(selectedGame, regions) : undefined;
+    const regions = platform.imageRegions;
+    const images = selectedGame ? resolveImages(selectedGame, regions) : undefined;
+    const frontSrc = images?.front ? getImageUrl(images.front) : undefined;
 
     return (
         <>
@@ -49,21 +68,21 @@ export function GameSheet({ selectedGame, sheetTab, setSheetTab, galleryOpen, se
                     <Drawer.Overlay className="sheet-overlay" />
                     <Drawer.Content className="sheet" aria-describedby={undefined}>
                         <div className="sheet-bg">
-                            {front && <img src={front.src} alt="" className="sheet-bg-img" />}
+                            {frontSrc && <img src={frontSrc} alt="" className="sheet-bg-img" />}
                         </div>
 
                         <Drawer.Handle className="sheet-handle" />
 
                         <Drawer.Title className="sr-only">
-                            {selectedGame?.name ?? 'Game Details'}
+                            {selectedGame?.title ?? 'Game Details'}
                         </Drawer.Title>
 
                         {selectedGame && (
                             <div className="sheet-content">
                                 <div className="sheet-title-bar">
-                                    <div className="sheet-title">{selectedGame.name}</div>
+                                    <div className="sheet-title">{selectedGame.title}</div>
                                     <div className="sheet-subtitle">
-                                        {String(selectedGame.releaseDate ?? '').substring(0, 4)} · {selectedGame.genre}
+                                        {selectedGame.year} · {selectedGame.genre}
                                     </div>
                                 </div>
 
@@ -91,6 +110,7 @@ export function GameSheet({ selectedGame, sheetTab, setSheetTab, galleryOpen, se
                                         <LibraryTab
                                             game={selectedGame}
                                             regions={regions}
+                                            activeConsole={activeConsole}
                                             onOpenGallery={(idx) => {
                                                 setGalleryIndex(idx);
                                                 setGalleryOpen(true);
@@ -116,7 +136,7 @@ export function GameSheet({ selectedGame, sheetTab, setSheetTab, galleryOpen, se
                 close={() => setGalleryOpen(false)}
                 index={galleryIndex}
                 plugins={[Zoom]}
-                slides={selectedGame ? buildGallerySlides(selectedGame, regions) : []}
+                slides={selectedGame ? buildGallerySlides(selectedGame, regions, activeConsole) : []}
             />
         </>
     );

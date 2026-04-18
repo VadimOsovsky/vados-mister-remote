@@ -1,12 +1,46 @@
+import { useCallback } from 'react';
+import { useAppContext } from '../../AppContext';
+import { useStore } from '../../hooks/useStore';
+import { STORE_KEYS } from '../../constants';
+import { ConsoleSwitcher } from '../collection/ConsoleSwitcher';
+import { SearchBar } from '../collection/SearchBar';
+import { GameGrid } from '../collection/GameGrid';
+import { BrandingBar } from '../collection/BrandingBar';
+import type { ConsoleKey } from '../../types';
+import './StorePage.css';
+
 export function StorePage() {
+    const { activeConsole, setActiveConsole, platform, connected } = useAppContext();
+    const { loading, search, setSearch, filteredGames } = useStore(activeConsole);
+
+    const switchConsole = useCallback((key: ConsoleKey) => {
+        setActiveConsole(key);
+        setSearch('');
+    }, [setActiveConsole, setSearch]);
+
     return (
-        <div style={{ padding: 14, paddingTop: 'calc(14px + env(safe-area-inset-top))' }}>
-            <div style={{ fontFamily: "'Sora', sans-serif", fontSize: 20, fontWeight: 700, color: 'var(--text-primary)' }}>
-                Store
+        <>
+            <div className="header">
+                <div className="header-top">
+                    <div className="header-title">Store</div>
+                    <div className="status-badge">
+                        <div className={`status-dot ${connected ? '' : 'offline'}`} />
+                        <span>{connected ? 'Connected' : 'Offline'}</span>
+                    </div>
+                </div>
+                <ConsoleSwitcher activeConsole={activeConsole} onSwitch={switchConsole} keys={STORE_KEYS} />
             </div>
-            <div style={{ marginTop: 16, color: 'var(--text-tertiary)', fontSize: 14 }}>
-                Coming soon...
+
+            <SearchBar value={search} onChange={setSearch} />
+
+            <div className="loading-bar-wrap">
+                {loading && <div className="loading-bar" />}
             </div>
-        </div>
+            <div className="section-label">Store · {filteredGames.length} games</div>
+
+            <GameGrid games={filteredGames} regions={platform.imageRegions} onSelect={() => {}} />
+
+            <BrandingBar text={platform.branding} />
+        </>
     );
 }

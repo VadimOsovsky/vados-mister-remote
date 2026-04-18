@@ -5,10 +5,11 @@ import { ConsoleSwitcher } from './ConsoleSwitcher';
 import { SearchBar } from './SearchBar';
 import { GameGrid } from './GameGrid';
 import { BrandingBar } from './BrandingBar';
-import type { ConsoleKey, SSGame } from '../../types';
+import { COLLECTION_KEYS } from '../../constants';
+import type { ConsoleKey, LaunchBoxGame } from '../../types';
 import './CollectionPage.css';
 
-export function CollectionPage({ onSelectGame }: { onSelectGame: (game: SSGame) => void }) {
+export function CollectionPage({ onSelectGame }: { onSelectGame: (game: LaunchBoxGame) => void }) {
     const { activeConsole, setActiveConsole, platform, connected } = useAppContext();
     const { loading, search, setSearch, filteredGames } = useCollection(activeConsole);
 
@@ -27,7 +28,7 @@ export function CollectionPage({ onSelectGame }: { onSelectGame: (game: SSGame) 
                         <span>{connected ? 'Connected' : 'Offline'}</span>
                     </div>
                 </div>
-                <ConsoleSwitcher activeConsole={activeConsole} onSwitch={switchConsole} />
+                <ConsoleSwitcher activeConsole={activeConsole} onSwitch={switchConsole} keys={COLLECTION_KEYS} />
             </div>
 
             <SearchBar value={search} onChange={setSearch} />
@@ -37,7 +38,7 @@ export function CollectionPage({ onSelectGame }: { onSelectGame: (game: SSGame) 
             </div>
             <div className="section-label">Collection · {filteredGames.length} games</div>
 
-            <GameGrid games={filteredGames} regions={platform.mediaRegions} onSelect={onSelectGame} />
+            <GameGrid games={filteredGames} regions={platform.imageRegions} onSelect={onSelectGame} />
 
             <BrandingBar text={platform.branding} />
         </>

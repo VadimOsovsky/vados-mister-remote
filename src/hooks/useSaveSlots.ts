@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { ConsoleKey, SaveSlot, SSGame } from '../types';
+import type { ConsoleKey, LaunchBoxGame, SaveSlot } from '../types';
 import { KEYBOARD_KEYS, type WizzoApi } from '../services/wizzoApi';
 import { EMPTY_SLOTS, getSaveSlots, putSaveSlot } from '../lib/storage';
 
-export function useSaveSlots(api: WizzoApi, selectedGame: SSGame | null, activeConsole: ConsoleKey, sheetTab: string) {
+export function useSaveSlots(api: WizzoApi, selectedGame: LaunchBoxGame | null, activeConsole: ConsoleKey, sheetTab: string) {
     const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
     const [saveSlots, setSaveSlots] = useState<(SaveSlot | null)[]>(EMPTY_SLOTS);
     const [savingSlot, setSavingSlot] = useState(false);
@@ -33,7 +33,7 @@ export function useSaveSlots(api: WizzoApi, selectedGame: SSGame | null, activeC
                     screenshotCore: latest.core,
                     screenshotFilename: latest.filename,
                     savedAt: new Date().toISOString(),
-                    gameName: selectedGame.name,
+                    gameName: selectedGame.title,
                 };
                 const updated = putSaveSlot(selectedGame.id, activeConsole, selectedSlot, slot);
                 setSaveSlots(updated);
