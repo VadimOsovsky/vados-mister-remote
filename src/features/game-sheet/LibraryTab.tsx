@@ -1,8 +1,7 @@
-import { useState } from 'react';
-import type { ConsoleKey, GameOverrides, LaunchBoxGame } from '../../types';
+import type { ConsoleKey, LaunchBoxGame } from '../../types';
 import { BookIcon } from '../../lib/icons';
 import { getImageUrl, resolveImages } from '../../services/launchbox';
-import { getGameOverrides, setGameOverrides } from '../../lib/storage';
+import { getGameOverrides } from '../../lib/storage';
 import './LibraryTab.css';
 
 export function LibraryTab({ game, regions, activeConsole, onOpenGallery }: {
@@ -11,13 +10,11 @@ export function LibraryTab({ game, regions, activeConsole, onOpenGallery }: {
     activeConsole: ConsoleKey;
     onOpenGallery: (index: number) => void;
 }) {
-    const [editing, setEditing] = useState(false);
-    const [overrides, setOverrides] = useState<GameOverrides>(() => getGameOverrides(game.id, activeConsole));
-    const [draft, setDraft] = useState<GameOverrides>(overrides);
+    const overrides = getGameOverrides(game.id, activeConsole);
 
     const images = resolveImages(game, regions);
-    const frontSrc = overrides.boxFrontUrl || (images.front ? getImageUrl(images.front) : undefined);
-    const backSrc = overrides.boxBackUrl || (images.back ? getImageUrl(images.back) : undefined);
+    const frontSrc = overrides.boxFrontUrl || (images.front ? getImageUrl(images.front, 400) : undefined);
+    const backSrc = overrides.boxBackUrl || (images.back ? getImageUrl(images.back, 400) : undefined);
     const cartridgeSrc = overrides.cartridgeUrl || undefined;
     const manualUrl = overrides.manualUrl || undefined;
     const manualPhotoSrc = overrides.manualPhotoUrl || undefined;
@@ -27,90 +24,6 @@ export function LibraryTab({ game, regions, activeConsole, onOpenGallery }: {
     const frontGalleryIdx = 0;
     const backGalleryIdx = hasFront ? 1 : 0;
     const cartGalleryIdx = (hasFront ? 1 : 0) + (hasBack ? 1 : 0);
-
-    function handleSave() {
-        setGameOverrides(game.id, activeConsole, draft);
-        setOverrides(draft);
-        setEditing(false);
-    }
-
-    function handleCancel() {
-        setDraft(overrides);
-        setEditing(false);
-    }
-
-    if (editing) {
-        return (
-            <div className="sheet-panel">
-                <div className="library-edit-form">
-                    <label className="library-edit-field">
-                        <span className="library-edit-label">Box Front URL</span>
-                        <input
-                            className="library-edit-input"
-                            type="url"
-                            placeholder="https://..."
-                            value={draft.boxFrontUrl ?? ''}
-                            onChange={e => setDraft({ ...draft, boxFrontUrl: e.target.value || undefined })}
-                        />
-                    </label>
-                    <label className="library-edit-field">
-                        <span className="library-edit-label">Box Back URL</span>
-                        <input
-                            className="library-edit-input"
-                            type="url"
-                            placeholder="https://..."
-                            value={draft.boxBackUrl ?? ''}
-                            onChange={e => setDraft({ ...draft, boxBackUrl: e.target.value || undefined })}
-                        />
-                    </label>
-                    <label className="library-edit-field">
-                        <span className="library-edit-label">Cartridge URL</span>
-                        <input
-                            className="library-edit-input"
-                            type="url"
-                            placeholder="https://..."
-                            value={draft.cartridgeUrl ?? ''}
-                            onChange={e => setDraft({ ...draft, cartridgeUrl: e.target.value || undefined })}
-                        />
-                    </label>
-                    <label className="library-edit-field">
-                        <span className="library-edit-label">Manual URL</span>
-                        <input
-                            className="library-edit-input"
-                            type="url"
-                            placeholder="https://..."
-                            value={draft.manualUrl ?? ''}
-                            onChange={e => setDraft({ ...draft, manualUrl: e.target.value || undefined })}
-                        />
-                    </label>
-                    <label className="library-edit-field">
-                        <span className="library-edit-label">Manual Photo URL</span>
-                        <input
-                            className="library-edit-input"
-                            type="url"
-                            placeholder="https://..."
-                            value={draft.manualPhotoUrl ?? ''}
-                            onChange={e => setDraft({ ...draft, manualPhotoUrl: e.target.value || undefined })}
-                        />
-                    </label>
-                    <label className="library-edit-field">
-                        <span className="library-edit-label">ROM Name (MiSTer)</span>
-                        <input
-                            className="library-edit-input"
-                            type="text"
-                            placeholder="Game.nes"
-                            value={draft.romName ?? ''}
-                            onChange={e => setDraft({ ...draft, romName: e.target.value || undefined })}
-                        />
-                    </label>
-                    <div className="library-edit-actions">
-                        <button className="sheet-btn sheet-btn-primary" onClick={handleSave}>Save</button>
-                        <button className="sheet-btn sheet-btn-secondary" onClick={handleCancel}>Cancel</button>
-                    </div>
-                </div>
-            </div>
-        );
-    }
 
     return (
         <div className="sheet-panel">
@@ -177,13 +90,6 @@ export function LibraryTab({ game, regions, activeConsole, onOpenGallery }: {
                     ROM: {overrides.romName}
                 </div>
             )}
-            <button
-                className="sheet-btn sheet-btn-secondary"
-                onClick={() => { setDraft(overrides); setEditing(true); }}
-                style={{ marginTop: 8 }}
-            >
-                Edit
-            </button>
         </div>
     );
 }

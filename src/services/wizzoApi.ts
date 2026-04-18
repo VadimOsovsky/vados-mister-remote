@@ -143,8 +143,7 @@ export class WizzoApi {
   }
 
   get wsUrl(): string {
-    const url = new URL(this.baseUrl);
-    return `ws://${url.host}/ws`;
+    return `${this.baseUrl.replace('http', 'ws')}/ws`;
   }
 
   private async request<T>(
@@ -248,6 +247,38 @@ export class WizzoApi {
 
   sendRawKey(code: number): Promise<void> {
     return this.post(`/controls/keyboard-raw/${code}`);
+  }
+
+  saveState(slot: number): Promise<void> {
+    return this.sendWsKeyCombo(KEY_LEFTALT, KEY_F1 + slot);
+  }
+
+  loadState(slot: number): Promise<void> {
+    return this.sendRawKey(KEY_F1 + slot);
+  }
+
+  private sendWsKeyCombo(modifierCode: number, keyCode: number): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const ws = new WebSocket(this.wsUrl);
+      const timeout = setTimeout(() => {
+        ws.close();
+        reject(new Error('WebSocket key combo timed out'));
+      }, 5000);
+
+      ws.onopen = () => {
+        ws.send(`kbdRawDown:${modifierCode}`);
+        ws.send(`kbdRaw:${keyCode}`);
+        ws.send(`kbdRawUp:${modifierCode}`);
+        clearTimeout(timeout);
+        ws.close();
+        resolve();
+      };
+
+      ws.onerror = () => {
+        clearTimeout(timeout);
+        reject(new Error('WebSocket connection failed'));
+      };
+    });
   }
 
   // ── Screenshots ──
@@ -458,6 +489,11 @@ function parseWsMessage(msg: string): WizzoWsEvent | null {
   return null;
 }
 
+// ── uinput key codes for save states ──
+// MiSTer save states: Alt+F1..F4 (save slots 1-4), F1..F4 (load slots 1-4)
+const KEY_LEFTALT = 56;
+const KEY_F1 = 59;
+
 // ── Named keyboard keys (common ones for game controls) ──
 // Full list: https://github.com/wizzomafizzo/mrext/blob/main/cmd/remote/control/control.go
 
@@ -475,10 +511,6 @@ export const KEYBOARD_KEYS = {
   down: 'down',
   left: 'left',
   right: 'right',
-
-  // Save states (Alt+F2..F7 for save, Alt+F4..F7 for load — core-dependent)
-  saveState: 'save_state',
-  loadState: 'load_state',
 
   // Media
   screenshot: 'screenshot',

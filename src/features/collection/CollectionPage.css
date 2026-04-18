@@ -1,7 +1,25 @@
+/* ── PAGE LAYOUT ── */
+.page-layout {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.page-scroll {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.page-scroll::-webkit-scrollbar { width: 0; }
+
 /* ── HEADER ── */
 .header {
+  flex-shrink: 0;
   padding: 10px 14px 0;
   padding-top: calc(10px + env(safe-area-inset-top));
+  background: var(--bg-primary);
 }
 
 .header-top {

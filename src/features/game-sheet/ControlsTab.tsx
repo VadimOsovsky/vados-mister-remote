@@ -1,7 +1,7 @@
 import type { SaveSlot } from '../../types';
 import type { WizzoApi } from '../../services/wizzoApi';
 import { KEYBOARD_KEYS } from '../../services/wizzoApi';
-import { ResetIcon, OsdIcon, SaveIcon, LoadIcon } from '../../lib/icons';
+import { ResetIcon, TrashIcon, SaveIcon, LoadIcon } from '../../lib/icons';
 import { SaveSlotGrid } from './SaveSlotGrid';
 import './ControlsTab.css';
 
@@ -14,9 +14,10 @@ export function ControlsTab({ api, saveState }: {
         savingSlot: boolean;
         handleSave: () => void;
         handleLoad: () => void;
+        handleDelete: () => void;
     };
 }) {
-    const { selectedSlot, setSelectedSlot, saveSlots, savingSlot, handleSave, handleLoad } = saveState;
+    const { selectedSlot, setSelectedSlot, saveSlots, savingSlot, handleSave, handleLoad, handleDelete } = saveState;
 
     return (
         <div className="sheet-panel">
@@ -25,9 +26,13 @@ export function ControlsTab({ api, saveState }: {
                     {ResetIcon}
                     <span>Reset</span>
                 </button>
-                <button className="ctrl-btn" onClick={() => api.sendKey(KEYBOARD_KEYS.osd)}>
-                    {OsdIcon}
-                    <span>OSD Menu</span>
+                <button
+                    className={`ctrl-btn${selectedSlot === null || !saveSlots[selectedSlot ?? 0] ? ' ctrl-btn-disabled' : ''}`}
+                    onClick={handleDelete}
+                    disabled={selectedSlot === null || !saveSlots[selectedSlot ?? 0]}
+                >
+                    {TrashIcon}
+                    <span>Delete</span>
                 </button>
                 <button
                     className={`ctrl-btn${selectedSlot === null || savingSlot ? ' ctrl-btn-disabled' : ''}`}

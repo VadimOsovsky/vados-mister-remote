@@ -24,7 +24,7 @@ export function SaveSlotGrid({ slots, selectedSlot, onSelectSlot, getScreenshotU
                     ) : (
                         <div className="slot-empty-label">Empty</div>
                     )}
-                    <div className="slot-label">Slot {i + 1}</div>
+                    {/*<div className="slot-label">Slot {i + 1}</div>*/}
                 </button>
             ))}
         </div>

@@ -1,37 +1,43 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { type RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import type { LaunchBoxGame } from '../../types';
+import type { ConsoleKey, LaunchBoxGame } from '../../types';
 import { LazyImage } from '../../kit/LazyImage';
 import { getImageUrl, resolveImages } from '../../services/launchbox';
+import { getGameOverrides } from '../../lib/storage';
 import './GameGrid.css';
 
 const PAGE_SIZE = 50;
 const COLS = 2;
 
-function GameCard({ game, regions, onSelect }: {
+function GameCard({ game, regions, activeConsole, onSelect }: {
     game: LaunchBoxGame;
     regions: string[];
+    activeConsole: ConsoleKey;
     onSelect: (game: LaunchBoxGame) => void;
 }) {
+    const overrides = getGameOverrides(game.id, activeConsole);
     const images = resolveImages(game, regions);
-    const frontSrc = images.front ? getImageUrl(images.front, 200) : undefined;
+    const displayTitle = overrides.title || game.title;
+    const frontSrc = overrides.boxFrontUrl || (images.front ? getImageUrl(images.front, 200) : undefined);
     return (
         <div className="game-card" onClick={() => onSelect(game)}>
             <div className="card-art-wrap">
-                <LazyImage src={frontSrc} alt={game.title} className="card-art" />
+                <LazyImage src={frontSrc} alt={displayTitle} className="card-art" />
             </div>
             <div className="card-badge">
-                <div className="card-title">{game.title}</div>
+                <div className="card-title">{displayTitle}</div>
                 <div className="card-year">{game.year}</div>
             </div>
         </div>
     );
 }
 
-export function GameGrid({ games, regions, onSelect }: {
+export function GameGrid({ games, regions, activeConsole, onSelect, scrollRef }: {
     games: LaunchBoxGame[];
     regions: string[];
+    activeConsole: ConsoleKey;
     onSelect: (game: LaunchBoxGame) => void;
+    scrollRef?: RefObject<HTMLDivElement | null>;
 }) {
     const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
     const gridRef = useRef<HTMLDivElement>(null);
@@ -51,7 +57,7 @@ export function GameGrid({ games, regions, onSelect }: {
 
     const virtualizer = useVirtualizer({
         count: rowCount,
-        getScrollElement: () => document.querySelector('.app-content') as HTMLElement | null,
+        getScrollElement: () => scrollRef?.current ?? null,
         estimateSize: () => 200,
         overscan: 3,
         scrollMargin,
@@ -94,6 +100,7 @@ export function GameGrid({ games, regions, onSelect }: {
                                     key={game.id}
                                     game={game}
                                     regions={regions}
+                                    activeConsole={activeConsole}
                                     onSelect={onSelect}
                                 />
                             );

@@ -1,25 +1,31 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { ConsoleKey, LaunchBoxGame, SaveSlot } from '../types';
-import { KEYBOARD_KEYS, type WizzoApi } from '../services/wizzoApi';
-import { EMPTY_SLOTS, getSaveSlots, putSaveSlot } from '../lib/storage';
+import type { LaunchBoxGame, SaveSlot } from '../types';
+import type { WizzoApi } from '../services/wizzoApi';
+import { EMPTY_SLOTS, getSaveSlots, putSaveSlot, deleteSaveSlot } from '../lib/storage';
 
-export function useSaveSlots(api: WizzoApi, selectedGame: LaunchBoxGame | null, activeConsole: ConsoleKey, sheetTab: string) {
+export function useSaveSlots(api: WizzoApi, selectedGame: LaunchBoxGame | null, sheetTab: string) {
     const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
     const [saveSlots, setSaveSlots] = useState<(SaveSlot | null)[]>(EMPTY_SLOTS);
     const [savingSlot, setSavingSlot] = useState(false);
 
     useEffect(() => {
         if (sheetTab === 'controls' && selectedGame) {
-            setSaveSlots(getSaveSlots(selectedGame.id, activeConsole));
+            setSaveSlots(getSaveSlots(selectedGame.id));
             setSelectedSlot(null);
         }
-    }, [sheetTab, selectedGame, activeConsole]);
+    }, [sheetTab, selectedGame]);
 
     const handleSave = useCallback(async () => {
         if (selectedSlot === null || !selectedGame || savingSlot) return;
         setSavingSlot(true);
         try {
-            await api.sendKey(KEYBOARD_KEYS.saveState);
+            // Delete old screenshot if overwriting a slot
+            const oldSlot = saveSlots[selectedSlot];
+            if (oldSlot) {
+                api.deleteScreenshot(oldSlot.screenshotCore, oldSlot.screenshotFilename).catch(() => {});
+            }
+
+            await api.saveState(selectedSlot);
             await new Promise(r => setTimeout(r, 500));
             await api.takeScreenshot();
             await new Promise(r => setTimeout(r, 1000));
@@ -35,7 +41,7 @@ export function useSaveSlots(api: WizzoApi, selectedGame: LaunchBoxGame | null, 
                     savedAt: new Date().toISOString(),
                     gameName: selectedGame.title,
                 };
-                const updated = putSaveSlot(selectedGame.id, activeConsole, selectedSlot, slot);
+                const updated = putSaveSlot(selectedGame.id, selectedSlot, slot);
                 setSaveSlots(updated);
             }
         } catch (err) {
@@ -43,20 +49,28 @@ export function useSaveSlots(api: WizzoApi, selectedGame: LaunchBoxGame | null, 
         } finally {
             setSavingSlot(false);
         }
-    }, [selectedSlot, selectedGame, savingSlot, api, activeConsole]);
+    }, [selectedSlot, selectedGame, savingSlot, api, saveSlots]);
 
     const handleLoad = useCallback(async () => {
         if (selectedSlot === null || !saveSlots[selectedSlot]) return;
         try {
-            await api.sendKey(KEYBOARD_KEYS.loadState);
+            await api.loadState(selectedSlot!);
         } catch (err) {
             console.warn('Load state failed:', err);
         }
     }, [selectedSlot, saveSlots, api]);
 
+    const handleDelete = useCallback(() => {
+        if (selectedSlot === null || !saveSlots[selectedSlot] || !selectedGame) return;
+        const slot = saveSlots[selectedSlot]!;
+        api.deleteScreenshot(slot.screenshotCore, slot.screenshotFilename).catch(() => {});
+        const updated = deleteSaveSlot(selectedGame.id, selectedSlot);
+        setSaveSlots(updated);
+    }, [selectedSlot, saveSlots, selectedGame, api]);
+
     return {
         selectedSlot, setSelectedSlot,
         saveSlots, savingSlot,
-        handleSave, handleLoad,
+        handleSave, handleLoad, handleDelete,
     };
 }

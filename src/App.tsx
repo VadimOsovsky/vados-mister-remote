@@ -3,7 +3,7 @@ import { Routes, Route, Navigate } from 'react-router';
 
 import { PLATFORMS } from './constants';
 import type { ConsoleKey } from './types';
-import { readHost } from './lib/storage';
+import { readHost, getCollectionIds, addCollectionId, removeCollectionId } from './lib/storage';
 import { GridIcon, StoreIcon, SettingsIcon } from './lib/icons';
 import { useConnection } from './hooks/useConnection';
 import { useGameSheet } from './hooks/useGameSheet';
@@ -31,6 +31,20 @@ export default function MisterRemote() {
 
     const sheet = useGameSheet();
 
+    const [collectionIds, setCollectionIds] = useState<string[]>(() => getCollectionIds(activeConsole));
+
+    useEffect(() => {
+        setCollectionIds(getCollectionIds(activeConsole));
+    }, [activeConsole]);
+
+    const addToCollection = useCallback((gameId: string) => {
+        setCollectionIds(addCollectionId(activeConsole, gameId));
+    }, [activeConsole]);
+
+    const removeFromCollection = useCallback((gameId: string) => {
+        setCollectionIds(removeCollectionId(activeConsole, gameId));
+    }, [activeConsole]);
+
     // Sync theme class onto <body> so portals (vaul Drawer, etc.) inherit CSS variables
     useEffect(() => {
         document.body.classList.add(platform.theme);
@@ -46,6 +60,7 @@ export default function MisterRemote() {
             activeConsole, setActiveConsole: switchConsole,
             platform, api, connected,
             misterHost, setMisterHost,
+            collectionIds, addToCollection, removeFromCollection,
         }}>
             <div className={`app ${platform.theme}`}>
                 <div className="app-content">
@@ -67,6 +82,8 @@ export default function MisterRemote() {
                     setGalleryOpen={sheet.setGalleryOpen}
                     galleryIndex={sheet.galleryIndex}
                     setGalleryIndex={sheet.setGalleryIndex}
+                    editMode={sheet.editMode}
+                    setEditMode={sheet.setEditMode}
                     onClose={sheet.closeSheet}
                 />
             </div>

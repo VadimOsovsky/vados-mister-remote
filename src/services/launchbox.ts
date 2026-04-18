@@ -120,10 +120,9 @@ export async function loadPlatformGames(consoleKey: ConsoleKey): Promise<LaunchB
 /**
  * Load only the collection games for a specific console variant.
  */
-export async function loadCollectionGames(consoleKey: ConsoleKey): Promise<LaunchBoxGame[]> {
-  const platform = PLATFORMS[consoleKey];
+export async function loadCollectionGames(consoleKey: ConsoleKey, collectionIds: string[]): Promise<LaunchBoxGame[]> {
   const allGames = await loadPlatformGames(consoleKey);
-  const collectionSet = new Set(platform.collection);
+  const collectionSet = new Set(collectionIds);
   return allGames.filter(g => collectionSet.has(g.id));
 }
 

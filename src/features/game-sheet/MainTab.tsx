@@ -23,7 +23,7 @@ export function MainTab({ game, regions, connected, romPicker, onLaunch }: {
     onLaunch: () => void;
 }) {
     const images = resolveImages(game, regions);
-    const frontSrc = images.front ? getImageUrl(images.front) : undefined;
+    const frontSrc = images.front ? getImageUrl(images.front, 400) : undefined;
 
     return (
         <div className="sheet-panel">

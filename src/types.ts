@@ -43,7 +43,7 @@ export interface PlatformDef {
   lbPlatform: string;        // LaunchBox JSON file name (without .json)
   wizzoSystemId: string;     // MiSTer/Wizzo system ID for searchGames() API
   imageRegions: string[];    // Priority order for image region resolution
-  collection: string[];      // LaunchBox game IDs in user's collection
+  collectionGroup?: ConsoleKey; // Share collection storage with another console
 }
 
 // ── LAUNCHBOX ──
@@ -69,6 +69,7 @@ export interface LaunchBoxGame {
 
 // ── GAME OVERRIDES (user customizations) ──
 export interface GameOverrides {
+  title?: string;
   boxFrontUrl?: string;
   boxBackUrl?: string;
   cartridgeUrl?: string;

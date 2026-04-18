@@ -10,6 +10,9 @@ export interface AppContextValue {
     connected: boolean;
     misterHost: string;
     setMisterHost: (host: string) => void;
+    collectionIds: string[];
+    addToCollection: (gameId: string) => void;
+    removeFromCollection: (gameId: string) => void;
 }
 
 export const AppContext = createContext<AppContextValue>(null!);

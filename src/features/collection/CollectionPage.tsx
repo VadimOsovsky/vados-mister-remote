@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { useAppContext } from '../../AppContext';
 import { useCollection } from '../../hooks/useCollection';
 import { ConsoleSwitcher } from './ConsoleSwitcher';
@@ -12,6 +12,7 @@ import './CollectionPage.css';
 export function CollectionPage({ onSelectGame }: { onSelectGame: (game: LaunchBoxGame) => void }) {
     const { activeConsole, setActiveConsole, platform, connected } = useAppContext();
     const { loading, search, setSearch, filteredGames } = useCollection(activeConsole);
+    const scrollRef = useRef<HTMLDivElement>(null);
 
     const switchConsole = useCallback((key: ConsoleKey) => {
         setActiveConsole(key);
@@ -19,7 +20,7 @@ export function CollectionPage({ onSelectGame }: { onSelectGame: (game: LaunchBo
     }, [setActiveConsole, setSearch]);
 
     return (
-        <>
+        <div className="page-layout">
             <div className="header">
                 <div className="header-top">
                     <div className="header-title">MiSTer Remote</div>
@@ -31,16 +32,18 @@ export function CollectionPage({ onSelectGame }: { onSelectGame: (game: LaunchBo
                 <ConsoleSwitcher activeConsole={activeConsole} onSwitch={switchConsole} keys={COLLECTION_KEYS} />
             </div>
 
-            <SearchBar value={search} onChange={setSearch} />
+            <div className="page-scroll" ref={scrollRef}>
+                <SearchBar value={search} onChange={setSearch} />
 
-            <div className="loading-bar-wrap">
-                {loading && <div className="loading-bar" />}
+                <div className="loading-bar-wrap">
+                    {loading && <div className="loading-bar" />}
+                </div>
+                <div className="section-label">Collection · {filteredGames.length} games</div>
+
+                <GameGrid games={filteredGames} regions={platform.imageRegions} activeConsole={activeConsole} onSelect={onSelectGame} scrollRef={scrollRef} />
+
+                <BrandingBar text={platform.branding} />
             </div>
-            <div className="section-label">Collection · {filteredGames.length} games</div>
-
-            <GameGrid games={filteredGames} regions={platform.imageRegions} onSelect={onSelectGame} />
-
-            <BrandingBar text={platform.branding} />
-        </>
+        </div>
     );
 }

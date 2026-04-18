@@ -11,7 +11,6 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     lbPlatform: 'nes',
     wizzoSystemId: 'NES',
     imageRegions: ['North America', 'United States', 'Canada', 'World'],
-    collection: ['140', '361', '1258'],  // Super Mario Bros., Mega Man 2, Contra
   },
   nes_pal: {
     name: 'NES (PAL)',
@@ -21,8 +20,7 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     colors: ['#2c3e50', '#34495e', '#c0392b', '#e74c3c'],
     lbPlatform: 'nes',
     wizzoSystemId: 'NES',
-    imageRegions: ['Europe', 'United Kingdom', 'Germany', 'France', 'Spain', 'Italy', 'Australia', 'World'],
-    collection: ['135', '112', '121'],  // Castlevania, Super Mario Bros. 3, Kirby's Adventure
+    imageRegions: ['Europe', 'United Kingdom', 'Germany', 'France', 'Spain', 'Italy', 'Australia'],
   },
   famicom: {
     name: 'Famicom',
@@ -33,18 +31,17 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     lbPlatform: 'nes',
     wizzoSystemId: 'NES',
     imageRegions: ['Japan', 'Asia', 'World'],
-    collection: ['140', '1258', '135'],  // Super Mario Bros., Contra, Castlevania
   },
   av_famicom: {
     name: 'AV Famicom',
     icon: '⬜',
     theme: 'theme-av-famicom',
-    branding: 'New Famicom',
-    colors: ['#636e72', '#2d3436', '#b2bec3', '#dfe6e9'],
+    branding: 'AV Famicom',
+    colors: ['#2d2d2d', '#3a3a3a', '#c0392b', '#e8c840'],
     lbPlatform: 'nes',
     wizzoSystemId: 'NES',
     imageRegions: ['Japan', 'Asia', 'World'],
-    collection: ['112', '361', '121'],  // Super Mario Bros. 3, Mega Man 2, Kirby's Adventure
+    collectionGroup: 'famicom',
   },
   fds: {
     name: 'FDS',
@@ -55,7 +52,6 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     lbPlatform: 'fds',
     wizzoSystemId: 'NES',
     imageRegions: ['Japan', 'Asia', 'World'],
-    collection: [],
   },
 };
 

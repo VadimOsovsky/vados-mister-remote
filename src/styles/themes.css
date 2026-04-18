@@ -1,7 +1,8 @@
-/* ── THEME: NES NTSC ──
+/* ── THEME: NES (NTSC & PAL) ──
    Dark charcoal grey + Nintendo red accents.
-   Based on NES Classic Mini UI. */
-.theme-nes-ntsc {
+   Based on NES Classic Mini UI. Shared by NTSC and PAL variants. */
+.theme-nes-ntsc,
+.theme-nes-pal {
   --bg-primary: #0a1030;
   --bg-secondary: #101840;
   --bg-card: #787888;
@@ -68,4 +69,39 @@
   --tab-bar-text: rgba(255, 200, 160, 0.4);
   --tab-bar-active: #ffdc6e;
   --tab-bar-border: #4a0c0c;
+}
+
+/* ── THEME: AV Famicom (AV Famicom / HVC-101) ──
+   White body, dark charcoal top, red & gold controller accents. */
+.theme-av-famicom {
+  --bg-primary: #f5f3f0;
+  --bg-secondary: #ebe8e4;
+  --bg-card: #ffffff;
+  --bg-card-inner: #ffffff;
+  --bg-input: #e8e5e0;
+  --bg-pill: #dddad5;
+  --bg-pill-active: #3a3a3a;
+  --bg-tab-bar: #2d2d2d;
+  --bg-overlay: rgba(10, 10, 14, 0.85);
+
+  --text-primary: #2d2d2d;
+  --text-secondary: #6a6a6a;
+  --text-tertiary: #9a9a9a;
+  --text-on-accent: #ffffff;
+  --text-on-card: #2d2d2d;
+
+  --accent: #c0392b;
+  --accent-hover: #d44637;
+  --accent-badge: #f0eeeb;
+  --text-badge: #2d2d2d;
+
+  --border-main: #d0cdc8;
+  --border-card: 3px solid #e0ddd8;
+  --border-input: 3px solid #d0cdc8;
+
+  --pattern-opacity: 0.015;
+  --branding-color: #2d2d2d;
+  --tab-bar-text: rgba(255, 255, 255, 0.35);
+  --tab-bar-active: #c0392b;
+  --tab-bar-border: #222222;
 }
