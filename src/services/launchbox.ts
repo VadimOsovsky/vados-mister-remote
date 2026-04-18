@@ -3,7 +3,7 @@ import { PLATFORMS } from '../constants';
 
 const IMAGE_CDN = 'https://images.launchbox-app.com';
 const DB_NAME = 'launchbox-cache';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const STORE_NAME = 'platforms';
 
 // ── IndexedDB helpers ──
@@ -12,9 +12,10 @@ function openDB(): Promise<IDBDatabase> {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
     req.onupgradeneeded = () => {
       const db = req.result;
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.createObjectStore(STORE_NAME);
+      if (db.objectStoreNames.contains(STORE_NAME)) {
+        db.deleteObjectStore(STORE_NAME);
       }
+      db.createObjectStore(STORE_NAME);
     };
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
@@ -48,8 +49,12 @@ const memoryCache = new Map<string, LaunchBoxGame[]>();
 
 // ── Public API ──
 
-export function getImageUrl(fileName: string): string {
-  return `${IMAGE_CDN}/${fileName}`;
+export function getImageUrl(fileName: string, width?: number): string {
+  const url = `${IMAGE_CDN}/${fileName}`;
+  if (width) {
+    return `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=${width}&output=webp`;
+  }
+  return url;
 }
 
 /**

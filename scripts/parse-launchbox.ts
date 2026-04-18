@@ -34,6 +34,9 @@ interface RawGame {
   Developer: string;
   Publisher: string;
   MaxPlayers: string;
+  CommunityRating: string;
+  CommunityRatingCount: string;
+  ReleaseType: string;
 }
 
 interface RawGameImage {
@@ -58,6 +61,8 @@ interface OutputGame {
   developer: string;
   publisher: string;
   maxPlayers: string;
+  rating: number;
+  ratingCount: number;
   images: Record<string, RegionImages>;
 }
 
@@ -140,7 +145,7 @@ async function parseMetadataZip(): Promise<{ games: Map<string, RawGame>; images
     let gameCount = 0;
     let imageCount = 0;
 
-    const gameFields = new Set(['DatabaseID', 'Name', 'Platform', 'ReleaseDate', 'Genres', 'Overview', 'Developer', 'Publisher', 'MaxPlayers']);
+    const gameFields = new Set(['DatabaseID', 'Name', 'Platform', 'ReleaseDate', 'Genres', 'Overview', 'Developer', 'Publisher', 'MaxPlayers', 'CommunityRating', 'CommunityRatingCount', 'ReleaseType']);
     const imageFields = new Set(['DatabaseID', 'FileName', 'Type', 'Region']);
 
     parser.on('opentag', (node) => {
@@ -173,7 +178,7 @@ async function parseMetadataZip(): Promise<{ games: Map<string, RawGame>; images
         inGame = false;
         const g = currentGame as RawGame;
         const platformKey = PLATFORM_MAP[g.Platform];
-        if (platformKey && g.DatabaseID && g.Name) {
+        if (platformKey && g.DatabaseID && g.Name && (!g.ReleaseType || g.ReleaseType === 'Released')) {
           games.set(g.DatabaseID, { ...g, Platform: platformKey } as RawGame);
           gameCount++;
           if (gameCount % 1000 === 0) {
@@ -256,6 +261,8 @@ async function buildOutput(games: Map<string, RawGame>, images: RawGameImage[]) 
       developer: game.Developer || '',
       publisher: game.Publisher || '',
       maxPlayers: game.MaxPlayers || '',
+      rating: parseFloat(game.CommunityRating) || 0,
+      ratingCount: parseInt(game.CommunityRatingCount) || 0,
       images: imgMap,
     };
 

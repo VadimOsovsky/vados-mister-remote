@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { PLATFORMS } from '../constants';
-import type { ConsoleKey, LaunchBoxGame } from '../types';
+import type { ConsoleKey, LaunchBoxGame, SortMode } from '../types';
 import { hasImageInRegions, loadPlatformGames, searchGames } from '../services/launchbox';
+import { SORT_FNS } from '../services/sorting';
 
 export function useStore(activeConsole: ConsoleKey) {
     const [games, setGames] = useState<LaunchBoxGame[]>([]);
     const [loading, setLoading] = useState(false);
     const [search, setSearch] = useState('');
+    const [sort, setSort] = useState<SortMode>('popular');
 
     const platform = PLATFORMS[activeConsole];
 
@@ -23,9 +25,12 @@ export function useStore(activeConsole: ConsoleKey) {
     }, [activeConsole]);
 
     const filteredGames = useMemo(() => {
-        const regionFiltered = games.filter(g => hasImageInRegions(g, platform.imageRegions));
+        console.log('VO: sort', sort)
+        const regionFiltered = games
+            .filter(g => hasImageInRegions(g, platform.imageRegions))
+            .sort(SORT_FNS[sort]);
         return search ? searchGames(regionFiltered, search) : regionFiltered;
-    }, [games, search, platform.imageRegions]);
+    }, [games, search, platform.imageRegions, sort]);
 
-    return { loading, search, setSearch, filteredGames };
+    return { loading, search, setSearch, sort, setSort, filteredGames };
 }

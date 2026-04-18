@@ -20,7 +20,7 @@ export interface GameWithConsole extends Game {
 }
 
 export type ConsoleKey = 'nes_ntsc' | 'nes_pal' | 'famicom' | 'av_famicom' | 'fds';
-export type SortMode = 'az' | 'za' | 'recent' | 'most';
+export type SortMode = 'az' | 'za' | 'recent' | 'most' | 'popular' | 'year' | 'title';
 export type TabKey = 'games' | 'favorites' | 'recents' | 'settings';
 export type SheetTab = 'info' | 'library' | 'controls';
 
@@ -62,6 +62,8 @@ export interface LaunchBoxGame {
   developer: string;
   publisher: string;
   maxPlayers: string;
+  rating: number;
+  ratingCount: number;
   images: Record<string, LaunchBoxImages>;
 }
 

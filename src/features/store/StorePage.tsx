@@ -11,7 +11,7 @@ import './StorePage.css';
 
 export function StorePage() {
     const { activeConsole, setActiveConsole, platform, connected } = useAppContext();
-    const { loading, search, setSearch, filteredGames } = useStore(activeConsole);
+    const { loading, search, setSearch, sort, setSort, filteredGames } = useStore(activeConsole);
 
     const switchConsole = useCallback((key: ConsoleKey) => {
         setActiveConsole(key);
@@ -31,7 +31,7 @@ export function StorePage() {
                 <ConsoleSwitcher activeConsole={activeConsole} onSwitch={switchConsole} keys={STORE_KEYS} />
             </div>
 
-            <SearchBar value={search} onChange={setSearch} />
+            <SearchBar value={search} onChange={setSearch} sort={sort} sortCycle={['popular', 'year', 'title']} onSortChange={setSort} />
 
             <div className="loading-bar-wrap">
                 {loading && <div className="loading-bar" />}
