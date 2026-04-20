@@ -4,7 +4,8 @@ import type { ConsoleKey, LaunchBoxGame } from '../../types';
 import { useAppContext } from '../../AppContext';
 import { TrophyBadgeIcon } from '../../lib/icons';
 import { LazyImage } from '../../kit/LazyImage';
-import { getImageUrl, resolveImages } from '../../services/launchbox';
+import { getImageUrl, resolveImages, resolveTitle } from '../../services/launchbox';
+import { PLATFORMS } from '../../constants';
 import { getGameOverrides } from '../../lib/storage';
 import './GameGrid.css';
 
@@ -20,7 +21,7 @@ function GameCard({ game, regions, activeConsole, onSelect }: {
     const { beatenIds } = useAppContext();
     const overrides = getGameOverrides(game.id, activeConsole);
     const images = resolveImages(game, regions);
-    const displayTitle = overrides.title || game.title;
+    const displayTitle = overrides.title || resolveTitle(game, PLATFORMS[activeConsole].nameRegions);
     const frontSrc = overrides.boxFrontUrl || (images.front ? getImageUrl(images.front, 200) : undefined);
     const isBeaten = beatenIds.includes(game.id);
     return (

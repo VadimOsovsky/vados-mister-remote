@@ -36,6 +36,7 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     lbPlatform: 'nes',
     wizzoSystemId: 'NES',
     imageRegions: ['Japan', 'Asia', 'World'],
+    nameRegions: ['Japan'],
     controls: [{ id: 'reset', label: 'Reset', action: 'reset' }],
   },
   fds: {
@@ -48,6 +49,7 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     lbPlatform: 'fds',
     wizzoSystemId: 'NES',
     imageRegions: ['Japan', 'Asia', 'World'],
+    nameRegions: ['Japan'],
     controls: [
       { id: 'reset', label: 'Reset', action: 'reset' },
       { id: 'flip_disk', label: 'Flip Disk', action: 'user' },
@@ -63,6 +65,7 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     lbPlatform: 'nes',
     wizzoSystemId: 'NES',
     imageRegions: ['Japan', 'Asia', 'World'],
+    nameRegions: ['Japan'],
     collectionGroup: 'famicom',
     controls: [{ id: 'reset', label: 'Reset', action: 'reset' }],
   },

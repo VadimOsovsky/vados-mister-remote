@@ -46,6 +46,12 @@ interface RawGameImage {
   Region: string;
 }
 
+interface RawGameAlternateName {
+  DatabaseID: string;
+  AlternateName: string;
+  Region: string;
+}
+
 interface RegionImages {
   front?: string;
   back?: string;
@@ -64,6 +70,7 @@ interface OutputGame {
   rating: number;
   ratingCount: number;
   images: Record<string, RegionImages>;
+  alternateNames?: Record<string, string>;
 }
 
 const OUTPUT_DIR = join(import.meta.dirname, '..', 'public', 'launchbox');
@@ -105,11 +112,12 @@ async function downloadMetadata() {
 }
 
 // ── Extract and parse XML from ZIP ──
-async function parseMetadataZip(): Promise<{ games: Map<string, RawGame>; images: RawGameImage[] }> {
+async function parseMetadataZip(): Promise<{ games: Map<string, RawGame>; images: RawGameImage[]; altNames: RawGameAlternateName[] }> {
   console.log('Parsing Metadata.zip...');
 
   const games = new Map<string, RawGame>();
   const images: RawGameImage[] = [];
+  const altNames: RawGameAlternateName[] = [];
 
   // We need to extract the zip first, then parse the XML
   // Use unzipper or manual approach
@@ -140,13 +148,17 @@ async function parseMetadataZip(): Promise<{ games: Map<string, RawGame>; images
     let textBuffer = '';
     let currentGame: Partial<RawGame> = {};
     let currentImage: Partial<RawGameImage> = {};
+    let currentAltName: Partial<RawGameAlternateName> = {};
     let inGame = false;
     let inGameImage = false;
+    let inGameAltName = false;
     let gameCount = 0;
     let imageCount = 0;
+    let altNameCount = 0;
 
     const gameFields = new Set(['DatabaseID', 'Name', 'Platform', 'ReleaseDate', 'Genres', 'Overview', 'Developer', 'Publisher', 'MaxPlayers', 'CommunityRating', 'CommunityRatingCount', 'ReleaseType']);
     const imageFields = new Set(['DatabaseID', 'FileName', 'Type', 'Region']);
+    const altNameFields = new Set(['DatabaseID', 'AlternateName', 'Region']);
 
     parser.on('opentag', (node) => {
       currentTag = node.name;
@@ -158,6 +170,9 @@ async function parseMetadataZip(): Promise<{ games: Map<string, RawGame>; images
       } else if (node.name === 'GameImage') {
         inGameImage = true;
         currentImage = {};
+      } else if (node.name === 'GameAlternateName') {
+        inGameAltName = true;
+        currentAltName = {};
       }
     });
 
@@ -172,6 +187,8 @@ async function parseMetadataZip(): Promise<{ games: Map<string, RawGame>; images
         (currentGame as any)[tag] = textBuffer.trim();
       } else if (inGameImage && imageFields.has(tag)) {
         (currentImage as any)[tag] = textBuffer.trim();
+      } else if (inGameAltName && altNameFields.has(tag)) {
+        (currentAltName as any)[tag] = textBuffer.trim();
       }
 
       if (tag === 'Game' && inGame) {
@@ -195,6 +212,13 @@ async function parseMetadataZip(): Promise<{ games: Map<string, RawGame>; images
             imageCount++;
           }
         }
+      } else if (tag === 'GameAlternateName' && inGameAltName) {
+        inGameAltName = false;
+        const alt = currentAltName as RawGameAlternateName;
+        if (alt.DatabaseID && alt.AlternateName && alt.Region && games.has(alt.DatabaseID)) {
+          altNames.push(alt);
+          altNameCount++;
+        }
       }
 
       textBuffer = '';
@@ -202,8 +226,8 @@ async function parseMetadataZip(): Promise<{ games: Map<string, RawGame>; images
     });
 
     parser.on('end', () => {
-      console.log(`\n  Found ${gameCount} games, ${imageCount} images`);
-      resolve({ games, images });
+      console.log(`\n  Found ${gameCount} games, ${imageCount} images, ${altNameCount} alternate names`);
+      resolve({ games, images, altNames });
     });
 
     parser.on('error', (err) => {
@@ -223,7 +247,7 @@ async function parseMetadataZip(): Promise<{ games: Map<string, RawGame>; images
 }
 
 // ── Build output ──
-async function buildOutput(games: Map<string, RawGame>, images: RawGameImage[]) {
+async function buildOutput(games: Map<string, RawGame>, images: RawGameImage[], altNames: RawGameAlternateName[]) {
   console.log('Building output JSON files...');
 
   // Group images by DatabaseID
@@ -232,6 +256,18 @@ async function buildOutput(games: Map<string, RawGame>, images: RawGameImage[]) 
     const list = imagesByGame.get(img.DatabaseID) || [];
     list.push(img);
     imagesByGame.set(img.DatabaseID, list);
+  }
+
+  // Group alternate names by DatabaseID → { region: name }
+  const altNamesByGame = new Map<string, Record<string, string>>();
+  for (const alt of altNames) {
+    if (!altNamesByGame.has(alt.DatabaseID)) {
+      altNamesByGame.set(alt.DatabaseID, {});
+    }
+    const regionMap = altNamesByGame.get(alt.DatabaseID)!;
+    if (!regionMap[alt.Region]) {
+      regionMap[alt.Region] = alt.AlternateName;
+    }
   }
 
   // Group games by platform
@@ -252,6 +288,8 @@ async function buildOutput(games: Map<string, RawGame>, images: RawGameImage[]) 
 
     const year = game.ReleaseDate ? game.ReleaseDate.substring(0, 4) : '';
 
+    const altMap = altNamesByGame.get(dbId);
+
     const out: OutputGame = {
       id: dbId,
       title: game.Name,
@@ -264,6 +302,7 @@ async function buildOutput(games: Map<string, RawGame>, images: RawGameImage[]) 
       rating: parseFloat(game.CommunityRating) || 0,
       ratingCount: parseInt(game.CommunityRatingCount) || 0,
       images: imgMap,
+      ...(altMap && Object.keys(altMap).length > 0 ? { alternateNames: altMap } : {}),
     };
 
     const list = byPlatform.get(platform) || [];
@@ -288,8 +327,8 @@ async function buildOutput(games: Map<string, RawGame>, images: RawGameImage[]) 
 // ── Main ──
 async function main() {
   await downloadMetadata();
-  const { games, images } = await parseMetadataZip();
-  await buildOutput(games, images);
+  const { games, images, altNames } = await parseMetadataZip();
+  await buildOutput(games, images, altNames);
 }
 
 main().catch((err) => {

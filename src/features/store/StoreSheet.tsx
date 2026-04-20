@@ -8,7 +8,7 @@ import 'yet-another-react-lightbox/styles.css';
 import { useAppContext } from '../../AppContext';
 import type { LaunchBoxGame } from '../../types';
 import { InfoIcon, BookIcon, PlusIcon } from '../../lib/icons';
-import { getImageUrl, resolveImages } from '../../services/launchbox';
+import { getImageUrl, resolveImages, resolveTitle } from '../../services/launchbox';
 import '../../features/game-sheet/GameSheet.css';
 import '../../features/game-sheet/MainTab.css';
 import '../../features/game-sheet/LibraryTab.css';
@@ -25,6 +25,7 @@ function StoreMainTab({ game, regions, onAdd }: {
     regions: string[];
     onAdd: () => void;
 }) {
+    const { platform } = useAppContext();
     const images = resolveImages(game, regions);
     const frontSrc = images.front ? getImageUrl(images.front, 400) : undefined;
 
@@ -32,7 +33,7 @@ function StoreMainTab({ game, regions, onAdd }: {
         <div className="sheet-panel">
             <div className="sheet-main-layout">
                 <div className="sheet-art">
-                    {frontSrc && <img src={frontSrc} alt={game.title} />}
+                    {frontSrc && <img src={frontSrc} alt={resolveTitle(game, platform.nameRegions)} />}
                 </div>
                 <div className="sheet-main-details">
                     <div className="sheet-main-row">
@@ -149,13 +150,13 @@ export function StoreSheet({ selectedGame, onClose }: {
                         <Drawer.Handle className="sheet-handle" />
 
                         <Drawer.Title className="sr-only">
-                            {selectedGame?.title ?? 'Game Details'}
+                            {selectedGame ? resolveTitle(selectedGame, platform.nameRegions) : 'Game Details'}
                         </Drawer.Title>
 
                         {selectedGame && (
                             <div className="sheet-content">
                                 <div className="sheet-title-bar">
-                                    <div className="sheet-title">{selectedGame.title}</div>
+                                    <div className="sheet-title">{resolveTitle(selectedGame, platform.nameRegions)}</div>
                                     <div className="sheet-subtitle">
                                         {selectedGame.year} · {selectedGame.genre}
                                     </div>

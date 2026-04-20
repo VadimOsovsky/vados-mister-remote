@@ -10,7 +10,7 @@ import { useSaveSlots } from '../../hooks/useSaveSlots';
 import type { SheetTab } from '../../hooks/useGameSheet';
 import type { LaunchBoxGame } from '../../types';
 import { InfoIcon, BookIcon, SaveIcon, PencilIcon } from '../../lib/icons';
-import { getImageUrl, resolveImages } from '../../services/launchbox';
+import { getImageUrl, resolveImages, resolveTitle } from '../../services/launchbox';
 import { getGameOverrides, deleteGameOverrides } from '../../lib/storage';
 import { MainTab } from './MainTab';
 import { LibraryTab } from './LibraryTab';
@@ -62,7 +62,7 @@ export function GameSheet({ selectedGame, sheetTab, setSheetTab, galleryOpen, se
     const frontSrc = images?.front ? getImageUrl(images.front, 200) : undefined;
 
     const overrides = selectedGame ? getGameOverrides(selectedGame.id, activeConsole) : {};
-    const displayTitle = overrides.title || selectedGame?.title || 'Game Details';
+    const displayTitle = overrides.title || (selectedGame ? resolveTitle(selectedGame, platform.nameRegions) : 'Game Details');
 
     return (
         <>

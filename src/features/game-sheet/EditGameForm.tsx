@@ -2,7 +2,8 @@ import { useState } from 'react';
 import type { ConsoleKey, GameOverrides, LaunchBoxGame } from '../../types';
 import { TrashIcon } from '../../lib/icons';
 import { getGameOverrides, setGameOverrides, getRomMapping } from '../../lib/storage';
-import { getImageUrl, resolveImages } from '../../services/launchbox';
+import { getImageUrl, resolveImages, resolveTitle } from '../../services/launchbox';
+import { PLATFORMS } from '../../constants';
 import './EditGameForm.css';
 
 export function EditGameForm({ game, regions, activeConsole, onSave, onCancel, onDelete }: {
@@ -17,7 +18,7 @@ export function EditGameForm({ game, regions, activeConsole, onSave, onCancel, o
         const overrides = getGameOverrides(game.id, activeConsole);
         const images = resolveImages(game, regions);
         return {
-            title: overrides.title || game.title,
+            title: overrides.title || resolveTitle(game, PLATFORMS[activeConsole].nameRegions),
             boxFrontUrl: overrides.boxFrontUrl || (images.front ? getImageUrl(images.front) : undefined),
             boxBackUrl: overrides.boxBackUrl || (images.back ? getImageUrl(images.back) : undefined),
             cartridgeUrl: overrides.cartridgeUrl,
@@ -36,7 +37,7 @@ export function EditGameForm({ game, regions, activeConsole, onSave, onCancel, o
         // Only save fields that differ from defaults to avoid redundant storage
         const images = resolveImages(game, regions);
         const defaults: GameOverrides = {
-            title: game.title,
+            title: resolveTitle(game, PLATFORMS[activeConsole].nameRegions),
             boxFrontUrl: images.front ? getImageUrl(images.front) : undefined,
             boxBackUrl: images.back ? getImageUrl(images.back) : undefined,
             romName: getRomMapping(game.id, activeConsole)?.split('/').pop() || undefined,

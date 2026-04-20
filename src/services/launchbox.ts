@@ -3,7 +3,7 @@ import { PLATFORMS } from '../constants';
 
 const IMAGE_CDN = 'https://images.launchbox-app.com';
 const DB_NAME = 'launchbox-cache';
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 const STORE_NAME = 'platforms';
 
 // ── IndexedDB helpers ──
@@ -55,6 +55,24 @@ export function getImageUrl(fileName: string, width?: number): string {
     return `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=${width}&output=webp`;
   }
   return url;
+}
+
+/**
+ * Resolve display title for a game given preferred name regions.
+ * Returns the first matching region's alternate name, or the default title.
+ */
+export function resolveTitle(
+  game: LaunchBoxGame,
+  nameRegions?: string[],
+): string {
+  if (nameRegions && game.alternateNames) {
+    for (const region of nameRegions) {
+      if (game.alternateNames[region]) {
+        return game.alternateNames[region];
+      }
+    }
+  }
+  return game.title;
 }
 
 /**
@@ -142,7 +160,11 @@ export function searchGames(
 ): LaunchBoxGame[] {
   const q = query.toLowerCase();
   return games.filter(
-    g => g.title.toLowerCase().includes(q) || g.genre.toLowerCase().includes(q),
+    g => g.title.toLowerCase().includes(q)
+      || g.genre.toLowerCase().includes(q)
+      || (g.alternateNames && Object.values(g.alternateNames).some(
+        name => name.toLowerCase().includes(q),
+      )),
   );
 }
 
