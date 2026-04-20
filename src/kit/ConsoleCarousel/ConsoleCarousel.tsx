@@ -52,7 +52,7 @@ export function ConsoleCarousel({ activeConsole, onSwitch }: {
                 slidesPerView="auto"
                 coverflowEffect={{
                     rotate: 0,
-                    stretch: 0,
+                    stretch: 40,
                     depth: 120,
                     modifier: 2,
                     slideShadows: false,

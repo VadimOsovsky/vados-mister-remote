@@ -9,7 +9,7 @@
 }
 
 .carousel-slide {
-  width: 56vw !important;
+  width: 72vw !important;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -27,11 +27,13 @@
   justify-content: center;
   overflow: hidden;
   transform: scale(0.55);
-  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  opacity: 0.4;
+  transition: all 0.3s;
 }
 
 .swiper-slide-active .carousel-card {
   transform: scale(1);
+  opacity: 1;
   border-color: var(--accent);
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
 }
