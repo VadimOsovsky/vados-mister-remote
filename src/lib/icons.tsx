@@ -158,3 +158,13 @@ export const GamepadIcon = (
         <rect x="2" y="6" width="20" height="12" rx="2"/>
     </svg>
 );
+
+export const RemoteIcon = (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+         strokeLinejoin="round">
+        <rect x="7" y="2" width="10" height="20" rx="3"/>
+        <circle cx="12" cy="8" r="2"/>
+        <path d="M10 14h4"/>
+        <path d="M10 17h4"/>
+    </svg>
+);

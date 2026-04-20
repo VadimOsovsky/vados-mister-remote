@@ -48,7 +48,7 @@
   border-radius: 6px;
   padding: 10px 12px;
   font-family: 'DM Sans', sans-serif;
-  font-size: 13px;
+  font-size: 16px;
   color: #fff;
   outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
@@ -67,7 +67,7 @@
 
 /* Title input — slightly larger for prominence */
 .edit-game-input-title {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   padding: 12px 14px;
   background: rgba(255, 255, 255, 0.1);

@@ -1,0 +1,135 @@
+/* ── Remote Page ── */
+.remote-page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 14px;
+  padding-top: calc(14px + env(safe-area-inset-top));
+  overflow: hidden;
+}
+
+.remote-header {
+  font-family: 'Sora', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.remote-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  padding-bottom: 24px;
+}
+
+/* ── Action Buttons ── */
+.remote-actions {
+  display: flex;
+  gap: 14px;
+}
+
+.remote-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 14px 28px;
+  min-width: 100px;
+  border-radius: 14px;
+  border: 2px solid var(--border-main);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-family: 'Sora', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.12s ease, background 0.12s ease;
+  user-select: none;
+}
+
+.remote-btn:active {
+  transform: scale(0.94);
+  background: var(--bg-input);
+}
+
+.remote-btn svg {
+  width: 22px;
+  height: 22px;
+  opacity: 0.7;
+}
+
+/* ── D-Pad ── */
+.dpad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  width: min(240px, 60vw);
+  aspect-ratio: 1;
+  gap: 0;
+  filter: drop-shadow(0 2px 12px rgba(0, 0, 0, 0.15));
+}
+
+.dpad-empty {
+  pointer-events: none;
+}
+
+.dpad-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-secondary);
+  border: 1.5px solid var(--border-main);
+  color: var(--text-secondary);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.1s ease, background 0.1s ease;
+  user-select: none;
+}
+
+.dpad-btn:active {
+  background: var(--bg-input);
+  transform: scale(0.93);
+}
+
+.dpad-btn svg {
+  width: 28px;
+  height: 28px;
+  opacity: 0.5;
+}
+
+.dpad-up    { border-radius: 16px 16px 0 0; }
+.dpad-down  { border-radius: 0 0 16px 16px; }
+.dpad-left  { border-radius: 16px 0 0 16px; }
+.dpad-right { border-radius: 0 16px 16px 0; }
+
+.dpad-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent);
+  color: var(--text-on-accent);
+  border: none;
+  border-radius: 50%;
+  font-family: 'Sora', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.1s ease, background 0.1s ease;
+  user-select: none;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+}
+
+.dpad-center:active {
+  background: var(--accent-hover);
+  transform: scale(0.9);
+}

@@ -13,9 +13,11 @@
   left: 0;
   right: 0;
   z-index: 201;
-  max-height: 85vh;
+  max-height: 85dvh;
   border-radius: 16px 16px 0 0;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Blurred background image */
@@ -48,7 +50,8 @@
   padding: 0 16px 16px;
   padding-bottom: calc(16px + env(safe-area-inset-bottom));
   overflow-y: auto;
-  max-height: 85vh;
+  flex: 1;
+  min-height: 0;
 }
 
 /* Drag handle */

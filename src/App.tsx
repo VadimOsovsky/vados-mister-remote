@@ -4,7 +4,7 @@ import { Routes, Route, Navigate } from 'react-router';
 import { PLATFORMS } from './constants';
 import type { ConsoleKey } from './types';
 import { readHost, getCollectionIds, addCollectionId, removeCollectionId } from './lib/storage';
-import { GridIcon, StoreIcon, SettingsIcon } from './lib/icons';
+import { GridIcon, StoreIcon, RemoteIcon, SettingsIcon } from './lib/icons';
 import { useConnection } from './hooks/useConnection';
 import { useGameSheet } from './hooks/useGameSheet';
 import { AppContext } from './AppContext';
@@ -12,6 +12,7 @@ import { TabBar } from './kit/TabBar/TabBar';
 import { CollectionPage } from './features/collection/CollectionPage';
 import { StorePage } from './features/store/StorePage';
 import { SettingsPage } from './features/settings/SettingsPage';
+import { RemotePage } from './features/remote/RemotePage';
 import { GameSheet } from './features/game-sheet/GameSheet';
 
 import './styles/themes.css';
@@ -20,6 +21,7 @@ import './App.css';
 const TAB_ITEMS = [
     { to: '/collection', icon: GridIcon, label: 'Collection' },
     { to: '/store', icon: StoreIcon, label: 'Store' },
+    { to: '/remote', icon: RemoteIcon, label: 'Remote' },
     { to: '/settings', icon: SettingsIcon, label: 'Settings' },
 ];
 
@@ -67,6 +69,7 @@ export default function MisterRemote() {
                     <Routes>
                         <Route path="/collection" element={<CollectionPage onSelectGame={sheet.openSheet} />} />
                         <Route path="/store" element={<StorePage />} />
+                        <Route path="/remote" element={<RemotePage />} />
                         <Route path="/settings" element={<SettingsPage />} />
                         <Route path="*" element={<Navigate to="/collection" replace />} />
                     </Routes>
