@@ -40,6 +40,7 @@ export interface ConsoleControl {
   id: string;
   label: string;
   action: string;
+  type?: 'key' | 'launch';
 }
 
 // ── PLATFORM DEFINITION ──

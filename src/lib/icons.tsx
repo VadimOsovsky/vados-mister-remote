@@ -56,8 +56,10 @@ export const ResetIcon = (
 export const DiskIcon = (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
          strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10"/>
-        <circle cx="12" cy="12" r="3"/>
+        <rect x="4" y="2" width="16" height="20" rx="2"/>
+        <rect x="8" y="2" width="8" height="8"/>
+        <rect x="8" y="14" width="8" height="8" rx="1"/>
+        <line x1="13" y1="3" x2="13" y2="6"/>
     </svg>
 );
 
@@ -172,6 +174,14 @@ export const UnlockIcon = (
          strokeLinejoin="round">
         <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
         <path d="M7 11V7a5 5 0 0 1 9.9-1"/>
+    </svg>
+);
+
+export const PowerIcon = (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+         strokeLinejoin="round">
+        <path d="M18.36 6.64a9 9 0 1 1-12.73 0"/>
+        <line x1="12" y1="2" x2="12" y2="12"/>
     </svg>
 );
 

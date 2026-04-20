@@ -1,5 +1,10 @@
 import type { ConsoleKey, PlatformDef, SortMode } from './types';
 
+// ── CONTROLS ──
+const LAUNCH_CORE = { id: 'launch_core', label: 'Launch', action: '', type: 'launch' } as const;
+const RESET = { id: 'reset', label: 'Reset', action: 'reset' } as const;
+const FLIP_DISK = { id: 'flip_disk', label: 'Flip Disk', action: 'user' } as const;
+
 // ── PLATFORMS ──
 export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
   nes_ntsc: {
@@ -12,7 +17,7 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     lbPlatform: 'nes',
     wizzoSystemId: 'NES',
     imageRegions: ['North America', 'United States', 'Canada', 'World'],
-    controls: [{ id: 'reset', label: 'Reset', action: 'reset' }],
+    controls: [LAUNCH_CORE, RESET],
   },
   nes_pal: {
     name: 'NES (PAL)',
@@ -24,7 +29,7 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     lbPlatform: 'nes',
     wizzoSystemId: 'NES',
     imageRegions: ['Europe', 'United Kingdom', 'Germany', 'France', 'Spain', 'Italy', 'Australia'],
-    controls: [{ id: 'reset', label: 'Reset', action: 'reset' }],
+    controls: [LAUNCH_CORE, RESET],
   },
   famicom: {
     name: 'Famicom',
@@ -37,7 +42,7 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     wizzoSystemId: 'NES',
     imageRegions: ['Japan', 'Asia', 'World'],
     nameRegions: ['Japan'],
-    controls: [{ id: 'reset', label: 'Reset', action: 'reset' }],
+    controls: [LAUNCH_CORE, RESET],
   },
   fds: {
     name: 'FDS',
@@ -50,10 +55,7 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     wizzoSystemId: 'NES',
     imageRegions: ['Japan', 'Asia', 'World'],
     nameRegions: ['Japan'],
-    controls: [
-      { id: 'reset', label: 'Reset', action: 'reset' },
-      { id: 'flip_disk', label: 'Flip Disk', action: 'user' },
-    ],
+    controls: [LAUNCH_CORE, RESET, FLIP_DISK],
   },
   av_famicom: {
     name: 'AV Famicom',
@@ -67,7 +69,7 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     imageRegions: ['Japan', 'Asia', 'World'],
     nameRegions: ['Japan'],
     collectionGroup: 'famicom',
-    controls: [{ id: 'reset', label: 'Reset', action: 'reset' }],
+    controls: [LAUNCH_CORE, RESET],
   },
 };
 
