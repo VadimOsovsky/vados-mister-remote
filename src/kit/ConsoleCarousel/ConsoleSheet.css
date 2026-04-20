@@ -1,0 +1,93 @@
+/* ── Console Badge (header trigger) ── */
+.console-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px 6px 8px;
+  border-radius: 12px;
+  border: 2px solid var(--border-main);
+  background: var(--bg-card);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease;
+  user-select: none;
+}
+
+.console-badge:active {
+  transform: scale(0.95);
+  background: var(--bg-input);
+}
+
+.console-badge-img {
+  height: 24px;
+  max-width: 200px;
+  object-fit: contain;
+  pointer-events: none;
+  align-items: start;
+  padding: 0 12px;
+}
+
+.console-badge svg {
+  width: 14px;
+  height: 14px;
+  color: var(--text-tertiary);
+  opacity: 0.6;
+  transition: transform 0.2s ease;
+}
+
+/* ── Console Sheet (vaul drawer) ── */
+.console-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: var(--bg-overlay);
+}
+
+.console-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 201;
+  border-radius: 16px 16px 0 0;
+  background: var(--bg-primary);
+  border-top: 1px solid var(--border-main);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.console-sheet-handle {
+  display: flex;
+  justify-content: center;
+  padding: 2px 0;
+  margin-top: 6px;
+  margin-bottom: 2px;
+  position: relative;
+  z-index: 1;
+  opacity: 0.35 !important;
+}
+
+.console-sheet-body {
+  padding: 0 0 16px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+}
+
+.console-sheet-branding {
+  text-align: center;
+  font-family: 'Sora', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-tertiary);
+  margin-bottom: 4px;
+  transition: color 0.25s ease;
+}
+
+.console-sheet-divider {
+  height: 1px;
+  background: var(--border-main);
+  margin: 4px 24px 12px;
+  opacity: 0.6;
+}

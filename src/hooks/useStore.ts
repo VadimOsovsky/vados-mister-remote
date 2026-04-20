@@ -4,13 +4,15 @@ import type { ConsoleKey, LaunchBoxGame, SortMode } from '../types';
 import { hasImageInRegions, loadPlatformGames, searchGames } from '../services/launchbox';
 import { SORT_FNS } from '../services/sorting';
 import { useAppContext } from '../AppContext';
+import { readStoreSort, writeStoreSort } from '../lib/storage';
 
 export function useStore(activeConsole: ConsoleKey) {
     const { collectionIds } = useAppContext();
     const [games, setGames] = useState<LaunchBoxGame[]>([]);
     const [loading, setLoading] = useState(false);
     const [search, setSearch] = useState('');
-    const [sort, setSort] = useState<SortMode>('popular');
+    const [sort, _setSort] = useState<SortMode>(() => readStoreSort() ?? 'popular');
+    const setSort = (s: SortMode) => { _setSort(s); writeStoreSort(s); };
 
     const platform = PLATFORMS[activeConsole];
 

@@ -33,10 +33,17 @@ export interface SaveSlot {
   gameName: string;
 }
 
+// ── CONSOLE CONTROLS ──
+export interface ConsoleControl {
+  id: string;
+  label: string;
+  action: string;
+}
+
 // ── PLATFORM DEFINITION ──
 export interface PlatformDef {
   name: string;
-  icon: string;
+  logo: string;
   theme: string;
   branding: string;
   colors: string[];
@@ -44,6 +51,8 @@ export interface PlatformDef {
   wizzoSystemId: string;     // MiSTer/Wizzo system ID for searchGames() API
   imageRegions: string[];    // Priority order for image region resolution
   collectionGroup?: ConsoleKey; // Share collection storage with another console
+  imageUrl?: string;
+  controls?: ConsoleControl[];
 }
 
 // ── LAUNCHBOX ──

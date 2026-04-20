@@ -1,11 +1,10 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useAppContext } from '../../AppContext';
 import { useCollection } from '../../hooks/useCollection';
-import { ConsoleSwitcher } from './ConsoleSwitcher';
+import { ConsoleBadge, ConsoleSheet } from '../../kit/ConsoleCarousel/ConsoleSheet';
 import { SearchBar } from './SearchBar';
 import { GameGrid } from './GameGrid';
 import { BrandingBar } from './BrandingBar';
-import { COLLECTION_KEYS } from '../../constants';
 import type { ConsoleKey, LaunchBoxGame } from '../../types';
 import './CollectionPage.css';
 
@@ -13,6 +12,7 @@ export function CollectionPage({ onSelectGame }: { onSelectGame: (game: LaunchBo
     const { activeConsole, setActiveConsole, platform, connected } = useAppContext();
     const { loading, search, setSearch, filteredGames } = useCollection(activeConsole);
     const scrollRef = useRef<HTMLDivElement>(null);
+    const [consoleSheetOpen, setConsoleSheetOpen] = useState(false);
 
     const switchConsole = useCallback((key: ConsoleKey) => {
         setActiveConsole(key);
@@ -23,13 +23,12 @@ export function CollectionPage({ onSelectGame }: { onSelectGame: (game: LaunchBo
         <div className="page-layout">
             <div className="header">
                 <div className="header-top">
-                    <div className="header-title">MiSTer Remote</div>
+                    <ConsoleBadge onClick={() => setConsoleSheetOpen(true)} />
                     <div className="status-badge">
                         <div className={`status-dot ${connected ? '' : 'offline'}`} />
                         <span>{connected ? 'Connected' : 'Offline'}</span>
                     </div>
                 </div>
-                <ConsoleSwitcher activeConsole={activeConsole} onSwitch={switchConsole} keys={COLLECTION_KEYS} />
             </div>
 
             <div className="page-scroll" ref={scrollRef}>
@@ -44,6 +43,8 @@ export function CollectionPage({ onSelectGame }: { onSelectGame: (game: LaunchBo
 
                 <BrandingBar text={platform.branding} />
             </div>
+
+            <ConsoleSheet open={consoleSheetOpen} onOpenChange={setConsoleSheetOpen} onSwitch={switchConsole} />
         </div>
     );
 }

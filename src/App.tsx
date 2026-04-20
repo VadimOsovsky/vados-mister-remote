@@ -3,7 +3,7 @@ import { Routes, Route, Navigate } from 'react-router';
 
 import { PLATFORMS } from './constants';
 import type { ConsoleKey } from './types';
-import { readHost, getCollectionIds, addCollectionId, removeCollectionId } from './lib/storage';
+import { readHost, getCollectionIds, addCollectionId, removeCollectionId, readActiveConsole, writeActiveConsole } from './lib/storage';
 import { GridIcon, StoreIcon, RemoteIcon, SettingsIcon } from './lib/icons';
 import { useConnection } from './hooks/useConnection';
 import { useGameSheet } from './hooks/useGameSheet';
@@ -26,7 +26,7 @@ const TAB_ITEMS = [
 ];
 
 export default function MisterRemote() {
-    const [activeConsole, setActiveConsole] = useState<ConsoleKey>('nes_ntsc');
+    const [activeConsole, setActiveConsole] = useState<ConsoleKey>(() => readActiveConsole() ?? 'nes_ntsc');
     const [misterHost, setMisterHost] = useState(readHost);
     const { connected, api } = useConnection(misterHost);
     const platform = PLATFORMS[activeConsole];
@@ -55,6 +55,7 @@ export default function MisterRemote() {
 
     const switchConsole = useCallback((key: ConsoleKey) => {
         setActiveConsole(key);
+        writeActiveConsole(key);
     }, []);
 
     return (

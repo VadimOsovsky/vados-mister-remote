@@ -1,4 +1,4 @@
-import type { ConsoleKey, GameOverrides, SaveSlot } from '../types';
+import type { ConsoleKey, GameOverrides, SaveSlot, SortMode } from '../types';
 import { PLATFORMS } from '../constants';
 
 const HOST_KEY = 'mister_host';
@@ -6,6 +6,8 @@ const ROM_MAPPINGS_KEY = 'rom_mappings';
 const SAVE_SLOTS_PREFIX = 'save_slots';
 const GAME_OVERRIDES_PREFIX = 'game_overrides';
 const COLLECTION_PREFIX = 'collection';
+const ACTIVE_CONSOLE_KEY = 'active_console';
+const STORE_SORT_KEY = 'store_sort';
 
 export const EMPTY_SLOTS: (SaveSlot | null)[] = [null, null, null, null];
 
@@ -114,4 +116,28 @@ export function removeCollectionId(consoleKey: ConsoleKey, gameId: string): stri
         localStorage.setItem(`${COLLECTION_PREFIX}_${key}`, JSON.stringify(ids));
     } catch { /* localStorage full */ }
     return ids;
+}
+
+// ── Active console ──
+
+export function readActiveConsole(): ConsoleKey | null {
+    const val = localStorage.getItem(ACTIVE_CONSOLE_KEY);
+    return val && val in PLATFORMS ? val as ConsoleKey : null;
+}
+
+export function writeActiveConsole(key: ConsoleKey): void {
+    localStorage.setItem(ACTIVE_CONSOLE_KEY, key);
+}
+
+// ── Store sort ──
+
+const VALID_SORT_MODES: Set<string> = new Set(['az', 'za', 'recent', 'most', 'popular', 'year', 'title']);
+
+export function readStoreSort(): SortMode | null {
+    const val = localStorage.getItem(STORE_SORT_KEY);
+    return val && VALID_SORT_MODES.has(val) ? val as SortMode : null;
+}
+
+export function writeStoreSort(sort: SortMode): void {
+    localStorage.setItem(STORE_SORT_KEY, sort);
 }

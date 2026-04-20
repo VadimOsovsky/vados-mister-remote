@@ -1,0 +1,77 @@
+/* ── Console Carousel ── */
+.console-carousel {
+  padding: 4px 0 0;
+}
+
+.console-carousel .swiper {
+  overflow: visible;
+  padding: 12px 0 6px;
+}
+
+.carousel-slide {
+  width: 56vw !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.carousel-card {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 16px;
+  border: var(--border-card);
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transform: scale(0.55);
+  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.swiper-slide-active .carousel-card {
+  transform: scale(1);
+  border-color: var(--accent);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
+}
+
+.carousel-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 12px;
+  pointer-events: none;
+}
+
+.carousel-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.carousel-icon-img {
+  max-width: 60%;
+  max-height: 60%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.carousel-label {
+  font-family: 'Sora', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  opacity: 0;
+  transition: color 0.3s ease, opacity 0.3s ease;
+}
+
+.swiper-slide-active .carousel-label {
+  color: var(--text-primary);
+  opacity: 1;
+}

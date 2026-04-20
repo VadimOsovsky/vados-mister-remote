@@ -1,0 +1,38 @@
+/* ── Console Controls ── */
+.console-controls {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.console-ctrl-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 2px solid var(--border-main);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-family: 'Sora', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.12s ease, background 0.12s ease;
+  user-select: none;
+}
+
+.console-ctrl-btn:active {
+  transform: scale(0.94);
+  background: var(--bg-input);
+}
+
+.console-ctrl-btn svg {
+  width: 14px;
+  height: 14px;
+  opacity: 0.7;
+}

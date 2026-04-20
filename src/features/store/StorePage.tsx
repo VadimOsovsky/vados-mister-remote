@@ -1,8 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { useAppContext } from '../../AppContext';
 import { useStore } from '../../hooks/useStore';
-import { STORE_KEYS } from '../../constants';
-import { ConsoleSwitcher } from '../collection/ConsoleSwitcher';
+import { ConsoleBadge, ConsoleSheet } from '../../kit/ConsoleCarousel/ConsoleSheet';
 import { SearchBar } from '../collection/SearchBar';
 import { GameGrid } from '../collection/GameGrid';
 import { BrandingBar } from '../collection/BrandingBar';
@@ -15,6 +14,7 @@ export function StorePage() {
     const { loading, search, setSearch, sort, setSort, filteredGames } = useStore(activeConsole);
     const [selectedGame, setSelectedGame] = useState<LaunchBoxGame | null>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
+    const [consoleSheetOpen, setConsoleSheetOpen] = useState(false);
 
     const switchConsole = useCallback((key: ConsoleKey) => {
         setActiveConsole(key);
@@ -25,13 +25,12 @@ export function StorePage() {
         <div className="page-layout">
             <div className="header">
                 <div className="header-top">
-                    <div className="header-title">Store</div>
+                    <ConsoleBadge onClick={() => setConsoleSheetOpen(true)} />
                     <div className="status-badge">
                         <div className={`status-dot ${connected ? '' : 'offline'}`} />
                         <span>{connected ? 'Connected' : 'Offline'}</span>
                     </div>
                 </div>
-                <ConsoleSwitcher activeConsole={activeConsole} onSwitch={switchConsole} keys={STORE_KEYS} />
             </div>
 
             <div className="page-scroll" ref={scrollRef}>
@@ -47,6 +46,7 @@ export function StorePage() {
                 <BrandingBar text={platform.branding} />
             </div>
 
+            <ConsoleSheet open={consoleSheetOpen} onOpenChange={setConsoleSheetOpen} onSwitch={switchConsole} />
             <StoreSheet selectedGame={selectedGame} onClose={() => setSelectedGame(null)} />
         </div>
     );
