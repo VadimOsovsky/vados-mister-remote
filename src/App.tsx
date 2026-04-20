@@ -3,7 +3,7 @@ import { Routes, Route, Navigate } from 'react-router';
 
 import { PLATFORMS } from './constants';
 import type { ConsoleKey } from './types';
-import { readHost, getCollectionIds, addCollectionId, removeCollectionId, readActiveConsole, writeActiveConsole } from './lib/storage';
+import { readHost, getCollectionIds, addCollectionId, removeCollectionId, getBeatenIds, addBeatenId, removeBeatenId, readActiveConsole, writeActiveConsole } from './lib/storage';
 import { GridIcon, StoreIcon, RemoteIcon, SettingsIcon } from './lib/icons';
 import { useConnection } from './hooks/useConnection';
 import { useGameSheet } from './hooks/useGameSheet';
@@ -34,9 +34,11 @@ export default function MisterRemote() {
     const sheet = useGameSheet();
 
     const [collectionIds, setCollectionIds] = useState<string[]>(() => getCollectionIds(activeConsole));
+    const [beatenIds, setBeatenIds] = useState<string[]>(() => getBeatenIds(activeConsole));
 
     useEffect(() => {
         setCollectionIds(getCollectionIds(activeConsole));
+        setBeatenIds(getBeatenIds(activeConsole));
     }, [activeConsole]);
 
     const addToCollection = useCallback((gameId: string) => {
@@ -45,6 +47,14 @@ export default function MisterRemote() {
 
     const removeFromCollection = useCallback((gameId: string) => {
         setCollectionIds(removeCollectionId(activeConsole, gameId));
+    }, [activeConsole]);
+
+    const markAsBeaten = useCallback((gameId: string) => {
+        setBeatenIds(addBeatenId(activeConsole, gameId));
+    }, [activeConsole]);
+
+    const unmarkAsBeaten = useCallback((gameId: string) => {
+        setBeatenIds(removeBeatenId(activeConsole, gameId));
     }, [activeConsole]);
 
     // Sync theme class onto <body> so portals (vaul Drawer, etc.) inherit CSS variables
@@ -64,6 +74,7 @@ export default function MisterRemote() {
             platform, api, connected,
             misterHost, setMisterHost,
             collectionIds, addToCollection, removeFromCollection,
+            beatenIds, markAsBeaten, unmarkAsBeaten,
         }}>
             <div className={`app ${platform.theme}`}>
                 <div className="app-content">

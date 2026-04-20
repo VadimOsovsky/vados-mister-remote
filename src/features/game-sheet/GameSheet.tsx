@@ -53,7 +53,7 @@ export function GameSheet({ selectedGame, sheetTab, setSheetTab, galleryOpen, se
     setEditMode: (edit: boolean) => void;
     onClose: () => void;
 }) {
-    const { activeConsole, platform, api, connected, removeFromCollection } = useAppContext();
+    const { activeConsole, platform, api, connected, removeFromCollection, unmarkAsBeaten } = useAppContext();
     const romPicker = useRomPicker(api, platform, selectedGame, activeConsole);
     const saveState = useSaveSlots(api, selectedGame, sheetTab);
 
@@ -108,6 +108,7 @@ export function GameSheet({ selectedGame, sheetTab, setSheetTab, galleryOpen, se
                                         onCancel={() => setEditMode(false)}
                                         onDelete={() => {
                                             removeFromCollection(selectedGame.id);
+                                            unmarkAsBeaten(selectedGame.id);
                                             deleteGameOverrides(selectedGame.id, activeConsole);
                                             onClose();
                                         }}
@@ -148,6 +149,7 @@ export function GameSheet({ selectedGame, sheetTab, setSheetTab, galleryOpen, se
                                         <Tabs.Content value="controls">
                                             <ControlsTab
                                                 api={api}
+                                                gameId={selectedGame.id}
                                                 saveState={saveState}
                                             />
                                         </Tabs.Content>

@@ -69,6 +69,11 @@
   display: none;
 }
 
+.slot-tile-beaten {
+  border-color: #FFD700;
+  border-width: 3px;
+}
+
 .slot-lock-badge {
   position: absolute;
   top: 6px;
@@ -86,4 +91,18 @@
 .slot-lock-badge svg {
   width: 12px;
   height: 12px;
+}
+
+.slot-beaten-badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 22px;
+  height: 22px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+}
+
+.slot-beaten-badge svg {
+  width: 100%;
+  height: 100%;
 }

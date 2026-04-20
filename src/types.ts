@@ -32,6 +32,7 @@ export interface SaveSlot {
   savedAt: string;
   gameName: string;
   locked?: boolean;
+  beaten?: boolean;
 }
 
 // ── CONSOLE CONTROLS ──

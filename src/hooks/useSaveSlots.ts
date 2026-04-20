@@ -77,9 +77,18 @@ export function useSaveSlots(api: WizzoApi, selectedGame: LaunchBoxGame | null, 
         setSaveSlots(updated);
     }, [selectedSlot, saveSlots, selectedGame, api]);
 
+    /** Toggle beaten flag on selected slot. Returns whether game has any beaten slot after toggle. */
+    const handleToggleBeaten = useCallback((): boolean => {
+        if (selectedSlot === null || !saveSlots[selectedSlot] || !selectedGame) return false;
+        const slot = saveSlots[selectedSlot]!;
+        const updated = putSaveSlot(selectedGame.id, selectedSlot, { ...slot, beaten: !slot.beaten });
+        setSaveSlots(updated);
+        return updated.some(s => s?.beaten);
+    }, [selectedSlot, saveSlots, selectedGame]);
+
     return {
         selectedSlot, setSelectedSlot,
         saveSlots, savingSlot,
-        handleSave, handleLoad, handleDelete, handleToggleLock,
+        handleSave, handleLoad, handleDelete, handleToggleLock, handleToggleBeaten,
     };
 }

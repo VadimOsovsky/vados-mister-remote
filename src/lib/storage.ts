@@ -6,6 +6,7 @@ const ROM_MAPPINGS_KEY = 'rom_mappings';
 const SAVE_SLOTS_PREFIX = 'save_slots';
 const GAME_OVERRIDES_PREFIX = 'game_overrides';
 const COLLECTION_PREFIX = 'collection';
+const BEATEN_PREFIX = 'beaten';
 const ACTIVE_CONSOLE_KEY = 'active_console';
 const STORE_SORT_KEY = 'store_sort';
 
@@ -114,6 +115,34 @@ export function removeCollectionId(consoleKey: ConsoleKey, gameId: string): stri
     const ids = getCollectionIds(key).filter(id => id !== gameId);
     try {
         localStorage.setItem(`${COLLECTION_PREFIX}_${key}`, JSON.stringify(ids));
+    } catch { /* localStorage full */ }
+    return ids;
+}
+
+// ── Beaten games ──
+
+export function getBeatenIds(consoleKey: ConsoleKey): string[] {
+    try {
+        const raw = localStorage.getItem(`${BEATEN_PREFIX}_${collectionKey(consoleKey)}`);
+        return raw ? JSON.parse(raw) : [];
+    } catch { return []; }
+}
+
+export function addBeatenId(consoleKey: ConsoleKey, gameId: string): string[] {
+    const key = collectionKey(consoleKey);
+    const ids = getBeatenIds(key);
+    if (!ids.includes(gameId)) ids.push(gameId);
+    try {
+        localStorage.setItem(`${BEATEN_PREFIX}_${key}`, JSON.stringify(ids));
+    } catch { /* localStorage full */ }
+    return ids;
+}
+
+export function removeBeatenId(consoleKey: ConsoleKey, gameId: string): string[] {
+    const key = collectionKey(consoleKey);
+    const ids = getBeatenIds(key).filter(id => id !== gameId);
+    try {
+        localStorage.setItem(`${BEATEN_PREFIX}_${key}`, JSON.stringify(ids));
     } catch { /* localStorage full */ }
     return ids;
 }

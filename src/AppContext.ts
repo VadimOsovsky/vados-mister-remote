@@ -13,6 +13,9 @@ export interface AppContextValue {
     collectionIds: string[];
     addToCollection: (gameId: string) => void;
     removeFromCollection: (gameId: string) => void;
+    beatenIds: string[];
+    markAsBeaten: (gameId: string) => void;
+    unmarkAsBeaten: (gameId: string) => void;
 }
 
 export const AppContext = createContext<AppContextValue>(null!);

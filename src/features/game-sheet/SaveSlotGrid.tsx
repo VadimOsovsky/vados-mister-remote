@@ -1,5 +1,5 @@
 import type { SaveSlot } from '../../types';
-import { LockIcon } from '../../lib/icons';
+import { LockIcon, TrophyBadgeIcon } from '../../lib/icons';
 import './SaveSlotGrid.css';
 
 export function SaveSlotGrid({ slots, selectedSlot, onSelectSlot, getScreenshotUrl }: {
@@ -13,7 +13,7 @@ export function SaveSlotGrid({ slots, selectedSlot, onSelectSlot, getScreenshotU
             {slots.map((slot, i) => (
                 <button
                     key={i}
-                    className={`slot-tile${selectedSlot === i ? ' slot-tile-selected' : ''}${slot ? '' : ' slot-tile-empty'}`}
+                    className={`slot-tile${selectedSlot === i ? (slot?.beaten ? ' slot-tile-beaten' : ' slot-tile-selected') : ''}${slot ? '' : ' slot-tile-empty'}`}
                     onClick={() => onSelectSlot(selectedSlot === i ? null : i)}
                 >
                     {slot ? (
@@ -26,6 +26,7 @@ export function SaveSlotGrid({ slots, selectedSlot, onSelectSlot, getScreenshotU
                         <div className="slot-empty-label">Empty</div>
                     )}
                     {slot?.locked && <div className="slot-lock-badge">{LockIcon}</div>}
+                    {slot?.beaten && <div className="slot-beaten-badge">{TrophyBadgeIcon}</div>}
                 </button>
             ))}
         </div>

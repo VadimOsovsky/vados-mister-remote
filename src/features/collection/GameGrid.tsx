@@ -1,6 +1,8 @@
 import { type RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { ConsoleKey, LaunchBoxGame } from '../../types';
+import { useAppContext } from '../../AppContext';
+import { TrophyBadgeIcon } from '../../lib/icons';
 import { LazyImage } from '../../kit/LazyImage';
 import { getImageUrl, resolveImages } from '../../services/launchbox';
 import { getGameOverrides } from '../../lib/storage';
@@ -15,14 +17,17 @@ function GameCard({ game, regions, activeConsole, onSelect }: {
     activeConsole: ConsoleKey;
     onSelect: (game: LaunchBoxGame) => void;
 }) {
+    const { beatenIds } = useAppContext();
     const overrides = getGameOverrides(game.id, activeConsole);
     const images = resolveImages(game, regions);
     const displayTitle = overrides.title || game.title;
     const frontSrc = overrides.boxFrontUrl || (images.front ? getImageUrl(images.front, 200) : undefined);
+    const isBeaten = beatenIds.includes(game.id);
     return (
         <div className="game-card" onClick={() => onSelect(game)}>
             <div className="card-art-wrap">
                 <LazyImage src={frontSrc} alt={displayTitle} className="card-art" />
+                {isBeaten && <div className="card-beaten">{TrophyBadgeIcon}</div>}
             </div>
             <div className="card-badge">
                 <div className="card-title">{displayTitle}</div>
