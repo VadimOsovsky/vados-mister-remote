@@ -56,7 +56,7 @@ export function LibraryTab({ game, regions, activeConsole, onOpenGallery }: {
                     className={`library-cover${cartridgeSrc ? ' library-cover-clickable' : ''}`}
                     onClick={() => { if (cartridgeSrc) onOpenGallery(cartGalleryIdx); }}
                 >
-                    <div className="library-cover-label">Cartridge</div>
+                    <div className="library-cover-label">Game</div>
                     <div className="library-cover-frame">
                         {cartridgeSrc
                             ? <img src={cartridgeSrc} alt="Cartridge" />

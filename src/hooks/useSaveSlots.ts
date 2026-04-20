@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { LaunchBoxGame, SaveSlot } from '../types';
+import type { ConsoleKey, LaunchBoxGame, SaveSlot } from '../types';
 import type { WizzoApi } from '../services/wizzoApi';
-import { EMPTY_SLOTS, getSaveSlots, putSaveSlot, deleteSaveSlot } from '../lib/storage';
+import { EMPTY_SLOTS, getSaveSlots, putSaveSlot, deleteSaveSlot, getRomMapping } from '../lib/storage';
 
-export function useSaveSlots(api: WizzoApi, selectedGame: LaunchBoxGame | null, sheetTab: string) {
+export function useSaveSlots(api: WizzoApi, selectedGame: LaunchBoxGame | null, sheetTab: string, activeConsole: ConsoleKey) {
     const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
     const [saveSlots, setSaveSlots] = useState<(SaveSlot | null)[]>(EMPTY_SLOTS);
     const [savingSlot, setSavingSlot] = useState(false);
@@ -59,14 +59,37 @@ export function useSaveSlots(api: WizzoApi, selectedGame: LaunchBoxGame | null, 
         }
     }, [selectedSlot, selectedGame, savingSlot, api, saveSlots]);
 
+    const [loadingSlot, setLoadingSlot] = useState(false);
+    const hasRomMapping = !!(selectedGame && getRomMapping(selectedGame.id, activeConsole));
+
     const handleLoad = useCallback(async () => {
-        if (selectedSlot === null || !saveSlots[selectedSlot]) return;
+        if (selectedSlot === null || !saveSlots[selectedSlot] || !selectedGame) return;
+        setLoadingSlot(true);
         try {
-            await api.loadState(selectedSlot!);
+            // Check if a game is already running
+            const playing = await api.getPlaying();
+            if (!playing.core) {
+                // No core running — try to launch the game first
+                const romPath = getRomMapping(selectedGame.id, activeConsole);
+                if (!romPath) {
+                    console.warn('No ROM mapping found, cannot auto-launch');
+                    return;
+                }
+                await api.launchGame(romPath);
+                // Poll until core is running (max ~15s)
+                for (let i = 0; i < 30; i++) {
+                    await new Promise(r => setTimeout(r, 500));
+                    const status = await api.getPlaying();
+                    if (status.core) break;
+                }
+            }
+            await api.loadState(selectedSlot);
         } catch (err) {
             console.warn('Load state failed:', err);
+        } finally {
+            setLoadingSlot(false);
         }
-    }, [selectedSlot, saveSlots, api]);
+    }, [selectedSlot, saveSlots, selectedGame, activeConsole, api]);
 
     const handleDelete = useCallback(() => {
         if (selectedSlot === null || !saveSlots[selectedSlot] || !selectedGame) return;
@@ -88,7 +111,7 @@ export function useSaveSlots(api: WizzoApi, selectedGame: LaunchBoxGame | null, 
 
     return {
         selectedSlot, setSelectedSlot,
-        saveSlots, savingSlot,
+        saveSlots, savingSlot, loadingSlot, hasRomMapping,
         handleSave, handleLoad, handleDelete, handleToggleLock, handleToggleBeaten,
     };
 }

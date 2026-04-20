@@ -55,7 +55,7 @@ export function GameSheet({ selectedGame, sheetTab, setSheetTab, galleryOpen, se
 }) {
     const { activeConsole, platform, api, connected, removeFromCollection, unmarkAsBeaten } = useAppContext();
     const romPicker = useRomPicker(api, platform, selectedGame, activeConsole);
-    const saveState = useSaveSlots(api, selectedGame, sheetTab);
+    const saveState = useSaveSlots(api, selectedGame, sheetTab, activeConsole);
 
     const regions = platform.imageRegions;
     const images = selectedGame ? resolveImages(selectedGame, regions) : undefined;

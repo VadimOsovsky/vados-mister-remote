@@ -13,6 +13,8 @@ export function ControlsTab({ api, saveState, gameId }: {
         setSelectedSlot: (slot: number | null) => void;
         saveSlots: (SaveSlot | null)[];
         savingSlot: boolean;
+        loadingSlot: boolean;
+        hasRomMapping: boolean;
         handleSave: () => void;
         handleLoad: () => void;
         handleDelete: () => void;
@@ -21,7 +23,7 @@ export function ControlsTab({ api, saveState, gameId }: {
     };
 }) {
     const { markAsBeaten, unmarkAsBeaten } = useAppContext();
-    const { selectedSlot, setSelectedSlot, saveSlots, savingSlot, handleSave, handleLoad, handleDelete, handleToggleLock, handleToggleBeaten } = saveState;
+    const { selectedSlot, setSelectedSlot, saveSlots, savingSlot, loadingSlot, hasRomMapping, handleSave, handleLoad, handleDelete, handleToggleLock, handleToggleBeaten } = saveState;
     const currentSlot = selectedSlot !== null ? saveSlots[selectedSlot] : null;
     const isLocked = !!currentSlot?.locked;
     const isBeaten = !!currentSlot?.beaten;
@@ -68,12 +70,12 @@ export function ControlsTab({ api, saveState, gameId }: {
                     <span>Beaten</span>
                 </button>
                 <button
-                    className={`ctrl-btn${selectedSlot === null || !saveSlots[selectedSlot ?? 0] ? ' ctrl-btn-disabled' : ''}`}
+                    className={`ctrl-btn${selectedSlot === null || !saveSlots[selectedSlot ?? 0] || loadingSlot || !hasRomMapping ? ' ctrl-btn-disabled' : ''}`}
                     onClick={handleLoad}
-                    disabled={selectedSlot === null || !saveSlots[selectedSlot ?? 0]}
+                    disabled={selectedSlot === null || !saveSlots[selectedSlot ?? 0] || loadingSlot || !hasRomMapping}
                 >
                     {LoadIcon}
-                    <span>Load</span>
+                    <span>{loadingSlot ? 'Loading...' : 'Load'}</span>
                 </button>
             </div>
 
