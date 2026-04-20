@@ -15,8 +15,16 @@ export function useSaveSlots(api: WizzoApi, selectedGame: LaunchBoxGame | null, 
         }
     }, [sheetTab, selectedGame]);
 
+    const handleToggleLock = useCallback(() => {
+        if (selectedSlot === null || !saveSlots[selectedSlot] || !selectedGame) return;
+        const slot = saveSlots[selectedSlot]!;
+        const updated = putSaveSlot(selectedGame.id, selectedSlot, { ...slot, locked: !slot.locked });
+        setSaveSlots(updated);
+    }, [selectedSlot, saveSlots, selectedGame]);
+
     const handleSave = useCallback(async () => {
         if (selectedSlot === null || !selectedGame || savingSlot) return;
+        if (saveSlots[selectedSlot]?.locked) return;
         setSavingSlot(true);
         try {
             // Delete old screenshot if overwriting a slot
@@ -62,6 +70,7 @@ export function useSaveSlots(api: WizzoApi, selectedGame: LaunchBoxGame | null, 
 
     const handleDelete = useCallback(() => {
         if (selectedSlot === null || !saveSlots[selectedSlot] || !selectedGame) return;
+        if (saveSlots[selectedSlot]?.locked) return;
         const slot = saveSlots[selectedSlot]!;
         api.deleteScreenshot(slot.screenshotCore, slot.screenshotFilename).catch(() => {});
         const updated = deleteSaveSlot(selectedGame.id, selectedSlot);
@@ -71,6 +80,6 @@ export function useSaveSlots(api: WizzoApi, selectedGame: LaunchBoxGame | null, 
     return {
         selectedSlot, setSelectedSlot,
         saveSlots, savingSlot,
-        handleSave, handleLoad, handleDelete,
+        handleSave, handleLoad, handleDelete, handleToggleLock,
     };
 }

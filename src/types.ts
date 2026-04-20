@@ -31,6 +31,7 @@ export interface SaveSlot {
   screenshotFilename: string;
   savedAt: string;
   gameName: string;
+  locked?: boolean;
 }
 
 // ── CONSOLE CONTROLS ──

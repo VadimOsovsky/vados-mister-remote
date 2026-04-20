@@ -1,4 +1,5 @@
 import type { SaveSlot } from '../../types';
+import { LockIcon } from '../../lib/icons';
 import './SaveSlotGrid.css';
 
 export function SaveSlotGrid({ slots, selectedSlot, onSelectSlot, getScreenshotUrl }: {
@@ -24,7 +25,7 @@ export function SaveSlotGrid({ slots, selectedSlot, onSelectSlot, getScreenshotU
                     ) : (
                         <div className="slot-empty-label">Empty</div>
                     )}
-                    {/*<div className="slot-label">Slot {i + 1}</div>*/}
+                    {slot?.locked && <div className="slot-lock-badge">{LockIcon}</div>}
                 </button>
             ))}
         </div>

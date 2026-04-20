@@ -43,3 +43,8 @@
 .ctrl-btn-disabled:active {
   transform: none;
 }
+
+.ctrl-btn-active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
