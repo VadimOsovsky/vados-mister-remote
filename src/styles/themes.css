@@ -4,7 +4,7 @@
 .theme-nes-ntsc,
 .theme-nes-pal {
   --bg-primary: #0a1030;
-  --bg-secondary: #101840;
+  --bg-secondary: #1a2250;
   --bg-card: #787888;
   --bg-card-inner: #6a6a78;
   --bg-input: #2a2a30;
@@ -24,7 +24,7 @@
   --accent-badge: #787888;
   --text-badge: #e0e0e0;
 
-  --border-main: #3a3a40;
+  --border-main: #505060;
   --border-card: 3px solid #4a4a4a;
   --border-input: 3px solid #3a3a40;
 
