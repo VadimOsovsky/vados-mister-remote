@@ -12,16 +12,27 @@ if [ -z "$MISTER_IP" ]; then
   exit 1
 fi
 
-# Check SSH connectivity
+# SSH multiplexing — one connection, one password prompt
+SSH_CONTROL="/tmp/mister-deploy-$$"
+SSH_OPTS="-o ControlMaster=auto -o ControlPath=$SSH_CONTROL -o ControlPersist=60"
+export SSH_OPTS
+
+ssh_cmd() { ssh $SSH_OPTS "$MISTER_USER@$MISTER_IP" "$@"; }
+scp_cmd() { scp $SSH_OPTS "$@"; }
+
+cleanup() { ssh -o ControlPath="$SSH_CONTROL" -O exit "$MISTER_USER@$MISTER_IP" 2>/dev/null || true; }
+trap cleanup EXIT
+
+# Check SSH connectivity (this also opens the master connection)
 echo "==> Checking connection to MiSTer ($MISTER_IP)..."
-if ! ssh -o ConnectTimeout=5 "$MISTER_USER@$MISTER_IP" "true" 2>/dev/null; then
+if ! ssh_cmd -o ConnectTimeout=5 "true" 2>/dev/null; then
   echo "Error: Cannot connect to $MISTER_USER@$MISTER_IP via SSH"
   echo "Make sure MiSTer is on and SSH is accessible (default password: 1)"
   exit 1
 fi
 
 # Check python3 is available (for HTTP server)
-PYTHON_BIN=$(ssh "$MISTER_USER@$MISTER_IP" "which python3 || which python" 2>/dev/null)
+PYTHON_BIN=$(ssh_cmd "which python3 || which python" 2>/dev/null)
 if [ -z "$PYTHON_BIN" ]; then
   echo "Error: python3/python not found on MiSTer"
   exit 1
@@ -31,31 +42,30 @@ echo "==> Building..."
 yarn build
 
 echo "==> Cleaning old files on MiSTer..."
-ssh "$MISTER_USER@$MISTER_IP" "rm -rf $REMOTE_DIR/*"
+ssh_cmd "rm -rf $REMOTE_DIR/*"
 
 echo "==> Uploading to MiSTer..."
-ssh "$MISTER_USER@$MISTER_IP" "mkdir -p $REMOTE_DIR/launchbox"
-# Upload everything except assets/ (those are on CDN)
-scp -r dist/index.html dist/manifest.webmanifest dist/registerSW.js dist/sw.js \
-       dist/favicon.svg dist/icons.svg dist/pwa-192x192.png dist/pwa-512x512.png \
-       dist/consoles/nes_logo.png \
-       "$MISTER_USER@$MISTER_IP:$REMOTE_DIR/"
+ssh_cmd "mkdir -p $REMOTE_DIR/launchbox"
+# Upload entire build output
+scp_cmd -r dist/* "$MISTER_USER@$MISTER_IP:$REMOTE_DIR/"
 # Upload LaunchBox game metadata
-scp public/launchbox/nes.json "$MISTER_USER@$MISTER_IP:$REMOTE_DIR/launchbox/"
+scp_cmd public/launchbox/nes.json "$MISTER_USER@$MISTER_IP:$REMOTE_DIR/launchbox/"
+# Upload SPA server script
+scp_cmd scripts/spa-server.py "$MISTER_USER@$MISTER_IP:$REMOTE_DIR/"
 
 echo "==> Setting up HTTP server..."
-ssh "$MISTER_USER@$MISTER_IP" bash <<REMOTE_EOF
+ssh_cmd bash <<REMOTE_EOF
 REMOTE_DIR="/media/fat/remote"
 HTTP_PORT=8183
 PYTHON_BIN="$PYTHON_BIN"
 STARTUP="/media/fat/linux/user-startup.sh"
 MARKER="# mister-remote"
-SERVER_CMD="\$PYTHON_BIN -m http.server \$HTTP_PORT -d \$REMOTE_DIR"
+SERVER_CMD="\$PYTHON_BIN \$REMOTE_DIR/server.py \$HTTP_PORT \$REMOTE_DIR"
 
 # Start python http server now (kill old instance first)
-pkill -f "http.server \$HTTP_PORT" 2>/dev/null || true
+pkill -f "server.py \$HTTP_PORT" 2>/dev/null || true
 nohup \$SERVER_CMD >/dev/null 2>&1 &
-echo "python http.server started on port \$HTTP_PORT"
+echo "SPA server started on port \$HTTP_PORT"
 
 # Add to startup if not already there
 if ! grep -q "\$MARKER" "\$STARTUP" 2>/dev/null; then

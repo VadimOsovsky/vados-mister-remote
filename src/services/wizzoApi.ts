@@ -257,6 +257,10 @@ export class WizzoApi {
     return this.sendRawKey(KEY_F1 + slot);
   }
 
+  flipDisk(): Promise<void> {
+    return this.sendRawKey(KEY_F5);
+  }
+
   private sendWsKeyCombo(modifierCode: number, keyCode: number): Promise<void> {
     return new Promise((resolve, reject) => {
       const ws = new WebSocket(this.wsUrl);
@@ -493,6 +497,7 @@ function parseWsMessage(msg: string): WizzoWsEvent | null {
 // MiSTer save states: Alt+F1..F4 (save slots 1-4), F1..F4 (load slots 1-4)
 const KEY_LEFTALT = 56;
 const KEY_F1 = 59;
+const KEY_F5 = 63;
 
 // ── Named keyboard keys (common ones for game controls) ──
 // Full list: https://github.com/wizzomafizzo/mrext/blob/main/cmd/remote/control/control.go

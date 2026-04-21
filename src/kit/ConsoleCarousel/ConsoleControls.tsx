@@ -21,7 +21,13 @@ export function ConsoleControls({ activeConsole }: { activeConsole: ConsoleKey }
     const press = (ctrl: ConsoleControl) => {
         navigator.vibrate?.(10);
         if (ctrl.type === 'launch') {
-            api.launchSystem(platform.wizzoSystemId);
+            if (platform.launchPath) {
+                api.launchGame(platform.launchPath);
+            } else {
+                api.launchSystem(platform.wizzoSystemId);
+            }
+        } else if (ctrl.id === 'flip_disk') {
+            api.flipDisk();
         } else {
             api.sendKey(ctrl.action);
         }

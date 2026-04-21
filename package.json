@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build && tsx scripts/cdn-rewrite.ts",
+    "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "discover-ss-ids": "tsx scripts/discover-ss-ids.ts",

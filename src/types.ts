@@ -57,6 +57,7 @@ export interface PlatformDef {
   collectionGroup?: ConsoleKey; // Share collection storage with another console
   imageUrl?: string;
   controls?: ConsoleControl[];
+  launchPath?: string;        // Override: launch this file path instead of launchSystem()
 }
 
 // ── LAUNCHBOX ──

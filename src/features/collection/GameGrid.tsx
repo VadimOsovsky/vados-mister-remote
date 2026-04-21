@@ -22,7 +22,7 @@ function GameCard({ game, regions, activeConsole, onSelect }: {
     const overrides = getGameOverrides(game.id, activeConsole);
     const images = resolveImages(game, regions);
     const displayTitle = overrides.title || resolveTitle(game, PLATFORMS[activeConsole].nameRegions);
-    const frontSrc = overrides.boxFrontUrl || (images.front ? getImageUrl(images.front, 200) : undefined);
+    const frontSrc = overrides.boxFrontUrl || (images.front ? getImageUrl(images.front, 300) : undefined);
     const isBeaten = beatenIds.includes(game.id);
     return (
         <div className="game-card" onClick={() => onSelect(game)}>

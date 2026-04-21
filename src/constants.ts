@@ -2,7 +2,7 @@ import type { ConsoleKey, PlatformDef, SortMode } from './types';
 
 // ── CONTROLS ──
 const LAUNCH_CORE = { id: 'launch_core', label: 'Launch', action: '', type: 'launch' } as const;
-const RESET = { id: 'reset', label: 'Reset', action: 'reset' } as const;
+const RESET = { id: 'reset', label: 'Reset', action: 'user' } as const;
 const FLIP_DISK = { id: 'flip_disk', label: 'Flip Disk', action: 'user' } as const;
 
 // ── PLATFORMS ──
@@ -56,6 +56,7 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     imageRegions: ['Japan', 'Asia', 'World'],
     nameRegions: ['Japan'],
     controls: [LAUNCH_CORE, RESET, FLIP_DISK],
+    launchPath: '/media/fat/games/NES/_fds_boot.fds',
   },
   av_famicom: {
     name: 'AV Famicom',
