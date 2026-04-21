@@ -38,6 +38,7 @@ ssh "$MISTER_USER@$MISTER_IP" "mkdir -p $REMOTE_DIR/launchbox"
 # Upload everything except assets/ (those are on CDN)
 scp -r dist/index.html dist/manifest.webmanifest dist/registerSW.js dist/sw.js \
        dist/favicon.svg dist/icons.svg dist/pwa-192x192.png dist/pwa-512x512.png \
+       dist/consoles.nes_logo.png \
        "$MISTER_USER@$MISTER_IP:$REMOTE_DIR/"
 # Upload LaunchBox game metadata
 scp public/launchbox/nes.json "$MISTER_USER@$MISTER_IP:$REMOTE_DIR/launchbox/"
