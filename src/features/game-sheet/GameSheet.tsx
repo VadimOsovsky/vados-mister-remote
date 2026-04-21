@@ -54,7 +54,7 @@ export function GameSheet({ selectedGame, sheetTab, setSheetTab, galleryOpen, se
     onClose: () => void;
 }) {
     const { activeConsole, platform, api, connected, removeFromCollection, unmarkAsBeaten } = useAppContext();
-    const romPicker = useRomPicker(api, platform, selectedGame, activeConsole);
+const romPicker = useRomPicker(api, platform, selectedGame, activeConsole);
     const saveState = useSaveSlots(api, selectedGame, sheetTab, activeConsole);
 
     const regions = platform.imageRegions;
@@ -128,6 +128,7 @@ export function GameSheet({ selectedGame, sheetTab, setSheetTab, galleryOpen, se
                                             <MainTab
                                                 game={selectedGame}
                                                 regions={regions}
+                                                activeConsole={activeConsole}
                                                 connected={connected}
                                                 romPicker={romPicker}
                                                 onLaunch={romPicker.handleLaunchGame}

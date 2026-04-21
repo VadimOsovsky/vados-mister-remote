@@ -74,26 +74,6 @@
   border-color: var(--accent);
 }
 
-.rom-picker-search-btn {
-  padding: 10px 16px;
-  border-radius: 10px;
-  border: 2px solid rgba(255, 255, 255, 0.12);
-  background: var(--accent);
-  color: #fff;
-  font-family: 'Sora', sans-serif;
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.rom-picker-search-btn:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-
 .rom-picker-results {
   flex: 1;
   overflow-y: auto;

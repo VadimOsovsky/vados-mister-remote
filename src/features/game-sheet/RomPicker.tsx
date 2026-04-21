@@ -4,7 +4,7 @@ import './RomPicker.css';
 export function RomPicker({
     romSearchQuery, setRomSearchQuery,
     romSearchResults, romSearchLoading, romSearchError,
-    closeRomPicker, searchRoms, selectRom,
+    closeRomPicker, selectRom,
 }: {
     romSearchQuery: string;
     setRomSearchQuery: (q: string) => void;
@@ -12,7 +12,6 @@ export function RomPicker({
     romSearchLoading: boolean;
     romSearchError: string | null;
     closeRomPicker: () => void;
-    searchRoms: (q: string) => void;
     selectRom: (r: WizzoGameSearchResult) => void;
 }) {
     return (
@@ -28,17 +27,9 @@ export function RomPicker({
                         type="text"
                         value={romSearchQuery}
                         onChange={e => setRomSearchQuery(e.target.value)}
-                        onKeyDown={e => { if (e.key === 'Enter') searchRoms(romSearchQuery); }}
                         placeholder="Search ROMs on MiSTer..."
                         autoFocus
                     />
-                    <button
-                        className="rom-picker-search-btn"
-                        onClick={() => searchRoms(romSearchQuery)}
-                        disabled={romSearchLoading}
-                    >
-                        {romSearchLoading ? '...' : 'Search'}
-                    </button>
                 </div>
                 <div className="rom-picker-results">
                     {romSearchLoading && (

@@ -52,7 +52,7 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     branding: 'Famicom Disk System',
     colors: ['#c0392b', '#a93226', '#922B21', '#7B241C'],
     lbPlatform: 'fds',
-    wizzoSystemId: 'NES',
+    wizzoSystemId: 'FDS',
     imageRegions: ['Japan', 'Asia', 'World'],
     nameRegions: ['Japan'],
     controls: [LAUNCH_CORE, RESET, FLIP_DISK],

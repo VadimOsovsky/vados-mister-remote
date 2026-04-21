@@ -1,13 +1,15 @@
-import type { LaunchBoxGame } from '../../types';
+import type { ConsoleKey, LaunchBoxGame } from '../../types';
 import type { WizzoGameSearchResult } from '../../services/wizzoApi';
 import { PlayIcon } from '../../lib/icons';
 import { getImageUrl, resolveImages } from '../../services/launchbox';
+import { getGameOverrides } from '../../lib/storage';
 import { RomPicker } from './RomPicker';
 import './MainTab.css';
 
-export function MainTab({ game, regions, connected, romPicker, onLaunch }: {
+export function MainTab({ game, regions, activeConsole, connected, romPicker, onLaunch }: {
     game: LaunchBoxGame;
     regions: string[];
+    activeConsole: ConsoleKey;
     connected: boolean;
     romPicker: {
         romPickerOpen: boolean;
@@ -17,13 +19,13 @@ export function MainTab({ game, regions, connected, romPicker, onLaunch }: {
         romSearchLoading: boolean;
         romSearchError: string | null;
         closeRomPicker: () => void;
-        searchRoms: (q: string) => void;
         selectRom: (r: WizzoGameSearchResult) => void;
     };
     onLaunch: () => void;
 }) {
+    const overrides = getGameOverrides(game.id, activeConsole);
     const images = resolveImages(game, regions);
-    const frontSrc = images.front ? getImageUrl(images.front, 400) : undefined;
+    const frontSrc = overrides.boxFrontUrl || (images.front ? getImageUrl(images.front, 400) : undefined);
 
     return (
         <div className="sheet-panel">

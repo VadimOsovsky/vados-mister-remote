@@ -1,9 +1,9 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ConsoleKey, LaunchBoxGame, PlatformDef } from '../types';
 import type { WizzoApi, WizzoGameSearchResult } from '../services/wizzoApi';
 import { getRomMapping, setRomMapping } from '../lib/storage';
 
-export function useRomPicker(api: WizzoApi, platform: PlatformDef, selectedGame: LaunchBoxGame | null, activeConsole: ConsoleKey) {
+export function useRomPicker(api: WizzoApi, platform: PlatformDef, selectedGame: LaunchBoxGame | null, activeConsole: ConsoleKey, onSelect?: (romPath: string) => void) {
     const [romPickerOpen, setRomPickerOpen] = useState(false);
     const [romSearchQuery, setRomSearchQuery] = useState('');
     const [romSearchResults, setRomSearchResults] = useState<WizzoGameSearchResult[]>([]);
@@ -65,16 +65,31 @@ export function useRomPicker(api: WizzoApi, platform: PlatformDef, selectedGame:
         }
     }, [api, platform.wizzoSystemId]);
 
+    // Debounced auto-search on query change
+    const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
+    useEffect(() => {
+        if (!romPickerOpen) return;
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(() => {
+            searchRoms(romSearchQuery);
+        }, 500);
+        return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+    }, [romSearchQuery, romPickerOpen, searchRoms]);
+
     const selectRom = useCallback(async (result: WizzoGameSearchResult) => {
         if (!selectedGame) return;
         setRomMapping(selectedGame.id, activeConsole, result.path);
         setRomPickerOpen(false);
-        try {
-            await api.launchGame(result.path);
-        } catch {
-            openRomPicker(selectedGame.title);
+        if (onSelect) {
+            onSelect(result.path);
+        } else {
+            try {
+                await api.launchGame(result.path);
+            } catch {
+                openRomPicker(selectedGame.title);
+            }
         }
-    }, [selectedGame, activeConsole, api, openRomPicker]);
+    }, [selectedGame, activeConsole, api, openRomPicker, onSelect]);
 
     const handleLaunchGame = useCallback(async () => {
         if (!selectedGame) return;
