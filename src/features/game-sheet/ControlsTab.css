@@ -1,8 +1,16 @@
 /* ── Controls tab ── */
-.ctrl-grid {
+.ctrl-grid-top {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 10px;
+}
+
+.ctrl-grid-bottom {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 .ctrl-btn {
@@ -22,7 +30,13 @@
   text-transform: uppercase;
   letter-spacing: 0.03em;
   cursor: pointer;
-  transition: transform 0.15s ease;
+  transition: transform 0.15s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.ctrl-btn-wide {
+  flex-direction: row;
+  padding: 24px 8px;
+  font-size: 11px;
 }
 
 .ctrl-btn:active {
@@ -52,4 +66,9 @@
 .ctrl-btn-beaten {
   border-color: #FFD700;
   color: #FFD700;
+}
+
+.ctrl-btn-danger {
+  border-color: #ff4444;
+  color: #ff4444;
 }

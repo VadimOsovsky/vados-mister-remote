@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import type { SaveSlot } from '../../types';
 import type { WizzoApi } from '../../services/wizzoApi';
 import { useAppContext } from '../../AppContext';
@@ -27,6 +28,9 @@ export function ControlsTab({ api, saveState, gameId }: {
     const currentSlot = selectedSlot !== null ? saveSlots[selectedSlot] : null;
     const isLocked = !!currentSlot?.locked;
     const isBeaten = !!currentSlot?.beaten;
+    const [confirmDelete, setConfirmDelete] = useState(false);
+
+    useEffect(() => { setConfirmDelete(false); }, [selectedSlot]);
 
     function onToggleBeaten() {
         const hasAnyBeaten = handleToggleBeaten();
@@ -34,16 +38,26 @@ export function ControlsTab({ api, saveState, gameId }: {
         else unmarkAsBeaten(gameId);
     }
 
+    function onDelete() {
+        if (!confirmDelete) {
+            setConfirmDelete(true);
+            return;
+        }
+        setConfirmDelete(false);
+        handleDelete();
+    }
+
     return (
         <div className="sheet-panel">
-            <div className="ctrl-grid">
+            <div className="ctrl-grid-top">
                 <button
-                    className={`ctrl-btn${selectedSlot === null || !currentSlot || isLocked ? ' ctrl-btn-disabled' : ''}`}
-                    onClick={handleDelete}
+                    className={`ctrl-btn${selectedSlot === null || !currentSlot || isLocked ? ' ctrl-btn-disabled' : ''}${confirmDelete ? ' ctrl-btn-danger' : ''}`}
+                    onClick={onDelete}
+                    onBlur={() => setConfirmDelete(false)}
                     disabled={selectedSlot === null || !currentSlot || isLocked}
                 >
                     {TrashIcon}
-                    <span>Delete</span>
+                    <span>{confirmDelete ? 'Confirm' : 'Delete'}</span>
                 </button>
                 <button
                     className={`ctrl-btn${selectedSlot === null || !currentSlot ? ' ctrl-btn-disabled' : ''}${isLocked ? ' ctrl-btn-active' : ''}`}
@@ -54,14 +68,6 @@ export function ControlsTab({ api, saveState, gameId }: {
                     <span>{isLocked ? 'Unlock' : 'Lock'}</span>
                 </button>
                 <button
-                    className={`ctrl-btn${selectedSlot === null || savingSlot || isLocked && !!currentSlot ? ' ctrl-btn-disabled' : ''}`}
-                    onClick={handleSave}
-                    disabled={selectedSlot === null || savingSlot || (isLocked && !!currentSlot)}
-                >
-                    {SaveIcon}
-                    <span>{savingSlot ? 'Saving...' : 'Save'}</span>
-                </button>
-                <button
                     className={`ctrl-btn${selectedSlot === null || !currentSlot ? ' ctrl-btn-disabled' : ''}${isBeaten ? ' ctrl-btn-beaten' : ''}`}
                     onClick={onToggleBeaten}
                     disabled={selectedSlot === null || !currentSlot}
@@ -69,8 +75,18 @@ export function ControlsTab({ api, saveState, gameId }: {
                     {TrophyIcon}
                     <span>Beaten</span>
                 </button>
+            </div>
+            <div className="ctrl-grid-bottom">
                 <button
-                    className={`ctrl-btn${selectedSlot === null || !saveSlots[selectedSlot ?? 0] || loadingSlot || !hasRomMapping ? ' ctrl-btn-disabled' : ''}`}
+                    className={`ctrl-btn ctrl-btn-wide${selectedSlot === null || savingSlot || isLocked && !!currentSlot ? ' ctrl-btn-disabled' : ''}`}
+                    onClick={handleSave}
+                    disabled={selectedSlot === null || savingSlot || (isLocked && !!currentSlot)}
+                >
+                    {SaveIcon}
+                    <span>{savingSlot ? 'Saving...' : 'Save'}</span>
+                </button>
+                <button
+                    className={`ctrl-btn ctrl-btn-wide${selectedSlot === null || !saveSlots[selectedSlot ?? 0] || loadingSlot || !hasRomMapping ? ' ctrl-btn-disabled' : ''}`}
                     onClick={handleLoad}
                     disabled={selectedSlot === null || !saveSlots[selectedSlot ?? 0] || loadingSlot || !hasRomMapping}
                 >
