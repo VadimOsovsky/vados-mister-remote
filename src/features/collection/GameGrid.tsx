@@ -25,7 +25,10 @@ function GameCard({ game, regions, activeConsole, onSelect }: {
     const frontSrc = overrides.boxFrontUrl || (images.front ? getImageUrl(images.front, 300) : undefined);
     const isBeaten = beatenIds.includes(game.id);
     return (
-        <div className="game-card" onClick={() => onSelect(game)}>
+        <div
+            className={`game-card${isBeaten ? ' beaten' : ''}`}
+            onClick={() => onSelect(game)}
+        >
             <div className="card-art-wrap">
                 <LazyImage src={frontSrc} alt={displayTitle} className="card-art" />
                 {isBeaten && <div className="card-beaten">{TrophyBadgeIcon}</div>}

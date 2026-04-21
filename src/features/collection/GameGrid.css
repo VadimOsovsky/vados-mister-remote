@@ -81,10 +81,10 @@
 
 .card-beaten {
   position: absolute;
-  top: 6px;
-  left: 6px;
-  width: 22px;
-  height: 22px;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
   z-index: 2;
   filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.6));
   pointer-events: none;
@@ -124,4 +124,54 @@
   opacity: 0.6;
   flex-shrink: 0;
   margin-left: 6px;
+}
+
+/* ── BEATEN CARD: Golden Trophy Treatment ── */
+
+@keyframes trophy-glow {
+  0%, 100% { filter: drop-shadow(0 0 3px rgba(255, 215, 0, 0.6)); }
+  50%      { filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.9)); }
+}
+
+.game-card.beaten {
+  position: relative;
+  border: 3px solid #D4B84A;
+  box-shadow:
+    0 0 0 1px rgba(212, 184, 74, 0.35),
+    0 0 10px rgba(255, 220, 50, 0.2);
+}
+
+/* Golden vignette on box art */
+.game-card.beaten .card-art-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 50%,
+    rgba(255, 220, 50, 0.10) 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Enhanced trophy icon */
+.game-card.beaten .card-beaten {
+  width: 20px;
+  height: 20px;
+  animation: trophy-glow 3s ease-in-out infinite;
+}
+
+/* Golden badge */
+.game-card.beaten .card-badge {
+  background: linear-gradient(135deg, #CCA820 0%, #E8C840 50%, #CCA820 100%);
+}
+
+.game-card.beaten .card-title,
+.game-card.beaten .card-year {
+  color: #1a1200;
+}
+
+.game-card.beaten .card-year {
+  opacity: 0.7;
 }

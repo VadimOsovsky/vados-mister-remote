@@ -105,3 +105,37 @@
   --tab-bar-active: #c0392b;
   --tab-bar-border: #222222;
 }
+
+/* ── BEATEN CARD: Theme-specific overrides ── */
+
+/* NES dark — brighter shimmer and stronger glow on dark background */
+.theme-nes-ntsc .game-card.beaten,
+.theme-nes-pal .game-card.beaten {
+  box-shadow:
+    0 0 0 1px rgba(212, 184, 74, 0.45),
+    0 0 14px rgba(255, 220, 50, 0.25);
+}
+
+/* Famicom — warmer gold to stand out against cream */
+.theme-famicom .game-card.beaten {
+  border-color: #CCA820;
+  box-shadow:
+    0 0 0 1px rgba(204, 168, 32, 0.35),
+    0 0 8px rgba(204, 168, 32, 0.15);
+}
+
+.theme-famicom .game-card.beaten .card-art-wrap::after {
+  background: radial-gradient(
+    ellipse at center,
+    transparent 50%,
+    rgba(204, 168, 32, 0.07) 100%
+  );
+}
+
+/* AV Famicom — adjusted gold for cooler grey background */
+.theme-av-famicom .game-card.beaten {
+  border-color: #D0B030;
+  box-shadow:
+    0 0 0 1px rgba(208, 176, 48, 0.35),
+    0 0 8px rgba(208, 176, 48, 0.15);
+}
