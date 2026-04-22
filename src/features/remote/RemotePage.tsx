@@ -1,5 +1,5 @@
 import { useAppContext } from '../../AppContext';
-import { OsdIcon } from '../../lib/icons';
+import { OsdIcon, ResetIcon } from '../../lib/icons';
 import { KEYBOARD_KEYS } from '../../services/wizzoApi';
 import './RemotePage.css';
 
@@ -17,6 +17,10 @@ export function RemotePage() {
 
             <div className="remote-body">
                 <div className="remote-actions">
+                    <button className="remote-btn" onClick={() => press(KEYBOARD_KEYS.reset)}>
+                        {ResetIcon}
+                        <span>Reset</span>
+                    </button>
                     <button className="remote-btn" onClick={() => press(KEYBOARD_KEYS.osd)}>
                         {OsdIcon}
                         <span>OSD</span>
