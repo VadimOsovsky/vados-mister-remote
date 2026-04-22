@@ -8,24 +8,52 @@ function escapeXml(s: string): string {
 }
 
 function buildMglXml(setname: string, rbf: string, romPath: string): string {
-  return `<setname same_dir="1">${setname}</setname><rbf>${rbf}</rbf><file delay="2" type="f" index="0" path="${escapeXml(romPath)}"/>`;
+  return `<mistergamedescription>
+   <rbf>${rbf}</rbf>
+   <setname same_dir="1">${setname}</setname>
+   <file delay="2" type="f" index="1" path="${escapeXml(romPath)}"/>
+</mistergamedescription>
+`
 }
 
 async function zaparooLaunchMgl(host: string, mglXml: string): Promise<void> {
-  const url = `http://${host}:${ZAPAROO_PORT}/api`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      jsonrpc: '2.0',
-      id: 1,
-      method: 'launch',
-      params: { text: `mister.mgl:${mglXml}` },
-    }),
+  const url = `ws://${host}:${ZAPAROO_PORT}/api`;
+  return new Promise((resolve, reject) => {
+    const ws = new WebSocket(url);
+    const timeout = setTimeout(() => {
+      ws.close();
+      reject(new Error('Zaparoo WebSocket timeout'));
+    }, 10_000);
+
+    ws.onopen = () => {
+      ws.send(JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'launch',
+        params: { text: `**mister.mgl:${mglXml}` },
+      }));
+    };
+
+    ws.onmessage = (event) => {
+      clearTimeout(timeout);
+      try {
+        const json = JSON.parse(event.data as string);
+        if (json.error) {
+          reject(new Error(json.error.message ?? 'Zaparoo RPC error'));
+        } else {
+          resolve();
+        }
+      } catch {
+        resolve();
+      }
+      ws.close();
+    };
+
+    ws.onerror = () => {
+      clearTimeout(timeout);
+      reject(new Error('Zaparoo WebSocket connection failed'));
+    };
   });
-  if (!res.ok) throw new Error(`Zaparoo HTTP ${res.status}`);
-  const json = await res.json();
-  if (json.error) throw new Error(json.error.message ?? 'Zaparoo RPC error');
 }
 
 export async function launchGameForPlatform(
