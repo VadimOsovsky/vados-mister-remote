@@ -7,16 +7,18 @@ import { LazyImage } from '../../kit/LazyImage';
 import { getImageUrl, resolveImages, resolveTitle } from '../../services/launchbox';
 import { PLATFORMS } from '../../constants';
 import { getGameOverrides } from '../../lib/storage';
+import { getGamePrice } from '../../lib/pricing';
 import './GameGrid.css';
 
 const PAGE_SIZE = 50;
 const COLS = 2;
 
-function GameCard({ game, regions, activeConsole, onSelect }: {
+function GameCard({ game, regions, activeConsole, onSelect, showPrice }: {
     game: LaunchBoxGame;
     regions: string[];
     activeConsole: ConsoleKey;
     onSelect: (game: LaunchBoxGame) => void;
+    showPrice?: boolean;
 }) {
     const { beatenIds } = useAppContext();
     const overrides = getGameOverrides(game.id, activeConsole);
@@ -32,6 +34,7 @@ function GameCard({ game, regions, activeConsole, onSelect }: {
             <div className="card-art-wrap">
                 <LazyImage src={frontSrc} alt={displayTitle} className="card-art" />
                 {isBeaten && <div className="card-beaten">{TrophyBadgeIcon}</div>}
+                {showPrice && <div className="card-price">${getGamePrice(game)}</div>}
             </div>
             <div className="card-badge">
                 <div className="card-title">{displayTitle}</div>
@@ -41,12 +44,13 @@ function GameCard({ game, regions, activeConsole, onSelect }: {
     );
 }
 
-export function GameGrid({ games, regions, activeConsole, onSelect, scrollRef }: {
+export function GameGrid({ games, regions, activeConsole, onSelect, scrollRef, showPrice }: {
     games: LaunchBoxGame[];
     regions: string[];
     activeConsole: ConsoleKey;
     onSelect: (game: LaunchBoxGame) => void;
     scrollRef?: RefObject<HTMLDivElement | null>;
+    showPrice?: boolean;
 }) {
     const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
     const gridRef = useRef<HTMLDivElement>(null);
@@ -111,6 +115,7 @@ export function GameGrid({ games, regions, activeConsole, onSelect, scrollRef }:
                                     regions={regions}
                                     activeConsole={activeConsole}
                                     onSelect={onSelect}
+                                    showPrice={showPrice}
                                 />
                             );
                         })}

@@ -10,6 +10,9 @@ const BEATEN_PREFIX = 'beaten';
 const ACTIVE_CONSOLE_KEY = 'active_console';
 const CUSTOM_GAMES_PREFIX = 'custom_games';
 const STORE_SORT_KEY = 'store_sort';
+const WALLET_BALANCE_KEY = 'wallet_balance';
+const WALLET_LAST_TOPUP_KEY = 'wallet_last_topup';
+const WALLET_REWARDED_KEY = 'wallet_beaten_rewarded';
 
 export const EMPTY_SLOTS: (SaveSlot | null)[] = [null, null, null, null];
 
@@ -196,4 +199,43 @@ export function readStoreSort(): SortMode | null {
 
 export function writeStoreSort(sort: SortMode): void {
     localStorage.setItem(STORE_SORT_KEY, sort);
+}
+
+// ── Wallet ──
+
+export function getWalletBalance(): number {
+    try {
+        const raw = localStorage.getItem(WALLET_BALANCE_KEY);
+        return raw ? Number(raw) : 0;
+    } catch { return 0; }
+}
+
+export function setWalletBalance(amount: number): void {
+    try {
+        localStorage.setItem(WALLET_BALANCE_KEY, String(amount));
+    } catch { /* localStorage full */ }
+}
+
+export function getLastTopupDate(): string | null {
+    return localStorage.getItem(WALLET_LAST_TOPUP_KEY);
+}
+
+export function setLastTopupDate(date: string): void {
+    localStorage.setItem(WALLET_LAST_TOPUP_KEY, date);
+}
+
+export function getBeatenRewardedMap(): Record<string, true> {
+    try {
+        const raw = localStorage.getItem(WALLET_REWARDED_KEY);
+        return raw ? JSON.parse(raw) : {};
+    } catch { return {}; }
+}
+
+export function addBeatenRewardedId(gameId: string): Record<string, true> {
+    const map = getBeatenRewardedMap();
+    map[gameId] = true;
+    try {
+        localStorage.setItem(WALLET_REWARDED_KEY, JSON.stringify(map));
+    } catch { /* localStorage full */ }
+    return map;
 }

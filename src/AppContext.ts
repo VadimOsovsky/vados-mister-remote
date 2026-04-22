@@ -16,6 +16,8 @@ export interface AppContextValue {
     beatenIds: string[];
     markAsBeaten: (gameId: string) => void;
     unmarkAsBeaten: (gameId: string) => void;
+    balance: number;
+    purchaseGame: (gameId: string, price: number) => void;
 }
 
 export const AppContext = createContext<AppContextValue>(null!);

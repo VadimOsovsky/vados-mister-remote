@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { useNavigate } from 'react-router';
 import { Drawer } from 'vaul';
 import * as Tabs from '@radix-ui/react-tabs';
 import Lightbox from 'yet-another-react-lightbox';
@@ -8,8 +9,9 @@ import 'yet-another-react-lightbox/styles.css';
 import { useAppContext } from '../../AppContext';
 import { useRomPicker } from '../../hooks/useRomPicker';
 import type { LaunchBoxGame } from '../../types';
-import { InfoIcon, BookIcon, PlusIcon } from '../../lib/icons';
+import { InfoIcon, BookIcon } from '../../lib/icons';
 import { getImageUrl, resolveImages, resolveScreenshots, resolveTitle } from '../../services/launchbox';
+import { getGamePrice } from '../../lib/pricing';
 import { RomPicker } from '../game-sheet/RomPicker';
 import '../../features/game-sheet/GameSheet.css';
 import '../../features/game-sheet/MainTab.css';
@@ -23,10 +25,10 @@ const TABS: { key: StoreSheetTab; label: string; icon: React.ReactNode }[] = [
     { key: 'library', label: 'Library', icon: BookIcon },
 ];
 
-function StoreMainTab({ game, regions, onAdd, romPicker }: {
+function StoreMainTab({ game, regions, onPurchase, romPicker }: {
     game: LaunchBoxGame;
     regions: string[];
-    onAdd: () => void;
+    onPurchase: () => void;
     romPicker: {
         romPickerOpen: boolean;
         romSearchQuery: string;
@@ -38,7 +40,8 @@ function StoreMainTab({ game, regions, onAdd, romPicker }: {
         selectRom: (r: import('../../services/wizzoApi').WizzoGameSearchResult) => void;
     };
 }) {
-    const { platform } = useAppContext();
+    const { platform, balance } = useAppContext();
+    const price = getGamePrice(game);
     const images = resolveImages(game, regions);
     const frontSrc = images.front ? getImageUrl(images.front, 400) : undefined;
 
@@ -71,9 +74,19 @@ function StoreMainTab({ game, regions, onAdd, romPicker }: {
             {romPicker.romPickerOpen ? (
                 <RomPicker {...romPicker} />
             ) : (
-                <button className="sheet-btn sheet-btn-primary ctrl-launch-btn" onClick={onAdd}>
-                    {PlusIcon}
-                    <span>Add to Collection</span>
+                <button
+                    className="sheet-btn sheet-btn-purchase ctrl-launch-btn"
+                    disabled={balance < price}
+                    onClick={onPurchase}
+                >
+                    {balance < price ? (
+                        <span>Not Enough Funds</span>
+                    ) : (
+                        <>
+                            <span>Purchase</span>
+                            <span className="purchase-price">${price}</span>
+                        </>
+                    )}
                 </button>
             )}
         </div>
@@ -157,17 +170,19 @@ export function StoreSheet({ selectedGame, onClose }: {
     selectedGame: LaunchBoxGame | null;
     onClose: () => void;
 }) {
-    const { activeConsole, platform, api, addToCollection } = useAppContext();
+    const { activeConsole, platform, api, purchaseGame } = useAppContext();
+    const navigate = useNavigate();
     const [tab, setTab] = useState<StoreSheetTab>('main');
     const [galleryOpen, setGalleryOpen] = useState(false);
     const [galleryIndex, setGalleryIndex] = useState(0);
 
     const romPicker = useRomPicker(api, platform, selectedGame, activeConsole, useCallback(() => {
         if (selectedGame) {
-            addToCollection(selectedGame.id);
+            purchaseGame(selectedGame.id, getGamePrice(selectedGame));
         }
         onClose();
-    }, [selectedGame, addToCollection, onClose]));
+        navigate('/collection');
+    }, [selectedGame, purchaseGame, onClose, navigate]));
 
     // Reset rom picker when sheet closes (new game selected)
     const prevGameId = selectedGame?.id;
@@ -181,7 +196,7 @@ export function StoreSheet({ selectedGame, onClose }: {
     const images = selectedGame ? resolveImages(selectedGame, regions) : undefined;
     const frontSrc = images?.front ? getImageUrl(images.front, 200) : undefined;
 
-    function handleAdd() {
+    function handlePurchase() {
         if (selectedGame) {
             romPicker.openRomPicker(resolveTitle(selectedGame, platform.nameRegions));
         }
@@ -233,7 +248,7 @@ export function StoreSheet({ selectedGame, onClose }: {
                                         <StoreMainTab
                                             game={selectedGame}
                                             regions={regions}
-                                            onAdd={handleAdd}
+                                            onPurchase={handlePurchase}
                                             romPicker={romPicker}
                                         />
                                     </Tabs.Content>

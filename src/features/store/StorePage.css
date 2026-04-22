@@ -1,1 +1,25 @@
 @import '../collection/CollectionPage.css';
+
+/* ── Wallet Badge ── */
+.wallet-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: 10px;
+  border: 2px solid var(--border-main);
+  background: var(--bg-card);
+  font-family: 'Sora', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  line-height: 1;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.wallet-badge-dollar {
+  color: var(--accent);
+  font-weight: 800;
+}

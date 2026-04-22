@@ -10,7 +10,7 @@ import type { ConsoleKey, LaunchBoxGame } from '../../types';
 import './StorePage.css';
 
 export function StorePage() {
-    const { activeConsole, setActiveConsole, platform } = useAppContext();
+    const { activeConsole, setActiveConsole, platform, balance } = useAppContext();
     const { loading, search, setSearch, sort, setSort, filteredGames } = useStore(activeConsole);
     const [selectedGame, setSelectedGame] = useState<LaunchBoxGame | null>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -26,6 +26,9 @@ export function StorePage() {
             <div className="header">
                 <div className="header-top">
                     <ConsoleBadge onClick={() => setConsoleSheetOpen(true)} />
+                    <div className="wallet-badge">
+                        <span className="wallet-badge-dollar">$</span>{balance}
+                    </div>
                 </div>
             </div>
 
@@ -37,7 +40,7 @@ export function StorePage() {
                 </div>
                 <div className="section-label">Store · {filteredGames.length} games</div>
 
-                <GameGrid games={filteredGames} regions={platform.imageRegions} activeConsole={activeConsole} onSelect={setSelectedGame} scrollRef={scrollRef} />
+                <GameGrid games={filteredGames} regions={platform.imageRegions} activeConsole={activeConsole} onSelect={setSelectedGame} scrollRef={scrollRef} showPrice />
 
                 <BrandingBar text={platform.branding} />
             </div>

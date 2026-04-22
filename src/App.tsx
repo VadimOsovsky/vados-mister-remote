@@ -3,7 +3,8 @@ import { Routes, Route, Navigate } from 'react-router';
 
 import { PLATFORMS } from './constants';
 import type { ConsoleKey } from './types';
-import { readHost, getCollectionIds, addCollectionId, removeCollectionId, getBeatenIds, addBeatenId, removeBeatenId, readActiveConsole, writeActiveConsole } from './lib/storage';
+import { readHost, getCollectionIds, addCollectionId, removeCollectionId, getBeatenIds, addBeatenId, removeBeatenId, readActiveConsole, writeActiveConsole, getWalletBalance, setWalletBalance, getBeatenRewardedMap, addBeatenRewardedId } from './lib/storage';
+import { initWallet, BEATEN_REWARD } from './lib/wallet';
 import { GridIcon, StoreIcon, RemoteIcon, SettingsIcon } from './lib/icons';
 import { useConnection } from './hooks/useConnection';
 import { useGameSheet } from './hooks/useGameSheet';
@@ -35,6 +36,7 @@ export default function MisterRemote() {
 
     const [collectionIds, setCollectionIds] = useState<string[]>(() => getCollectionIds(activeConsole));
     const [beatenIds, setBeatenIds] = useState<string[]>(() => getBeatenIds(activeConsole));
+    const [balance, setBalance] = useState(() => initWallet());
 
     useEffect(() => {
         setCollectionIds(getCollectionIds(activeConsole));
@@ -49,8 +51,23 @@ export default function MisterRemote() {
         setCollectionIds(removeCollectionId(activeConsole, gameId));
     }, [activeConsole]);
 
+    const purchaseGame = useCallback((gameId: string, price: number) => {
+        const newBalance = balance - price;
+        setWalletBalance(newBalance);
+        setBalance(newBalance);
+        setCollectionIds(addCollectionId(activeConsole, gameId));
+    }, [activeConsole, balance]);
+
     const markAsBeaten = useCallback((gameId: string) => {
         setBeatenIds(addBeatenId(activeConsole, gameId));
+        // Award beaten reward (once per game, globally)
+        const rewarded = getBeatenRewardedMap();
+        if (!rewarded[gameId]) {
+            addBeatenRewardedId(gameId);
+            const newBalance = getWalletBalance() + BEATEN_REWARD;
+            setWalletBalance(newBalance);
+            setBalance(newBalance);
+        }
     }, [activeConsole]);
 
     const unmarkAsBeaten = useCallback((gameId: string) => {
@@ -75,6 +92,7 @@ export default function MisterRemote() {
             misterHost, setMisterHost,
             collectionIds, addToCollection, removeFromCollection,
             beatenIds, markAsBeaten, unmarkAsBeaten,
+            balance, purchaseGame,
         }}>
             <div className={`app ${platform.theme}`}>
                 <div className="app-content">
