@@ -142,3 +142,109 @@
   background: rgba(220, 38, 38, 0.18);
   color: #ef4444;
 }
+
+/* ── ROM Autocomplete ── */
+
+.rom-autocomplete-anchor {
+  position: relative;
+}
+
+/* Spinner inside input */
+.rom-autocomplete-spinner {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  width: 14px;
+  height: 14px;
+  margin-top: -7px;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: rom-spin 0.6s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes rom-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Dropdown */
+.rom-autocomplete-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  background: #18181e;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  animation: rom-dropdown-in 0.15s ease-out;
+}
+
+@keyframes rom-dropdown-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.rom-autocomplete-dropdown::-webkit-scrollbar {
+  width: 4px;
+}
+
+.rom-autocomplete-dropdown::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.rom-autocomplete-dropdown::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+}
+
+/* Item */
+.rom-autocomplete-item {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.rom-autocomplete-item:active {
+  transform: scale(0.98);
+}
+
+.rom-autocomplete-item-active,
+.rom-autocomplete-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.rom-autocomplete-item-active {
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.rom-autocomplete-name {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rom-autocomplete-path {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

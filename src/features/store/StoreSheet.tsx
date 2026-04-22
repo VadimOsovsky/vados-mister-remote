@@ -68,12 +68,14 @@ function StoreMainTab({ game, regions, onAdd, romPicker }: {
                 </div>
             </div>
             <div className="sheet-desc">{game.desc}</div>
-            <button className="sheet-btn sheet-btn-primary ctrl-launch-btn" onClick={onAdd}>
-                {PlusIcon}
-                <span>Add to Collection</span>
-            </button>
-
-            {romPicker.romPickerOpen && <RomPicker {...romPicker} />}
+            {romPicker.romPickerOpen ? (
+                <RomPicker {...romPicker} />
+            ) : (
+                <button className="sheet-btn sheet-btn-primary ctrl-launch-btn" onClick={onAdd}>
+                    {PlusIcon}
+                    <span>Add to Collection</span>
+                </button>
+            )}
         </div>
     );
 }
