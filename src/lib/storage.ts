@@ -1,4 +1,4 @@
-import type { ConsoleKey, GameOverrides, SaveSlot, SortMode } from '../types';
+import type { ConsoleKey, GameOverrides, LaunchBoxGame, SaveSlot, SortMode } from '../types';
 import { PLATFORMS } from '../constants';
 
 const HOST_KEY = 'mister_host';
@@ -8,6 +8,7 @@ const GAME_OVERRIDES_PREFIX = 'game_overrides';
 const COLLECTION_PREFIX = 'collection';
 const BEATEN_PREFIX = 'beaten';
 const ACTIVE_CONSOLE_KEY = 'active_console';
+const CUSTOM_GAMES_PREFIX = 'custom_games';
 const STORE_SORT_KEY = 'store_sort';
 
 export const EMPTY_SLOTS: (SaveSlot | null)[] = [null, null, null, null];
@@ -145,6 +146,32 @@ export function removeBeatenId(consoleKey: ConsoleKey, gameId: string): string[]
         localStorage.setItem(`${BEATEN_PREFIX}_${key}`, JSON.stringify(ids));
     } catch { /* localStorage full */ }
     return ids;
+}
+
+// ── Custom games ──
+
+export function getCustomGames(consoleKey: ConsoleKey): LaunchBoxGame[] {
+    try {
+        const raw = localStorage.getItem(`${CUSTOM_GAMES_PREFIX}_${collectionKey(consoleKey)}`);
+        return raw ? JSON.parse(raw) : [];
+    } catch { return []; }
+}
+
+export function addCustomGame(consoleKey: ConsoleKey, game: LaunchBoxGame): void {
+    const key = collectionKey(consoleKey);
+    const games = getCustomGames(key as ConsoleKey);
+    if (!games.some(g => g.id === game.id)) games.push(game);
+    try {
+        localStorage.setItem(`${CUSTOM_GAMES_PREFIX}_${key}`, JSON.stringify(games));
+    } catch { /* localStorage full */ }
+}
+
+export function removeCustomGame(consoleKey: ConsoleKey, gameId: string): void {
+    const key = collectionKey(consoleKey);
+    const games = getCustomGames(key as ConsoleKey).filter(g => g.id !== gameId);
+    try {
+        localStorage.setItem(`${CUSTOM_GAMES_PREFIX}_${key}`, JSON.stringify(games));
+    } catch { /* localStorage full */ }
 }
 
 // ── Active console ──

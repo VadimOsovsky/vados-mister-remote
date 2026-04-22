@@ -1,5 +1,6 @@
 import type { ConsoleKey, LaunchBoxGame, LaunchBoxImages } from '../types';
 import { PLATFORMS } from '../constants';
+import { getCustomGames } from '../lib/storage';
 
 const IMAGE_CDN = 'https://images.launchbox-app.com';
 const DB_NAME = 'launchbox-cache';
@@ -76,6 +77,21 @@ export function resolveTitle(
 }
 
 /**
+ * Collect all unique screenshots from every region of a game.
+ */
+export function resolveScreenshots(game: LaunchBoxGame): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const regionImages of Object.values(game.images)) {
+    if (regionImages.screenshot && !seen.has(regionImages.screenshot)) {
+      seen.add(regionImages.screenshot);
+      result.push(regionImages.screenshot);
+    }
+  }
+  return result;
+}
+
+/**
  * Resolve best image for a game given preferred regions.
  * Returns the first matching region's images, or the first available region.
  */
@@ -141,7 +157,9 @@ export async function loadPlatformGames(consoleKey: ConsoleKey): Promise<LaunchB
 export async function loadCollectionGames(consoleKey: ConsoleKey, collectionIds: string[]): Promise<LaunchBoxGame[]> {
   const allGames = await loadPlatformGames(consoleKey);
   const collectionSet = new Set(collectionIds);
-  return allGames.filter(g => collectionSet.has(g.id));
+  const lbGames = allGames.filter(g => collectionSet.has(g.id));
+  const customGames = getCustomGames(consoleKey).filter(g => collectionSet.has(g.id));
+  return [...lbGames, ...customGames];
 }
 
 /**

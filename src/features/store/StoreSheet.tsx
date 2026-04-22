@@ -9,7 +9,7 @@ import { useAppContext } from '../../AppContext';
 import { useRomPicker } from '../../hooks/useRomPicker';
 import type { LaunchBoxGame } from '../../types';
 import { InfoIcon, BookIcon, PlusIcon } from '../../lib/icons';
-import { getImageUrl, resolveImages, resolveTitle } from '../../services/launchbox';
+import { getImageUrl, resolveImages, resolveScreenshots, resolveTitle } from '../../services/launchbox';
 import { RomPicker } from '../game-sheet/RomPicker';
 import '../../features/game-sheet/GameSheet.css';
 import '../../features/game-sheet/MainTab.css';
@@ -86,6 +86,10 @@ function StoreLibraryTab({ game, regions, onOpenGallery }: {
     const images = resolveImages(game, regions);
     const frontSrc = images.front ? getImageUrl(images.front, 400) : undefined;
     const backSrc = images.back ? getImageUrl(images.back, 400) : undefined;
+    const screenshots = resolveScreenshots(game);
+
+    // Gallery index offset: screenshots start after front + back covers
+    const screenshotBaseIndex = (frontSrc ? 1 : 0) + (backSrc ? 1 : 0);
 
     return (
         <div className="sheet-panel">
@@ -113,6 +117,25 @@ function StoreLibraryTab({ game, regions, onOpenGallery }: {
                     </div>
                 </div>
             </div>
+
+            {screenshots.length > 0 && (
+                <div className="library-screenshots">
+                    <div className="library-screenshots-label">Screenshots</div>
+                    <div className="library-screenshots-grid">
+                        {screenshots.map((src, i) => (
+                            <div
+                                key={src}
+                                className="library-screenshot"
+                                onClick={() => onOpenGallery(screenshotBaseIndex + i)}
+                            >
+                                <div className="library-screenshot-frame">
+                                    <img src={getImageUrl(src, 400)} alt={`Screenshot ${i + 1}`} />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
@@ -122,6 +145,9 @@ function buildGallerySlides(game: LaunchBoxGame, regions: string[]): { src: stri
     const images = resolveImages(game, regions);
     if (images.front) slides.push({ src: getImageUrl(images.front) });
     if (images.back) slides.push({ src: getImageUrl(images.back) });
+    for (const screenshot of resolveScreenshots(game)) {
+        slides.push({ src: getImageUrl(screenshot) });
+    }
     return slides;
 }
 

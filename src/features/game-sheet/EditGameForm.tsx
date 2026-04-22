@@ -6,15 +6,17 @@ import { getImageUrl, resolveImages, resolveTitle } from '../../services/launchb
 import { PLATFORMS } from '../../constants';
 import './EditGameForm.css';
 
-export function EditGameForm({ game, regions, activeConsole, onSave, onCancel, onDelete }: {
+export function EditGameForm({ game, regions, activeConsole, onSave, onCancel, onDelete, isNew }: {
     game: LaunchBoxGame;
     regions: string[];
     activeConsole: ConsoleKey;
     onSave: () => void;
     onCancel: () => void;
     onDelete: () => void;
+    isNew?: boolean;
 }) {
     const [draft, setDraft] = useState<GameOverrides>(() => {
+        if (isNew) return getGameOverrides(game.id, activeConsole);
         const overrides = getGameOverrides(game.id, activeConsole);
         const images = resolveImages(game, regions);
         return {
@@ -33,7 +35,19 @@ export function EditGameForm({ game, regions, activeConsole, onSave, onCancel, o
         setDraft(prev => ({ ...prev, [key]: value || undefined }));
     }
 
+    const titleMissing = isNew && !draft.title?.trim();
+
     function handleSave() {
+        if (titleMissing) return;
+        if (isNew) {
+            const cleaned: GameOverrides = {};
+            for (const [k, v] of Object.entries(draft) as [keyof GameOverrides, string | undefined][]) {
+                if (v) cleaned[k] = v;
+            }
+            setGameOverrides(game.id, activeConsole, cleaned);
+            onSave();
+            return;
+        }
         // Only save fields that differ from defaults to avoid redundant storage
         const images = resolveImages(game, regions);
         const defaults: GameOverrides = {
@@ -139,20 +153,22 @@ export function EditGameForm({ game, regions, activeConsole, onSave, onCancel, o
             </div>
 
             <div className="edit-game-actions">
-                <button className="sheet-btn sheet-btn-primary" onClick={handleSave}>Save</button>
+                <button className="sheet-btn sheet-btn-primary" onClick={handleSave} disabled={titleMissing}>Save</button>
                 <button className="sheet-btn sheet-btn-secondary" onClick={onCancel}>Cancel</button>
             </div>
 
-            <div className="edit-game-danger">
-                <button
-                    className={`edit-game-delete-btn${confirmDelete ? ' edit-game-delete-btn-confirm' : ''}`}
-                    onClick={handleDelete}
-                    onBlur={() => setConfirmDelete(false)}
-                >
-                    {TrashIcon}
-                    <span>{confirmDelete ? 'Confirm Delete' : 'Delete from Collection'}</span>
-                </button>
-            </div>
+            {!isNew && (
+                <div className="edit-game-danger">
+                    <button
+                        className={`edit-game-delete-btn${confirmDelete ? ' edit-game-delete-btn-confirm' : ''}`}
+                        onClick={handleDelete}
+                        onBlur={() => setConfirmDelete(false)}
+                    >
+                        {TrashIcon}
+                        <span>{confirmDelete ? 'Confirm Delete' : 'Delete from Collection'}</span>
+                    </button>
+                </div>
+            )}
         </div>
     );
 }

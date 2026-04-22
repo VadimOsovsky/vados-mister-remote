@@ -56,6 +56,54 @@
   color: rgba(255, 255, 255, 0.25);
 }
 
+/* ── Screenshots ── */
+.library-screenshots {
+  margin-top: 14px;
+}
+
+.library-screenshots-label {
+  font-family: 'Sora', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+}
+
+.library-screenshots-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.library-screenshot {
+  cursor: pointer;
+}
+
+.library-screenshot-frame {
+  aspect-ratio: 8 / 7;
+  border-radius: 8px;
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s;
+}
+
+.library-screenshot:active .library-screenshot-frame {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.library-screenshot-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 .library-manual-btn {
   margin-top: 2px;
 }

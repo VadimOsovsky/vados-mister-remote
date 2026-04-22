@@ -11,7 +11,7 @@ import type { SheetTab } from '../../hooks/useGameSheet';
 import type { LaunchBoxGame } from '../../types';
 import { InfoIcon, BookIcon, SaveIcon, PencilIcon } from '../../lib/icons';
 import { getImageUrl, resolveImages, resolveTitle } from '../../services/launchbox';
-import { getGameOverrides, deleteGameOverrides } from '../../lib/storage';
+import { getGameOverrides, deleteGameOverrides, removeCustomGame } from '../../lib/storage';
 import { MainTab } from './MainTab';
 import { LibraryTab } from './LibraryTab';
 import { ControlsTab } from './ControlsTab';
@@ -110,6 +110,9 @@ const romPicker = useRomPicker(api, platform, selectedGame, activeConsole);
                                             removeFromCollection(selectedGame.id);
                                             unmarkAsBeaten(selectedGame.id);
                                             deleteGameOverrides(selectedGame.id, activeConsole);
+                                            if (selectedGame.id.startsWith('custom_')) {
+                                                removeCustomGame(activeConsole, selectedGame.id);
+                                            }
                                             onClose();
                                         }}
                                     />

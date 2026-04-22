@@ -32,18 +32,6 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     controls: [LAUNCH_CORE, RESET],
     mglConfig: { setname: 'NES_PAL', rbf: '_Console/NES' },
   },
-  // nes_dendy: {
-  //   name: 'Dendy',
-  //   logo: '/consoles/nes_logo.png',
-  //   theme: 'theme-nes-dendy',
-  //   branding: 'Dendy',
-  //   colors: ['#f5f5dc', '#d4a843', '#c0392b', '#2c3e50'],
-  //   lbPlatform: 'nes',
-  //   wizzoSystemId: 'NES',
-  //   imageRegions: ['Russia', 'World'],
-  //   controls: [LAUNCH_CORE, RESET],
-  //   mglConfig: { setname: 'NES_Dendy', rbf: '_Console/NES' },
-  // },
   famicom: {
     name: 'Famicom',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/7/7d/Family_Computer_logo.svg',
@@ -84,6 +72,19 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     nameRegions: ['Japan'],
     collectionGroup: 'famicom',
     controls: [LAUNCH_CORE, RESET],
+  },
+  dendy: {
+    name: 'Dendy',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/3/3d/Dendy_console_logo.svg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Dendy_Junior_with_cart_and_joypads.png/960px-Dendy_Junior_with_cart_and_joypads.png',
+    theme: 'theme-dendy',
+    branding: 'Dendy',
+    colors: ['#f5f5dc', '#d4a843', '#c0392b', '#2c3e50'],
+    lbPlatform: 'nes',
+    wizzoSystemId: 'NES',
+    imageRegions: ['Russia', 'World'],
+    controls: [LAUNCH_CORE, RESET],
+    mglConfig: { setname: 'NES_Dendy', rbf: '_Console/NES' },
   },
 };
 

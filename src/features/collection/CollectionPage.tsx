@@ -2,17 +2,20 @@ import { useCallback, useRef, useState } from 'react';
 import { useAppContext } from '../../AppContext';
 import { useCollection } from '../../hooks/useCollection';
 import { ConsoleBadge, ConsoleSheet } from '../../kit/ConsoleCarousel/ConsoleSheet';
+import { PlusIcon } from '../../lib/icons';
 import { SearchBar } from './SearchBar';
 import { GameGrid } from './GameGrid';
 import { BrandingBar } from './BrandingBar';
+import { AddGameSheet } from './AddGameSheet';
 import type { ConsoleKey, LaunchBoxGame } from '../../types';
 import './CollectionPage.css';
 
 export function CollectionPage({ onSelectGame }: { onSelectGame: (game: LaunchBoxGame) => void }) {
-    const { activeConsole, setActiveConsole, platform, connected } = useAppContext();
+    const { activeConsole, setActiveConsole, platform } = useAppContext();
     const { loading, search, setSearch, filteredGames } = useCollection(activeConsole);
     const scrollRef = useRef<HTMLDivElement>(null);
     const [consoleSheetOpen, setConsoleSheetOpen] = useState(false);
+    const [addSheetOpen, setAddSheetOpen] = useState(false);
 
     const switchConsole = useCallback((key: ConsoleKey) => {
         setActiveConsole(key);
@@ -24,10 +27,9 @@ export function CollectionPage({ onSelectGame }: { onSelectGame: (game: LaunchBo
             <div className="header">
                 <div className="header-top">
                     <ConsoleBadge onClick={() => setConsoleSheetOpen(true)} />
-                    <div className="status-badge">
-                        <div className={`status-dot ${connected ? '' : 'offline'}`} />
-                        <span>{connected ? 'Connected' : 'Offline'}</span>
-                    </div>
+                    <button className="add-game-btn" onClick={() => setAddSheetOpen(true)}>
+                        {PlusIcon}
+                    </button>
                 </div>
             </div>
 
@@ -45,6 +47,7 @@ export function CollectionPage({ onSelectGame }: { onSelectGame: (game: LaunchBo
             </div>
 
             <ConsoleSheet open={consoleSheetOpen} onOpenChange={setConsoleSheetOpen} onSwitch={switchConsole} />
+            <AddGameSheet open={addSheetOpen} onOpenChange={setAddSheetOpen} />
         </div>
     );
 }

@@ -19,7 +19,7 @@ export interface GameWithConsole extends Game {
   _console: string;
 }
 
-export type ConsoleKey = 'nes_ntsc' | 'nes_pal' | 'famicom' | 'av_famicom' | 'fds';
+export type ConsoleKey = 'nes_ntsc' | 'nes_pal' | 'famicom' | 'av_famicom' | 'dendy' | 'fds';
 export type SortMode = 'az' | 'za' | 'recent' | 'most' | 'popular' | 'year' | 'title';
 export type TabKey = 'games' | 'favorites' | 'recents' | 'settings';
 export type SheetTab = 'info' | 'library' | 'controls';

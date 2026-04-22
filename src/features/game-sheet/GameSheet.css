@@ -4,6 +4,8 @@
   inset: 0;
   z-index: 200;
   background: var(--bg-overlay);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 /* ── BOTTOM SHEET (vaul drawer content) ── */
