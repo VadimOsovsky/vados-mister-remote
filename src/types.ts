@@ -58,6 +58,7 @@ export interface PlatformDef {
   imageUrl?: string;
   controls?: ConsoleControl[];
   launchPath?: string;        // Override: launch this file path instead of launchSystem()
+  mglConfig?: { setname: string; rbf: string }; // Zaparoo MGL launch with setname for region config
 }
 
 // ── LAUNCHBOX ──

@@ -2,7 +2,8 @@
    Dark charcoal grey + Nintendo red accents.
    Based on NES Classic Mini UI. Shared by NTSC and PAL variants. */
 .theme-nes-ntsc,
-.theme-nes-pal {
+.theme-nes-pal,
+.theme-nes-dendy {
   --bg-primary: #0a1030;
   --bg-secondary: #1a2250;
   --bg-card: #787888;
@@ -110,7 +111,8 @@
 
 /* NES dark — brighter shimmer and stronger glow on dark background */
 .theme-nes-ntsc .game-card.beaten,
-.theme-nes-pal .game-card.beaten {
+.theme-nes-pal .game-card.beaten,
+.theme-nes-dendy .game-card.beaten {
   box-shadow:
     0 0 0 1px rgba(212, 184, 74, 0.45),
     0 0 14px rgba(255, 220, 50, 0.25);

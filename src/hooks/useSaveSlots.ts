@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import type { ConsoleKey, LaunchBoxGame, SaveSlot } from '../types';
 import type { WizzoApi } from '../services/wizzoApi';
 import { EMPTY_SLOTS, getSaveSlots, putSaveSlot, deleteSaveSlot, getRomMapping } from '../lib/storage';
+import { PLATFORMS } from '../constants';
+import { launchGameForPlatform } from '../services/zaparooLauncher';
 
 export function useSaveSlots(api: WizzoApi, selectedGame: LaunchBoxGame | null, sheetTab: string, activeConsole: ConsoleKey) {
     const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
@@ -75,7 +77,8 @@ export function useSaveSlots(api: WizzoApi, selectedGame: LaunchBoxGame | null, 
                     console.warn('No ROM mapping found, cannot auto-launch');
                     return;
                 }
-                await api.launchGame(romPath);
+                const platform = PLATFORMS[activeConsole];
+                await launchGameForPlatform(api.host, platform, romPath, api);
                 // Poll until core is running (max ~15s)
                 for (let i = 0; i < 30; i++) {
                     await new Promise(r => setTimeout(r, 500));

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ConsoleKey, LaunchBoxGame, PlatformDef } from '../types';
 import type { WizzoApi, WizzoGameSearchResult } from '../services/wizzoApi';
 import { getRomMapping, setRomMapping } from '../lib/storage';
+import { launchGameForPlatform } from '../services/zaparooLauncher';
 
 export function useRomPicker(api: WizzoApi, platform: PlatformDef, selectedGame: LaunchBoxGame | null, activeConsole: ConsoleKey, onSelect?: (romPath: string) => void) {
     const [romPickerOpen, setRomPickerOpen] = useState(false);
@@ -84,26 +85,26 @@ export function useRomPicker(api: WizzoApi, platform: PlatformDef, selectedGame:
             onSelect(result.path);
         } else {
             try {
-                await api.launchGame(result.path);
+                await launchGameForPlatform(api.host, platform, result.path, api);
             } catch {
                 openRomPicker(selectedGame.title);
             }
         }
-    }, [selectedGame, activeConsole, api, openRomPicker, onSelect]);
+    }, [selectedGame, activeConsole, api, platform, openRomPicker, onSelect]);
 
     const handleLaunchGame = useCallback(async () => {
         if (!selectedGame) return;
         const cachedPath = getRomMapping(selectedGame.id, activeConsole);
         if (cachedPath) {
             try {
-                await api.launchGame(cachedPath);
+                await launchGameForPlatform(api.host, platform, cachedPath, api);
                 return;
             } catch {
                 // Cached ROM path failed — fall through to picker
             }
         }
         openRomPicker(selectedGame.title);
-    }, [selectedGame, activeConsole, api, openRomPicker]);
+    }, [selectedGame, activeConsole, api, platform, openRomPicker]);
 
     return {
         romPickerOpen, romSearchQuery, setRomSearchQuery,
