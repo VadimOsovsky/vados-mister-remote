@@ -10,7 +10,7 @@ import type { ConsoleKey, LaunchBoxGame } from '../../types';
 import './StorePage.css';
 
 export function StorePage() {
-    const { activeConsole, setActiveConsole, platform, connected } = useAppContext();
+    const { activeConsole, setActiveConsole, platform } = useAppContext();
     const { loading, search, setSearch, sort, setSort, filteredGames } = useStore(activeConsole);
     const [selectedGame, setSelectedGame] = useState<LaunchBoxGame | null>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -26,10 +26,6 @@ export function StorePage() {
             <div className="header">
                 <div className="header-top">
                     <ConsoleBadge onClick={() => setConsoleSheetOpen(true)} />
-                    <div className="status-badge">
-                        <div className={`status-dot ${connected ? '' : 'offline'}`} />
-                        <span>{connected ? 'Connected' : 'Offline'}</span>
-                    </div>
                 </div>
             </div>
 

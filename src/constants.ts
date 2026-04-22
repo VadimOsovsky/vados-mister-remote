@@ -82,7 +82,7 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     colors: ['#f5f5dc', '#d4a843', '#c0392b', '#2c3e50'],
     lbPlatform: 'nes',
     wizzoSystemId: 'NES',
-    imageRegions: ['Russia', 'World'],
+    imageRegions: [],
     controls: [LAUNCH_CORE, RESET],
     mglConfig: { setname: 'NES_Dendy', rbf: '_Console/NES' },
   },
