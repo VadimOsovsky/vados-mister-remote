@@ -18,7 +18,7 @@ export function ControlsTab({ api, saveState, gameId }: {
         hasRomMapping: boolean;
         handleSave: () => void;
         handleLoad: () => void;
-        handleDelete: () => void;
+        handleDelete: () => boolean;
         handleToggleLock: () => void;
         handleToggleBeaten: () => boolean;
     };
@@ -44,7 +44,8 @@ export function ControlsTab({ api, saveState, gameId }: {
             return;
         }
         setConfirmDelete(false);
-        handleDelete();
+        const hasAnyBeaten = handleDelete();
+        if (!hasAnyBeaten) unmarkAsBeaten(gameId);
     }
 
     return (

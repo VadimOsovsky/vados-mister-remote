@@ -94,13 +94,15 @@ export function useSaveSlots(api: WizzoApi, selectedGame: LaunchBoxGame | null, 
         }
     }, [selectedSlot, saveSlots, selectedGame, activeConsole, api]);
 
-    const handleDelete = useCallback(() => {
-        if (selectedSlot === null || !saveSlots[selectedSlot] || !selectedGame) return;
-        if (saveSlots[selectedSlot]?.locked) return;
+    /** Delete selected slot. Returns whether game has any beaten slot after deletion. */
+    const handleDelete = useCallback((): boolean => {
+        if (selectedSlot === null || !saveSlots[selectedSlot] || !selectedGame) return false;
+        if (saveSlots[selectedSlot]?.locked) return false;
         const slot = saveSlots[selectedSlot]!;
         api.deleteScreenshot(slot.screenshotCore, slot.screenshotFilename).catch(() => {});
         const updated = deleteSaveSlot(selectedGame.id, selectedSlot);
         setSaveSlots(updated);
+        return updated.some(s => s?.beaten);
     }, [selectedSlot, saveSlots, selectedGame, api]);
 
     /** Toggle beaten flag on selected slot. Returns whether game has any beaten slot after toggle. */
