@@ -42,8 +42,31 @@ export function ConsoleCarousel({ activeConsole, onSwitch }: {
         }
     }, [activeConsole, items]);
 
+    const skipSlides = useCallback((direction: -1 | 1) => {
+        const swiper = swiperRef.current;
+        if (!swiper) return;
+        const target = Math.max(0, Math.min(items.length - 1, swiper.activeIndex + direction * 5));
+        if (target === swiper.activeIndex) return;
+        isProgrammatic.current = true;
+        swiper.slideTo(target, 180);
+        const key = items[target];
+        if (key) onSwitch(key);
+    }, [items, onSwitch]);
+
     return (
         <div className="console-carousel">
+            <div className="carousel-skip-row">
+                <button className="carousel-skip-btn" onClick={() => skipSlides(-1)} aria-label="Skip back 5">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M19 20L9 12L19 4" /><path d="M14 20L4 12L14 4" />
+                    </svg>
+                </button>
+                <button className="carousel-skip-btn" onClick={() => skipSlides(1)} aria-label="Skip forward 5">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M5 4L15 12L5 20" /><path d="M10 4L20 12L10 20" />
+                    </svg>
+                </button>
+            </div>
             <Swiper
                 modules={[EffectCoverflow]}
                 effect="coverflow"
