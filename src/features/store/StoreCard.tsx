@@ -5,7 +5,8 @@ import { storePrice } from './storePreview';
 import { getImageUrl, resolveImages, resolveTitle } from '../../services/launchbox';
 import { getPreviewCover } from '../collection/previewCovers';
 import { LazyImage } from '../../kit/LazyImage';
-import { formatPrice } from '../../lib/pricing';
+import { useAppContext } from '../../AppContext';
+import { formatGamePrice } from '../../lib/pricing';
 
 export function StoreCard({ game, consoleKey, preview, onSelect }: {
     game: LaunchBoxGame;
@@ -16,7 +17,8 @@ export function StoreCard({ game, consoleKey, preview, onSelect }: {
     const platform = PLATFORMS[consoleKey];
     const cover = resolveImages(game, platform.imageRegions).front;
     const title = resolveTitle(game, platform.nameRegions);
-    const price = formatPrice(storePrice(game, consoleKey, preview));
+    const { freeGames } = useAppContext();
+    const price = formatGamePrice(storePrice(game, consoleKey, preview, freeGames));
     return (
         <button type="button" className="shop-card" onClick={() => onSelect(game)}>
             <span className="shop-display">
@@ -24,7 +26,7 @@ export function StoreCard({ game, consoleKey, preview, onSelect }: {
                     <LazyImage src={(preview && getPreviewCover(consoleKey, game.id)) || (cover ? getImageUrl(cover, 300) : undefined)}
                         fallbackSrc={cover ? getImageUrl(cover) : undefined} alt="" />
                 </span>
-                <span className={'shop-price' + (price.length > 5 ? ' wide' : '')}><small>$</small>{price.slice(1)}</span>
+                <span className={'shop-price' + (price.length > 5 ? ' wide' : '')}>{freeGames ? price : <><small>$</small>{price.slice(1)}</>}</span>
             </span>
             <span className="shop-caption">
                 <strong title={title}>{title}</strong>

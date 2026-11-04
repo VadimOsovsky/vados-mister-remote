@@ -9,6 +9,14 @@ const COLLECTION_PREFIX = 'collection';
 const BEATEN_PREFIX = 'beaten';
 const ACTIVE_CONSOLE_KEY = 'active_console';
 const CUSTOM_GAMES_PREFIX = 'custom_games';
+export function readFreeGames(): boolean {
+    return localStorage.getItem('store_free_games') === 'true';
+}
+
+export function writeFreeGames(enabled: boolean): void {
+    localStorage.setItem('store_free_games', String(enabled));
+}
+
 const STORE_SORT_KEY = 'store_sort';
 const WALLET_BALANCE_KEY = 'wallet_balance';
 const WALLET_LAST_TOPUP_KEY = 'wallet_last_topup';
@@ -121,6 +129,27 @@ export function removeCollectionId(consoleKey: ConsoleKey, gameId: string): stri
         localStorage.setItem(`${COLLECTION_PREFIX}_${key}`, JSON.stringify(ids));
     } catch { /* localStorage full */ }
     return ids;
+}
+
+// ── Favorites ──
+
+export function getFavoriteIds(consoleKey: ConsoleKey): string[] {
+    try {
+        const raw = localStorage.getItem(`favorites_${collectionKey(consoleKey)}`);
+        const ids: unknown = raw ? JSON.parse(raw) : [];
+        return Array.isArray(ids) ? ids.filter(id => typeof id === 'string') : [];
+    } catch { return []; }
+}
+
+export function setFavorite(consoleKey: ConsoleKey, gameId: string, favorite: boolean): string[] {
+    const ids = new Set(getFavoriteIds(consoleKey));
+    if (favorite) ids.add(gameId);
+    else ids.delete(gameId);
+    const updated = [...ids];
+    try {
+        localStorage.setItem(`favorites_${collectionKey(consoleKey)}`, JSON.stringify(updated));
+    } catch { /* localStorage unavailable */ }
+    return updated;
 }
 
 // ── Beaten games ──

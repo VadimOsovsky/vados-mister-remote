@@ -318,5 +318,5 @@ button:not(:disabled):is(:active, .is-key-pressed) {
 }
 
 .yarl__slide_image {
-  border-radius: 4px;
+  border-radius: 3px;
 }

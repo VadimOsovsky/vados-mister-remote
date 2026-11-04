@@ -15,6 +15,24 @@
   gap: 12px;
 }
 
+.playroom-brand {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.playroom-connection-light {
+  flex: 0 0 8px;
+  height: 8px;
+  border: 1px solid var(--ink, currentColor);
+  border-radius: 50%;
+  background: #ee554c;
+}
+
+.playroom-connection-light[data-connected="true"] {
+  background: #48c979;
+}
+
 .playroom-logo {
   width: 136px;
   height: var(--header-brand-height, 44px);

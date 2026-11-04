@@ -9,10 +9,17 @@ export function PlayroomConsoleHeader({ onSwitch, alternate, showAlternate = fal
     alternate?: ReactNode;
     showAlternate?: boolean;
 }) {
-    const { setActiveConsole } = useAppContext();
+    const { connected, setActiveConsole } = useAppContext();
     const [open, setOpen] = useState(false);
 
-    const logo = <img className="playroom-logo" src="/playroom/logo.png" alt="Mister Playroom" />;
+    const connectionLabel = connected ? 'Connected to MiSTer' : 'Disconnected from MiSTer';
+    const logo = (
+        <div className="playroom-brand">
+            <img className="playroom-logo" src="/playroom/logo.png" alt="Mister Playroom" />
+            <span className="playroom-connection-light" data-connected={connected}
+                role="img" aria-label={connectionLabel} title={connectionLabel} />
+        </div>
+    );
 
     return (
         <>

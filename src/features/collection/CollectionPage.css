@@ -52,7 +52,21 @@
   margin: 0 20px;
 }
 
-.collection-page .shelf-tools:has(+ .loading-bar-wrap + .shelf-empty) {
+.collection-page .shelf-filters button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.collection-page .shelf-filters svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+
+.collection-page .shelf-filters span { margin-left: 2px; }
+
+.shelf-tools:has(+ .loading-bar-wrap + .shelf-empty) {
   padding-bottom: 8px;
 }
 

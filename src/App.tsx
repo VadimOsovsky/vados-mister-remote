@@ -3,7 +3,7 @@ import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router'
 
 import { PLATFORMS } from './constants';
 import type { ConsoleKey, LaunchBoxGame } from './types';
-import { readHost, getCollectionIds, addCollectionId, removeCollectionId, getBeatenIds, addBeatenId, removeBeatenId, readActiveConsole, writeActiveConsole, getWalletBalance, setWalletBalance, setRomMapping, getBeatenRewardedMap, addBeatenRewardedId } from './lib/storage';
+import { readHost, getCollectionIds, addCollectionId, removeCollectionId, getBeatenIds, addBeatenId, removeBeatenId, readActiveConsole, writeActiveConsole, getWalletBalance, setWalletBalance, setRomMapping, getBeatenRewardedMap, addBeatenRewardedId, readFreeGames, writeFreeGames, getFavoriteIds, setFavorite } from './lib/storage';
 import { initWallet, BEATEN_REWARD } from './lib/wallet';
 import { GridIcon, StoreIcon, RemoteIcon, SettingsIcon } from './lib/icons';
 import { useConnection } from './hooks/useConnection';
@@ -76,15 +76,28 @@ export default function MisterRemote() {
     }, []);
 
     const [collectionIds, setCollectionIds] = useState<string[]>(() => getCollectionIds(activeConsole));
+    const [favoriteIds, setFavoriteIds] = useState(() => getFavoriteIds(activeConsole));
     const [beatenIds, setBeatenIds] = useState<string[]>(() => getBeatenIds(activeConsole));
+    const [freeGames, updateFreeGames] = useState(readFreeGames);
+    function setFreeGames(enabled: boolean) {
+        writeFreeGames(enabled);
+        updateFreeGames(enabled);
+    }
+
     const [balance, setBalance] = useState(() => initWallet());
 
     const addToCollection = useCallback((gameId: string) => {
         setCollectionIds(addCollectionId(activeConsole, gameId));
     }, [activeConsole]);
 
+    const toggleFavorite = useCallback((gameId: string) => {
+        const favorite = getFavoriteIds(activeConsole).includes(gameId);
+        setFavoriteIds(setFavorite(activeConsole, gameId, !favorite));
+    }, [activeConsole]);
+
     const removeFromCollection = useCallback((gameId: string) => {
         setCollectionIds(removeCollectionId(activeConsole, gameId));
+        setFavoriteIds(setFavorite(activeConsole, gameId, false));
     }, [activeConsole]);
 
     const purchaseGame = useCallback((gameId: string, price: number, romPath: string) => {
@@ -129,6 +142,7 @@ export default function MisterRemote() {
         setActiveConsole(key);
         setCollectionIds(getCollectionIds(key));
         setBeatenIds(getBeatenIds(key));
+        setFavoriteIds(getFavoriteIds(key));
         writeActiveConsole(key);
     }, []);
 
@@ -138,8 +152,9 @@ export default function MisterRemote() {
             platform, api, connected,
             misterHost, setMisterHost,
             collectionIds, addToCollection, removeFromCollection,
+            favoriteIds, toggleFavorite,
             beatenIds, markAsBeaten, unmarkAsBeaten,
-            balance, purchaseGame,
+            balance, purchaseGame, freeGames, setFreeGames,
         }}>
             <div className={`app ${platform.theme}`}>
                 <div className={isGamePage ? "app-content owned-game-layout" : "app-content"}>

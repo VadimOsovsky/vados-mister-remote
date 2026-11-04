@@ -84,9 +84,14 @@
 }
 
 .collection-page .recent-card .card-art-wrap {
-  position: static;
   aspect-ratio: auto;
   padding: 8px 27px 4px;
+}
+
+.collection-page .recent-card .card-art {
+  inset: 8px 27px 4px;
+  max-width: calc(100% - 54px);
+  max-height: calc(100% - 12px);
 }
 
 .collection-page .recent-card .card-status {
@@ -95,19 +100,7 @@
   padding: 7px 0 0;
 }
 
-.recent-bookmark {
-  position: absolute;
-  top: -1px;
-  left: 12px;
-  width: 22px;
-  height: 31px;
-  padding-top: 4px;
-  text-align: center;
-  font: var(--font-label);
-  color: var(--card);
-  background: var(--ink);
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%);
-}
+.recent-card .favorite-bookmark { left: 12px; width: 22px; }
 
 .recent-card .save-dots i { width: 12px; height: 12px; }
 

@@ -2,13 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import { useAppContext } from '../../AppContext';
 import { useSettings } from '../../hooks/useSettings';
 import { PlayroomConsoleHeader } from '../../kit/PlayroomConsoleHeader';
-import { OsdIcon, ResetIcon, SearchIcon } from '../../lib/icons';
+import { OsdIcon, ResetIcon, SearchIcon, StoreIcon } from '../../lib/icons';
 import './SettingsPage.css';
 
 type IndexStatus = { label: string; percent?: number; busy: boolean };
 
 export function SettingsPage() {
-    const { api, misterHost, setMisterHost } = useAppContext();
+    const { api, misterHost, setMisterHost, freeGames, setFreeGames } = useAppContext();
     const { settingsHost, setSettingsHost, settingsSaved, saveSettings } = useSettings(misterHost, setMisterHost);
     const [indexStatus, setIndexStatus] = useState<IndexStatus>();
     const wsRef = useRef<WebSocket | null>(null);
@@ -85,6 +85,17 @@ export function SettingsPage() {
                             {(indexStatus.busy || indexStatus.percent === 100) &&
                                 <progress value={indexStatus.percent} max={100} aria-label="Indexing progress" />}
                         </div>}
+                    </section>
+                    <section className="settings-card" aria-labelledby="store-title">
+                        <div className="settings-card-heading">
+                            <span className="settings-symbol">{StoreIcon}</span>
+                            <div><p className="playroom-kicker">03 · Your collection</p><h2 id="store-title">Game store</h2></div>
+                        </div>
+                        <p id="free-games-description">Add games from the store without spending your balance.</p>
+                        <button type="button" role="switch" aria-checked={freeGames} aria-describedby="free-games-description"
+                            className="playroom-button playroom-press settings-switch" onClick={() => setFreeGames(!freeGames)}>
+                            Free games <span className="settings-switch-track" aria-hidden="true" />
+                        </button>
                     </section>
                     <p className="settings-local">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">

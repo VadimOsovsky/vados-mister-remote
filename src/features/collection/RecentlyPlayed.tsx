@@ -49,11 +49,13 @@ export function RecentlyPlayed({ games, consoleKey, preview, mock, onSelect, onH
         setLaunching(true);
         setFailed(false);
         try {
-            const latestSave = getSaveSlots(game.id)
-                .filter(slot => slot !== null)
-                .sort((a, b) => Date.parse(b.savedAt) - Date.parse(a.savedAt))[0];
-            if (latestSave) {
-                await loadCollectionSave(api, consoleKey, game.id, latestSave.slotIndex, romPath);
+            const slots = getSaveSlots(game.id);
+            const latestIndex = slots
+                .map((slot, index) => ({ slot, index }))
+                .filter(({ slot }) => slot !== null)
+                .sort((a, b) => Date.parse(b.slot!.savedAt) - Date.parse(a.slot!.savedAt))[0]?.index;
+            if (latestIndex !== undefined) {
+                await loadCollectionSave(api, consoleKey, game.id, latestIndex, romPath);
             } else {
                 await launchCollectionGame(api, consoleKey, game.id, romPath);
             }
@@ -98,7 +100,6 @@ export function RecentlyPlayed({ games, consoleKey, preview, mock, onSelect, onH
                                 onSelect={onSelect} preview={preview} recent={{
                                     selected: isSelected,
                                     mockSaves: mock ? [2, 1, 3][index] : undefined,
-                                    mockFavorite: mock && index === 0,
                                     time: <time dateTime={new Date(launchedAt).toISOString()}>{formatLaunchTime(launchedAt)}</time>,
                                 }} />
                         </SwiperSlide>

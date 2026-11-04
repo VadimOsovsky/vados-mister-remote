@@ -4,7 +4,7 @@ import { Drawer } from 'vaul';
 import type { useRomPicker } from '../../hooks/useRomPicker';
 import type { WizzoGameSearchResult } from '../../services/wizzoApi';
 import { FileIcon, SearchIcon, StoreIcon } from '../../lib/icons';
-import { formatPrice } from '../../lib/pricing';
+import { formatGamePrice } from '../../lib/pricing';
 
 type Picker = ReturnType<typeof useRomPicker>;
 
@@ -110,7 +110,7 @@ function StoreRomForm({ picker, title, consoleName, price, preview, canPurchase 
                     <Drawer.Close className="playroom-button playroom-press">Cancel</Drawer.Close>
                     <button className="playroom-button playroom-primary playroom-press"
                         disabled={!file || loading || !canPurchase} onClick={() => { if (file) confirm(file); }}>
-                        <span>Buy game</span><strong>{formatPrice(price)}</strong>
+                        <span>{price === 0 ? 'Add game' : 'Buy game'}</span><strong>{formatGamePrice(price)}</strong>
                     </button>
                 </div>
             </footer>

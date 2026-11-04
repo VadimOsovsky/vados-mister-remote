@@ -14,7 +14,8 @@ export function getStorePreviewIds(consoleKey: ConsoleKey) {
     return previewIds.nes;
 }
 
-export function storePrice(game: LaunchBoxGame, consoleKey: ConsoleKey, preview: boolean) {
+export function storePrice(game: LaunchBoxGame, consoleKey: ConsoleKey, preview: boolean, freeGames: boolean) {
+    if (freeGames) return 0;
     const index = preview ? getStorePreviewIds(consoleKey).indexOf(game.id) : -1;
     return previewPrices[index] ?? getGamePrice(game);
 }

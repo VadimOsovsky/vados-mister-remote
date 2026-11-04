@@ -2,6 +2,7 @@ import { type ReactNode, type RefObject, useEffect, useLayoutEffect, useMemo, us
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { ConsoleKey, LaunchBoxGame } from '../../types';
 import { useAppContext } from '../../AppContext';
+import { FavoriteBookmark } from './FavoriteBookmark';
 import { LazyImage } from '../../kit/LazyImage';
 import { getImageUrl, resolveImages, resolveTitle } from '../../services/launchbox';
 import { PLATFORMS } from '../../constants';
@@ -28,10 +29,10 @@ export function GameCard({ game, regions, activeConsole, onSelect, preview, rece
     regions: string[];
     activeConsole: ConsoleKey;
     onSelect: (game: LaunchBoxGame) => void;
-    recent?: { selected: boolean; time: ReactNode; mockSaves?: number; mockFavorite?: boolean };
+    recent?: { selected: boolean; time: ReactNode; mockSaves?: number };
     preview?: boolean;
 }) {
-    const { beatenIds } = useAppContext();
+    const { beatenIds, favoriteIds } = useAppContext();
     const overrides = getGameOverrides(game.id, activeConsole);
     const images = resolveImages(game, regions);
     const displayTitle = overrides.title || resolveTitle(game, PLATFORMS[activeConsole].nameRegions);
@@ -51,7 +52,7 @@ export function GameCard({ game, regions, activeConsole, onSelect, preview, rece
                 <span className="card-art-wrap">
                     <LazyImage src={frontSrc} fallbackSrc={directCover} alt="" className="card-art"
                         style={coverScale === undefined ? undefined : { scale: coverScale }} />
-                    {recent?.mockFavorite && <span className="recent-bookmark" role="img" aria-label="Favorite">★</span>}
+                    {favoriteIds.includes(game.id) && <FavoriteBookmark />}
                     {isBeaten && <span className="card-beaten">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 4 4 10-10" /></svg>

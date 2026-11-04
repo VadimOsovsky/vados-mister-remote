@@ -1,10 +1,11 @@
-import { useMemo, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useAppContext } from '../../AppContext';
 import { useCollection } from '../../hooks/useCollection';
 import { useNavigate } from 'react-router';
 import { PlusIcon } from '../../lib/icons';
 import { PlayroomConsoleHeader } from '../../kit/PlayroomConsoleHeader';
 import { SearchBar } from './SearchBar';
+import { FavoriteStar } from './FavoriteBookmark';
 import { GameGrid } from './GameGrid';
 import { RecentlyPlayed } from './RecentlyPlayed';
 import { AddGameSheet } from './AddGameSheet';
@@ -14,23 +15,21 @@ import './CollectionPage.css';
 
 export function CollectionPage({ onSelectGame }: { onSelectGame: (game: LaunchBoxGame) => void }) {
     const navigate = useNavigate();
-    const [completedOnly, setCompletedOnly] = useState(false);
-    const { activeConsole, setActiveConsole, platform, beatenIds } = useAppContext();
+    const [filter, setFilter] = useState<'all' | 'favorites' | 'completed'>('all');
+    const { activeConsole, setActiveConsole, platform, beatenIds, favoriteIds } = useAppContext();
     const { recentGames, mockRecent, loading, loadError, preview, search, setSearch, filteredGames } = useCollection(activeConsole);
-    const completedGames = useMemo(() => {
-        const completedIds = new Set(beatenIds);
-        return filteredGames.filter(game => completedIds.has(game.id));
-    }, [filteredGames, beatenIds]);
+    const completedGames = filteredGames.filter(game => beatenIds.includes(game.id));
+    const favoriteGames = filteredGames.filter(game => favoriteIds.includes(game.id));
     const [, setHistoryVersion] = useState(0);
-    const displayedGames = completedOnly ? completedGames : filteredGames;
-    const isFiltered = Boolean(search) || completedOnly;
+    const displayedGames = { all: filteredGames, favorites: favoriteGames, completed: completedGames }[filter];
+    const isFiltered = Boolean(search) || filter !== 'all';
     const scrollRef = useRef<HTMLDivElement>(null);
     const [addSheetOpen, setAddSheetOpen] = useState(false);
 
     function switchConsole(key: ConsoleKey) {
         setActiveConsole(key);
         setSearch('');
-        setCompletedOnly(false);
+        setFilter('all');
     }
 
     return (
@@ -53,11 +52,16 @@ export function CollectionPage({ onSelectGame }: { onSelectGame: (game: LaunchBo
                         </button>
                     </div>
                     <div className="shelf-filters" role="group" aria-label="Filter collection">
-                        <button className="playroom-press" aria-pressed={!completedOnly} onClick={() => setCompletedOnly(false)}>
+                        <button className="playroom-press" aria-pressed={filter === 'all'} onClick={() => setFilter('all')}>
                             All games <span>{filteredGames.length}</span>
                         </button>
-                        <button className="playroom-press" aria-pressed={completedOnly} onClick={() => setCompletedOnly(true)}>
-                            ✓ Completed <span>{completedGames.length}</span>
+                        <button className="playroom-press" aria-pressed={filter === 'favorites'} onClick={() => setFilter('favorites')}>
+                            <FavoriteStar /> Favorites <span>{favoriteGames.length}</span>
+                        </button>
+                        <button className="playroom-press" aria-pressed={filter === 'completed'} onClick={() => setFilter('completed')}>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                                strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>
+                            Completed <span>{completedGames.length}</span>
                         </button>
                     </div>
                 </div>

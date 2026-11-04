@@ -1,3 +1,4 @@
+import { FavoriteBookmark, FavoriteStar } from '../collection/FavoriteBookmark';
 import { useState } from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
 import * as Dialog from '@radix-ui/react-dialog';
@@ -20,6 +21,7 @@ import { slotLabel } from './slotLabel';
 import { getPreviewCover, getPreviewScreenshot } from '../collection/previewCovers';
 import { PlayroomHeader } from '../../kit/PlayroomHeader';
 import { LazyImage } from '../../kit/LazyImage';
+import { PreviewBox } from './PreviewBox';
 import './OwnedGamePage.css';
 
 const tabs = [
@@ -29,15 +31,29 @@ const tabs = [
 ] as const;
 
 type GameTab = typeof tabs[number]['key'];
+const GAME_TAB_KEY = 'owned_game_tab';
+
+function isGameTab(value: string | null): value is GameTab {
+    return tabs.some(tab => tab.key === value);
+}
+
+function readGameTab(): GameTab {
+    try {
+        const value = localStorage.getItem(GAME_TAB_KEY);
+        if (isGameTab(value)) return value;
+    } catch { /* localStorage unavailable */ }
+    return 'main';
+}
 
 export function OwnedGamePage({ selectedGame, onClose }: {
     selectedGame: LaunchBoxGame;
     onClose: () => void;
 }) {
-    const [activeTab, setActiveTab] = useState<GameTab>('main');
+    const [activeTab, setActiveTab] = useState(readGameTab);
     const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
+    const [boxOpen, setBoxOpen] = useState(false);
     const [editMode, setEditMode] = useState(false);
-    const { activeConsole, platform, api, connected, beatenIds, removeFromCollection, unmarkAsBeaten } = useAppContext();
+    const { activeConsole, platform, api, connected, beatenIds, favoriteIds, toggleFavorite, removeFromCollection, unmarkAsBeaten } = useAppContext();
     const romPicker = useRomPicker(api, platform, selectedGame, activeConsole);
     const saves = useSaveSlots(api, selectedGame, activeConsole);
     const [editField, setEditField] = useState<'rom' | undefined>();
@@ -45,8 +61,11 @@ export function OwnedGamePage({ selectedGame, onClose }: {
     const regions = platform.imageRegions;
     const images = resolveImages(selectedGame, regions);
     const overrides = getGameOverrides(selectedGame.id, activeConsole);
+    const favorite = favoriteIds.includes(selectedGame.id);
     const preview = import.meta.env.DEV && new URLSearchParams(window.location.search).get('preview') === '1';
     const front = overrides.boxFrontUrl || (preview && getPreviewCover(activeConsole, selectedGame.id)) || (images.front && getImageUrl(images.front));
+    const boxFront = preview && activeConsole === 'nes_ntsc' && selectedGame.id === '112'
+        ? getPreviewCover(activeConsole, selectedGame.id) : undefined;
     const previewScreenshot = preview && getPreviewScreenshot(selectedGame.id);
     const screenshots = previewScreenshot ? [previewScreenshot] : resolveScreenshots(selectedGame).map(path => getImageUrl(path));
     const displayTitle = overrides.title || resolveTitle(selectedGame, platform.nameRegions);
@@ -77,7 +96,11 @@ export function OwnedGamePage({ selectedGame, onClose }: {
 
     function changeTab(value: string) {
         saves.resetSelection();
-        setActiveTab(value as GameTab);
+        if (!isGameTab(value)) return;
+        setActiveTab(value);
+        try {
+            localStorage.setItem(GAME_TAB_KEY, value);
+        } catch { /* localStorage unavailable */ }
     }
 
     function deleteGame() {
@@ -100,6 +123,7 @@ export function OwnedGamePage({ selectedGame, onClose }: {
                     <div className="owned-hero-inner">
                         <div className="owned-cover">
                             <LazyImage src={front || undefined} alt="" />
+                            {favorite && <FavoriteBookmark />}
                             {completed && <span className="owned-medal" aria-label="Completed" role="img">✓</span>}
                         </div>
                         <div>
@@ -109,6 +133,10 @@ export function OwnedGamePage({ selectedGame, onClose }: {
                                 {!!selectedGame.maxPlayers && <span className="player-badge">{selectedGame.maxPlayers}P</span>}
                                 {selectedGame.genre && <span className="owned-genre">{selectedGame.genre}</span>}
                             </div>
+                            <button type="button" className="playroom-button playroom-press owned-favorite"
+                                aria-label="Favorite" aria-pressed={favorite} onClick={() => toggleFavorite(selectedGame.id)}>
+                                <FavoriteStar filled={favorite} />
+                            </button>
                             {completed && <p className="owned-completed">✓ Completed{completedIndex >= 0 && ` · saved in Slot ${completedIndex + 1}`}</p>}
                         </div>
                     </div>
@@ -146,7 +174,13 @@ export function OwnedGamePage({ selectedGame, onClose }: {
                             ))}
                         </div>
                         <div className="owned-library-tools">
-                            {overrides.manualUrl && <a className="owned-button owned-gold playroom-press" href={overrides.manualUrl} target="_blank" rel="noreferrer">{BookIcon} Open manual</a>}
+                            {/*{boxFront && <button type="button" className="owned-button playroom-press" onClick={() => setBoxOpen(true)}>*/}
+                            {/*    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" aria-hidden="true">*/}
+                            {/*        <path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Zm0 9 8-4.5M12 12 4 7.5M12 12v9" />*/}
+                            {/*    </svg>*/}
+                            {/*    <span><strong>View in 3D</strong><small>Rotate and zoom the box</small></span><span aria-hidden="true">↗</span>*/}
+                            {/*</button>}*/}
+                            {overrides.manualUrl && <a className="owned-button owned-gold playroom-press" href={overrides.manualUrl} target="_blank" rel="noreferrer">{BookIcon}<span><strong>Open manual</strong><small>A little help for your adventure</small></span><span aria-hidden="true">↗</span></a>}
                             <button className="owned-button playroom-press" onClick={() => edit('rom')}>{FileIcon}<span><strong>Game file</strong><small>{overrides.romName || 'Link or change ROM'}</small></span><span aria-hidden="true">→</span></button>
                         </div>
                     </Tabs.Content>
@@ -184,6 +218,8 @@ export function OwnedGamePage({ selectedGame, onClose }: {
                     </Dialog.Content>
                 </Dialog.Portal>
             </Dialog.Root>
+            {boxOpen && boxFront && <PreviewBox front={boxFront} back="/playroom/preview/mario3-back.jpg"
+                title={displayTitle} onClose={() => setBoxOpen(false)} />}
             <Lightbox open={galleryIndex !== null} close={() => setGalleryIndex(null)} index={galleryIndex ?? 0} plugins={[Zoom]} slides={slides} />
         </>
     );

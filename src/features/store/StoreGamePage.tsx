@@ -13,7 +13,7 @@ import { getImageUrl, loadPlatformGames, resolveImages, resolveScreenshots, reso
 import type { LaunchBoxGame } from '../../types';
 import { getPreviewCover } from '../collection/previewCovers';
 import { StoreRomDialog } from './StoreRomDialog';
-import { formatPrice } from '../../lib/pricing';
+import { formatGamePrice } from '../../lib/pricing';
 import { StoreWallet } from './StoreWallet';
 import { storePrice } from './storePreview';
 import './StoreGamePage.css';
@@ -61,12 +61,12 @@ function StoreDetailHeader({ backUrl, balance }: { backUrl: string; balance: num
 }
 
 function StoreProduct({ game, preview, backUrl }: { game: LaunchBoxGame; preview: boolean; backUrl: string }) {
-    const { api, activeConsole, platform, balance, collectionIds, purchaseGame } = useAppContext();
+    const { api, activeConsole, platform, balance, collectionIds, purchaseGame, freeGames } = useAppContext();
     const navigate = useNavigate();
     const [back, setBack] = useState(false);
     const [galleryIndex, setGalleryIndex] = useState<number>();
     const title = resolveTitle(game, platform.nameRegions);
-    const price = storePrice(game, activeConsole, preview);
+    const price = storePrice(game, activeConsole, preview, freeGames);
     const wallet = preview ? 120 : balance;
     const owned = !preview && collectionIds.includes(game.id);
     const romPicker = useRomPicker(api, platform, game, activeConsole, romPath => {
@@ -125,10 +125,10 @@ function StoreProduct({ game, preview, backUrl }: { game: LaunchBoxGame; preview
                 </article>
             </main>
             <aside className="owned-dock store-dock" aria-label="Purchase">
-                <div className="store-dock-price"><small>Price</small><strong>{formatPrice(price)}</strong></div>
+                <div className="store-dock-price"><small>Price</small><strong>{formatGamePrice(price)}</strong></div>
                 <button className="owned-button owned-gold owned-primary playroom-press"
                     disabled={owned || wallet < price} onClick={() => romPicker.openRomPicker(title)}>
-                    {StoreIcon}<span>{owned ? 'In your collection' : wallet < price ? 'Not enough funds' : 'Buy game'}</span>
+                    {StoreIcon}<span>{owned ? 'In your collection' : wallet < price ? 'Not enough funds' : freeGames ? 'Add game' : 'Buy game'}</span>
                 </button>
             </aside>
             <StoreRomDialog picker={romPicker} title={title} consoleName={platform.name}

@@ -38,6 +38,29 @@
   font: var(--font-body);
 }
 .settings-card .playroom-button { width: 100%; }
+.settings-card .settings-switch { justify-content: space-between; }
+.settings-switch-track {
+  display: flex;
+  align-items: center;
+  width: 44px;
+  height: 24px;
+  padding: 2px;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  background: var(--card);
+  flex: none;
+}
+.settings-switch-track::before {
+  content: '';
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--ink);
+}
+.settings-switch[aria-checked='true'] .settings-switch-track {
+  justify-content: flex-end;
+  background: var(--playroom-punctuation);
+}
 .settings-local { display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--muted); font: var(--font-caption); text-align: center; margin: 24px 0 0; }
 .settings-local svg { width: 16px; height: 16px; flex: none; }
 .index-progress { margin-top: 16px; }
