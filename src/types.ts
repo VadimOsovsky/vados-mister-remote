@@ -27,8 +27,8 @@ export type SheetTab = 'info' | 'library' | 'controls';
 // ── SAVE STATE SLOTS ──
 export interface SaveSlot {
   slotIndex: number;
-  screenshotCore: string;
-  screenshotFilename: string;
+  screenshotCore?: string;
+  screenshotFilename?: string;
   savedAt: string;
   gameName: string;
   locked?: boolean;

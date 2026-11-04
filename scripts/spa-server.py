@@ -10,7 +10,7 @@ import os
 import sys
 import threading
 from pathlib import Path
-from urllib.parse import urlsplit
+from urllib.parse import parse_qs, urlsplit
 
 
 STATE_ROUTE = "/api/playroom/state"
@@ -83,7 +83,27 @@ class SPAHandler(http.server.SimpleHTTPRequestHandler):
         return self.send_json(200, result)
 
     def do_GET(self):
-        if urlsplit(self.path).path == STATE_ROUTE:
+        request = urlsplit(self.path)
+        if request.path == "/api/playroom/save-state":
+            query = parse_qs(request.query)
+            core = query.get("core", [""])[0]
+            game = query.get("game", [""])[0]
+            slot = query.get("slot", [""])[0]
+            if core not in {"NES", "FDS"} or slot not in {"1", "2", "3", "4"}:
+                return self.send_error(400)
+            if not game or game in {".", ".."} or any(c in game for c in "/\\\0"):
+                return self.send_error(400)
+            path = Path("/media/fat/savestates") / core / f"{game}_{slot}.ss"
+            try:
+                info = path.stat()
+                version = str(info.st_mtime_ns) if info.st_size > 0 else None
+            except FileNotFoundError:
+                version = None
+            except OSError:
+                return self.send_error(500)
+            return self.send_json(200, {"version": version})
+
+        if request.path == STATE_ROUTE:
             try:
                 with STATE_LOCK:
                     state = read_state()

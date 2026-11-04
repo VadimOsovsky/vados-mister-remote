@@ -4,10 +4,19 @@ import type { WizzoApi } from '../services/wizzoApi';
 import { getSaveSlots, putSaveSlot, deleteSaveSlot, getRomMapping } from '../lib/storage';
 import { loadCollectionSave } from '../services/collectionLauncher';
 
+const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+async function readSaveVersion(query: URLSearchParams): Promise<string | null> {
+    const response = await fetch(`/api/playroom/save-state?${query}`, { cache: 'no-store' });
+    if (!response.ok) throw new Error('Could not check the save file on MiSTer.');
+    return (await response.json()).version;
+}
+
 export function useSaveSlots(api: WizzoApi, game: LaunchBoxGame, activeConsole: ConsoleKey) {
     const [selectedSlot, setSelectedSlot] = useState(0);
     const [saveSlots, setSaveSlots] = useState(() => getSaveSlots(game.id));
     const [savingSlot, setSavingSlot] = useState(false);
+    const [saveError, setSaveError] = useState<string>();
 
     function resetSelection() {
         setSaveSlots(getSaveSlots(game.id));
@@ -25,34 +34,59 @@ export function useSaveSlots(api: WizzoApi, game: LaunchBoxGame, activeConsole: 
         if (savingSlot) return;
         if (saveSlots[selectedSlot]?.locked) return;
         setSavingSlot(true);
+        setSaveError(undefined);
         try {
-            // Delete old screenshot if overwriting a slot
             const oldSlot = saveSlots[selectedSlot];
-            if (oldSlot) {
-                api.deleteScreenshot(oldSlot.screenshotCore, oldSlot.screenshotFilename).catch(() => {});
+            const playing = await api.getPlaying();
+            if (!playing?.gameName || !playing.core) throw new Error('Start the game on MiSTer first.');
+            const query = new URLSearchParams({
+                core: playing.core,
+                game: playing.gameName,
+                slot: String(selectedSlot + 1),
+            });
+            const verifyOnDisk = !import.meta.env.DEV && api.host === window.location.hostname;
+            const previousVersion = verifyOnDisk ? await readSaveVersion(query) : null;
+            await api.saveState(selectedSlot);
+
+            if (verifyOnDisk) {
+                let version = previousVersion;
+                for (let attempt = 0; attempt < 10 && version === previousVersion; attempt++) {
+                    await wait(500);
+                    version = await readSaveVersion(query);
+                }
+                if (!version || version === previousVersion) {
+                    throw new Error('MiSTer did not write a save file. Check “Savestates to SDCard” in the core menu.');
+                }
+            } else {
+                await wait(500);
             }
 
-            await api.saveState(selectedSlot);
-            await new Promise(r => setTimeout(r, 500));
-            await api.takeScreenshot();
-            await new Promise(r => setTimeout(r, 1000));
-            const screenshots = await api.listScreenshots();
-            if (screenshots.length > 0) {
-                const latest = screenshots.sort(
-                    (a, b) => new Date(b.modified).getTime() - new Date(a.modified).getTime()
-                )[0];
-                const slot: SaveSlot = {
-                    slotIndex: selectedSlot,
-                    screenshotCore: latest.core,
-                    screenshotFilename: latest.filename,
-                    savedAt: new Date().toISOString(),
-                    gameName: game.title,
-                };
-                const updated = putSaveSlot(game.id, selectedSlot, slot);
-                setSaveSlots(updated);
+            const slot: SaveSlot = {
+                slotIndex: selectedSlot,
+                savedAt: new Date().toISOString(),
+                gameName: game.title,
+            };
+            try {
+                const previous = new Set((await api.listScreenshots() ?? []).map(image => image.path));
+                await api.takeScreenshot();
+                await wait(1000);
+                const screenshot = (await api.listScreenshots() ?? []).find(image =>
+                    image.core === playing.core && image.game === playing.gameName && !previous.has(image.path));
+                slot.screenshotCore = screenshot?.core;
+                slot.screenshotFilename = screenshot?.filename;
+            } catch (err) {
+                console.warn('Save screenshot failed:', err);
+            }
+            if (!verifyOnDisk && !slot.screenshotFilename) {
+                throw new Error('Could not confirm the save on MiSTer.');
+            }
+            setSaveSlots(putSaveSlot(game.id, selectedSlot, slot));
+            if (oldSlot?.screenshotCore && oldSlot.screenshotFilename) {
+                api.deleteScreenshot(oldSlot.screenshotCore, oldSlot.screenshotFilename).catch(() => {});
             }
         } catch (err) {
             console.warn('Save state failed:', err);
+            setSaveError(err instanceof Error ? err.message : 'Could not save on MiSTer.');
         } finally {
             setSavingSlot(false);
         }
@@ -78,7 +112,9 @@ export function useSaveSlots(api: WizzoApi, game: LaunchBoxGame, activeConsole: 
         if (!saveSlots[selectedSlot]) return false;
         if (saveSlots[selectedSlot]?.locked) return false;
         const slot = saveSlots[selectedSlot]!;
-        api.deleteScreenshot(slot.screenshotCore, slot.screenshotFilename).catch(() => {});
+        if (slot.screenshotCore && slot.screenshotFilename) {
+            api.deleteScreenshot(slot.screenshotCore, slot.screenshotFilename).catch(() => {});
+        }
         const updated = deleteSaveSlot(game.id, selectedSlot);
         setSaveSlots(updated);
         return updated.some(s => s?.beaten);
@@ -95,7 +131,7 @@ export function useSaveSlots(api: WizzoApi, game: LaunchBoxGame, activeConsole: 
 
     return {
         selectedSlot, setSelectedSlot, resetSelection,
-        saveSlots, savingSlot, loadingSlot, hasRomMapping,
+        saveSlots, savingSlot, saveError, loadingSlot, hasRomMapping,
         handleSave, loadSlot, handleDelete, handleToggleLock, handleToggleBeaten,
     };
 }

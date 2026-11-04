@@ -56,7 +56,9 @@ export function OwnedGameSaves({ gameId, saves, previewScreenshot }: { gameId: s
             {saveSlots.map((slot, i) => <button key={i} className={`owned-save-card ${slot ? 'owned-button' : 'owned-save-empty'}`}
                 aria-pressed={i === index} onClick={() => setSelectedSlot(i)}>
                 <span className="owned-save-art">
-                    {slot ? <LazyImage src={api.getScreenshotUrl(slot.screenshotCore, slot.screenshotFilename)} fallbackSrc={previewScreenshot} alt="" /> : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M12 4v16M4 12h16" /></svg>}
+                    {slot ? <LazyImage src={slot.screenshotCore && slot.screenshotFilename
+                        ? api.getScreenshotUrl(slot.screenshotCore, slot.screenshotFilename) : undefined}
+                        fallbackSrc={previewScreenshot} alt="" /> : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M12 4v16M4 12h16" /></svg>}
                 </span>
                 {slot?.beaten && <span className="owned-medal" aria-hidden="true">✓</span>}
                 <span className="owned-save-caption">
@@ -83,6 +85,7 @@ export function OwnedGameSaves({ gameId, saves, previewScreenshot }: { gameId: s
                 onClick={() => saves.handleSave()}>{SaveIcon}{saves.savingSlot ? 'Saving…' : 'Save to this slot'}</button>
             <button className="owned-button playroom-press" disabled={!current || current.locked} onClick={() => setConfirmDelete(true)}>{TrashIcon} Delete save</button>
         </div>
+        {saves.saveError && <p role="alert">{saves.saveError}</p>}
         <Dialog.Root open={confirmDelete} onOpenChange={setConfirmDelete}>
             <Dialog.Portal>
                 <Dialog.Overlay className="owned-dialog-overlay" />
