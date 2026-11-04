@@ -1,3 +1,4 @@
+import { appStorage } from './sharedStorage';
 import type { ConsoleKey, GameOverrides, LaunchBoxGame, SaveSlot, SortMode } from '../types';
 import { PLATFORMS } from '../constants';
 
@@ -10,11 +11,11 @@ const BEATEN_PREFIX = 'beaten';
 const ACTIVE_CONSOLE_KEY = 'active_console';
 const CUSTOM_GAMES_PREFIX = 'custom_games';
 export function readFreeGames(): boolean {
-    return localStorage.getItem('store_free_games') === 'true';
+    return appStorage.getItem('store_free_games') === 'true';
 }
 
 export function writeFreeGames(enabled: boolean): void {
-    localStorage.setItem('store_free_games', String(enabled));
+    appStorage.setItem('store_free_games', String(enabled));
 }
 
 const STORE_SORT_KEY = 'store_sort';
@@ -34,7 +35,7 @@ export function writeHost(host: string): void {
 
 export function getRomMapping(gameId: string, consoleKey: ConsoleKey): string | null {
     try {
-        const raw = localStorage.getItem(ROM_MAPPINGS_KEY);
+        const raw = appStorage.getItem(ROM_MAPPINGS_KEY);
         if (!raw) return null;
         const mappings: Record<string, string> = JSON.parse(raw);
         return mappings[`${gameId}_${consoleKey}`] ?? null;
@@ -45,16 +46,16 @@ export function getRomMapping(gameId: string, consoleKey: ConsoleKey): string | 
 
 export function setRomMapping(gameId: string, consoleKey: ConsoleKey, romPath: string): void {
     try {
-        const raw = localStorage.getItem(ROM_MAPPINGS_KEY);
+        const raw = appStorage.getItem(ROM_MAPPINGS_KEY);
         const mappings: Record<string, string> = raw ? JSON.parse(raw) : {};
         mappings[`${gameId}_${consoleKey}`] = romPath;
-        localStorage.setItem(ROM_MAPPINGS_KEY, JSON.stringify(mappings));
+        appStorage.setItem(ROM_MAPPINGS_KEY, JSON.stringify(mappings));
     } catch { /* localStorage full or unavailable */ }
 }
 
 export function getSaveSlots(gameId: string | number): (SaveSlot | null)[] {
     try {
-        const raw = localStorage.getItem(`${SAVE_SLOTS_PREFIX}_${gameId}`);
+        const raw = appStorage.getItem(`${SAVE_SLOTS_PREFIX}_${gameId}`);
         if (!raw) return [...EMPTY_SLOTS];
         const parsed = JSON.parse(raw);
         if (!Array.isArray(parsed)) return [...EMPTY_SLOTS];
@@ -68,7 +69,7 @@ export function putSaveSlot(gameId: string | number, slotIndex: number, slot: Sa
     const slots = getSaveSlots(gameId);
     slots[slotIndex] = slot;
     try {
-        localStorage.setItem(`${SAVE_SLOTS_PREFIX}_${gameId}`, JSON.stringify(slots));
+        appStorage.setItem(`${SAVE_SLOTS_PREFIX}_${gameId}`, JSON.stringify(slots));
     } catch { /* localStorage full */ }
     return slots;
 }
@@ -81,7 +82,7 @@ export function deleteSaveSlot(gameId: string | number, slotIndex: number): (Sav
 
 export function getGameOverrides(gameId: string, consoleKey: ConsoleKey): GameOverrides {
     try {
-        const raw = localStorage.getItem(`${GAME_OVERRIDES_PREFIX}_${gameId}_${collectionKey(consoleKey)}`);
+        const raw = appStorage.getItem(`${GAME_OVERRIDES_PREFIX}_${gameId}_${collectionKey(consoleKey)}`);
         if (raw) return JSON.parse(raw);
     } catch { /* corrupted */ }
     return {};
@@ -89,13 +90,13 @@ export function getGameOverrides(gameId: string, consoleKey: ConsoleKey): GameOv
 
 export function setGameOverrides(gameId: string, consoleKey: ConsoleKey, overrides: GameOverrides): void {
     try {
-        localStorage.setItem(`${GAME_OVERRIDES_PREFIX}_${gameId}_${collectionKey(consoleKey)}`, JSON.stringify(overrides));
+        appStorage.setItem(`${GAME_OVERRIDES_PREFIX}_${gameId}_${collectionKey(consoleKey)}`, JSON.stringify(overrides));
     } catch { /* localStorage full */ }
 }
 
 export function deleteGameOverrides(gameId: string, consoleKey: ConsoleKey): void {
     try {
-        localStorage.removeItem(`${GAME_OVERRIDES_PREFIX}_${gameId}_${collectionKey(consoleKey)}`);
+        appStorage.removeItem(`${GAME_OVERRIDES_PREFIX}_${gameId}_${collectionKey(consoleKey)}`);
     } catch { /* ignore */ }
 }
 
@@ -107,7 +108,7 @@ function collectionKey(consoleKey: ConsoleKey): ConsoleKey {
 
 export function getCollectionIds(consoleKey: ConsoleKey): string[] {
     try {
-        const raw = localStorage.getItem(`${COLLECTION_PREFIX}_${collectionKey(consoleKey)}`);
+        const raw = appStorage.getItem(`${COLLECTION_PREFIX}_${collectionKey(consoleKey)}`);
         return raw ? JSON.parse(raw) : [];
     } catch { return []; }
 }
@@ -117,7 +118,7 @@ export function addCollectionId(consoleKey: ConsoleKey, gameId: string): string[
     const ids = getCollectionIds(key);
     if (!ids.includes(gameId)) ids.push(gameId);
     try {
-        localStorage.setItem(`${COLLECTION_PREFIX}_${key}`, JSON.stringify(ids));
+        appStorage.setItem(`${COLLECTION_PREFIX}_${key}`, JSON.stringify(ids));
     } catch { /* localStorage full */ }
     return ids;
 }
@@ -126,7 +127,7 @@ export function removeCollectionId(consoleKey: ConsoleKey, gameId: string): stri
     const key = collectionKey(consoleKey);
     const ids = getCollectionIds(key).filter(id => id !== gameId);
     try {
-        localStorage.setItem(`${COLLECTION_PREFIX}_${key}`, JSON.stringify(ids));
+        appStorage.setItem(`${COLLECTION_PREFIX}_${key}`, JSON.stringify(ids));
     } catch { /* localStorage full */ }
     return ids;
 }
@@ -135,7 +136,7 @@ export function removeCollectionId(consoleKey: ConsoleKey, gameId: string): stri
 
 export function getFavoriteIds(consoleKey: ConsoleKey): string[] {
     try {
-        const raw = localStorage.getItem(`favorites_${collectionKey(consoleKey)}`);
+        const raw = appStorage.getItem(`favorites_${collectionKey(consoleKey)}`);
         const ids: unknown = raw ? JSON.parse(raw) : [];
         return Array.isArray(ids) ? ids.filter(id => typeof id === 'string') : [];
     } catch { return []; }
@@ -147,7 +148,7 @@ export function setFavorite(consoleKey: ConsoleKey, gameId: string, favorite: bo
     else ids.delete(gameId);
     const updated = [...ids];
     try {
-        localStorage.setItem(`favorites_${collectionKey(consoleKey)}`, JSON.stringify(updated));
+        appStorage.setItem(`favorites_${collectionKey(consoleKey)}`, JSON.stringify(updated));
     } catch { /* localStorage unavailable */ }
     return updated;
 }
@@ -156,7 +157,7 @@ export function setFavorite(consoleKey: ConsoleKey, gameId: string, favorite: bo
 
 export function getBeatenIds(consoleKey: ConsoleKey): string[] {
     try {
-        const raw = localStorage.getItem(`${BEATEN_PREFIX}_${collectionKey(consoleKey)}`);
+        const raw = appStorage.getItem(`${BEATEN_PREFIX}_${collectionKey(consoleKey)}`);
         return raw ? JSON.parse(raw) : [];
     } catch { return []; }
 }
@@ -166,7 +167,7 @@ export function addBeatenId(consoleKey: ConsoleKey, gameId: string): string[] {
     const ids = getBeatenIds(key);
     if (!ids.includes(gameId)) ids.push(gameId);
     try {
-        localStorage.setItem(`${BEATEN_PREFIX}_${key}`, JSON.stringify(ids));
+        appStorage.setItem(`${BEATEN_PREFIX}_${key}`, JSON.stringify(ids));
     } catch { /* localStorage full */ }
     return ids;
 }
@@ -175,7 +176,7 @@ export function removeBeatenId(consoleKey: ConsoleKey, gameId: string): string[]
     const key = collectionKey(consoleKey);
     const ids = getBeatenIds(key).filter(id => id !== gameId);
     try {
-        localStorage.setItem(`${BEATEN_PREFIX}_${key}`, JSON.stringify(ids));
+        appStorage.setItem(`${BEATEN_PREFIX}_${key}`, JSON.stringify(ids));
     } catch { /* localStorage full */ }
     return ids;
 }
@@ -184,7 +185,7 @@ export function removeBeatenId(consoleKey: ConsoleKey, gameId: string): string[]
 
 export function getCustomGames(consoleKey: ConsoleKey): LaunchBoxGame[] {
     try {
-        const raw = localStorage.getItem(`${CUSTOM_GAMES_PREFIX}_${collectionKey(consoleKey)}`);
+        const raw = appStorage.getItem(`${CUSTOM_GAMES_PREFIX}_${collectionKey(consoleKey)}`);
         return raw ? JSON.parse(raw) : [];
     } catch { return []; }
 }
@@ -194,7 +195,7 @@ export function addCustomGame(consoleKey: ConsoleKey, game: LaunchBoxGame): void
     const games = getCustomGames(key as ConsoleKey);
     if (!games.some(g => g.id === game.id)) games.push(game);
     try {
-        localStorage.setItem(`${CUSTOM_GAMES_PREFIX}_${key}`, JSON.stringify(games));
+        appStorage.setItem(`${CUSTOM_GAMES_PREFIX}_${key}`, JSON.stringify(games));
     } catch { /* localStorage full */ }
 }
 
@@ -202,19 +203,19 @@ export function removeCustomGame(consoleKey: ConsoleKey, gameId: string): void {
     const key = collectionKey(consoleKey);
     const games = getCustomGames(key as ConsoleKey).filter(g => g.id !== gameId);
     try {
-        localStorage.setItem(`${CUSTOM_GAMES_PREFIX}_${key}`, JSON.stringify(games));
+        appStorage.setItem(`${CUSTOM_GAMES_PREFIX}_${key}`, JSON.stringify(games));
     } catch { /* localStorage full */ }
 }
 
 // ── Active console ──
 
 export function readActiveConsole(): ConsoleKey | null {
-    const val = localStorage.getItem(ACTIVE_CONSOLE_KEY);
+    const val = appStorage.getItem(ACTIVE_CONSOLE_KEY);
     return val && val in PLATFORMS ? val as ConsoleKey : null;
 }
 
 export function writeActiveConsole(key: ConsoleKey): void {
-    localStorage.setItem(ACTIVE_CONSOLE_KEY, key);
+    appStorage.setItem(ACTIVE_CONSOLE_KEY, key);
 }
 
 // ── Store sort ──
@@ -222,40 +223,40 @@ export function writeActiveConsole(key: ConsoleKey): void {
 const VALID_SORT_MODES: Set<string> = new Set(['az', 'za', 'recent', 'most', 'popular', 'year', 'title']);
 
 export function readStoreSort(): SortMode | null {
-    const val = localStorage.getItem(STORE_SORT_KEY);
+    const val = appStorage.getItem(STORE_SORT_KEY);
     return val && VALID_SORT_MODES.has(val) ? val as SortMode : null;
 }
 
 export function writeStoreSort(sort: SortMode): void {
-    localStorage.setItem(STORE_SORT_KEY, sort);
+    appStorage.setItem(STORE_SORT_KEY, sort);
 }
 
 // ── Wallet ──
 
 export function getWalletBalance(): number {
     try {
-        const raw = localStorage.getItem(WALLET_BALANCE_KEY);
+        const raw = appStorage.getItem(WALLET_BALANCE_KEY);
         return raw ? Number(raw) : 0;
     } catch { return 0; }
 }
 
 export function setWalletBalance(amount: number): void {
     try {
-        localStorage.setItem(WALLET_BALANCE_KEY, String(amount));
+        appStorage.setItem(WALLET_BALANCE_KEY, String(amount));
     } catch { /* localStorage full */ }
 }
 
 export function getLastTopupDate(): string | null {
-    return localStorage.getItem(WALLET_LAST_TOPUP_KEY);
+    return appStorage.getItem(WALLET_LAST_TOPUP_KEY);
 }
 
 export function setLastTopupDate(date: string): void {
-    localStorage.setItem(WALLET_LAST_TOPUP_KEY, date);
+    appStorage.setItem(WALLET_LAST_TOPUP_KEY, date);
 }
 
 export function getBeatenRewardedMap(): Record<string, true> {
     try {
-        const raw = localStorage.getItem(WALLET_REWARDED_KEY);
+        const raw = appStorage.getItem(WALLET_REWARDED_KEY);
         return raw ? JSON.parse(raw) : {};
     } catch { return {}; }
 }
@@ -264,7 +265,7 @@ export function addBeatenRewardedId(gameId: string): Record<string, true> {
     const map = getBeatenRewardedMap();
     map[gameId] = true;
     try {
-        localStorage.setItem(WALLET_REWARDED_KEY, JSON.stringify(map));
+        appStorage.setItem(WALLET_REWARDED_KEY, JSON.stringify(map));
     } catch { /* localStorage full */ }
     return map;
 }

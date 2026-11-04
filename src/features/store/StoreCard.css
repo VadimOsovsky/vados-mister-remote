@@ -68,7 +68,7 @@
 }
 .shop-art img { max-height: 100cqw; }
 .shop-art .card-art-placeholder { min-height: 100px; }
-.shop-card:is(:active, .is-key-pressed) .shop-art { translate: 0 -8px; }
+.shop-card:is(:active, .is-key-pressed) .shop-art { translate: 0 -4px; }
 
 .shop-price {
   z-index: 1;

@@ -19,8 +19,8 @@ export default defineConfig({
     VitePWA({
       selfDestroying: true,
       manifest: {
-        name: 'MiSTer Remote',
-        short_name: 'MiSTer',
+        name: 'Mister Playroom',
+        short_name: 'Playroom',
         description: 'Remote control for MiSTer FPGA',
         theme_color: '#863bff',
         background_color: '#0a0a0f',
@@ -37,7 +37,7 @@ export default defineConfig({
             type: 'image/png',
           },
           {
-            src: 'pwa-512x512.png',
+            src: 'pwa-maskable-512x512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable',

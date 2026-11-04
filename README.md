@@ -71,3 +71,10 @@ export default defineConfig([
   },
 ])
 ```
+# Shared Playroom data on MiSTer
+
+The production app uses the Playroom HTTP server from `scripts/spa-server.py` for its shared state. Deploy the server together with the frontend using `scripts/deploy-mister.sh`. State is stored at `/media/fat/playroom-data/state.json`, beside the deployment directory. Back up this file alongside the emulator's save files.
+
+Open the updated app first in the browser and at the address where your existing collection lives. The first browser with local data can import it while the shared store is uninitialized. Other devices then see the shared collection when they open the app. Browser storage is scoped to the origin, so data from localhost or another MiSTer address cannot be imported automatically. The import leaves the old browser data intact.
+
+The MiSTer host address stays local to each browser. Vite development and its preview fixtures also use local browser data.

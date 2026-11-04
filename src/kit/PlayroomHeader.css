@@ -23,6 +23,7 @@
 
 .playroom-connection-light {
   flex: 0 0 8px;
+  width: 8px;
   height: 8px;
   border: 1px solid var(--ink, currentColor);
   border-radius: 50%;
@@ -35,12 +36,14 @@
 
 .playroom-logo {
   width: 136px;
+  min-width: 0;
   height: var(--header-brand-height, 44px);
   object-fit: contain;
 }
 
 .playroom-header-swap {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   align-items: center;
   height: var(--header-brand-height);
   overflow: hidden;

@@ -64,7 +64,7 @@
   border-radius: var(--field-radius);
   box-shadow: 0 3px var(--field-shadow-color);
 }
-.store-rom-search input { flex: 1; min-width: 0; border: 0; background: none; color: inherit; font: var(--font-field); }
+.store-rom-search input { flex: 1; min-width: 0; border: 0; background: none; color: inherit; font: var(--font-body); }
 .store-rom-search input::-webkit-search-cancel-button { display: none; }
 .store-rom-clear {
   display: grid;

@@ -1,3 +1,4 @@
+import { appStorage } from '../../lib/sharedStorage';
 import { FavoriteBookmark, FavoriteStar } from '../collection/FavoriteBookmark';
 import { useState } from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
@@ -39,7 +40,7 @@ function isGameTab(value: string | null): value is GameTab {
 
 function readGameTab(): GameTab {
     try {
-        const value = localStorage.getItem(GAME_TAB_KEY);
+        const value = appStorage.getItem(GAME_TAB_KEY);
         if (isGameTab(value)) return value;
     } catch { /* localStorage unavailable */ }
     return 'main';
@@ -99,7 +100,7 @@ export function OwnedGamePage({ selectedGame, onClose }: {
         if (!isGameTab(value)) return;
         setActiveTab(value);
         try {
-            localStorage.setItem(GAME_TAB_KEY, value);
+            appStorage.setItem(GAME_TAB_KEY, value);
         } catch { /* localStorage unavailable */ }
     }
 

@@ -80,7 +80,7 @@
   height: var(--field-height);
   border-radius: var(--field-radius);
   box-shadow: 0 3px 0 var(--field-shadow-color);
-  font: var(--font-field);
+  font: var(--font-body);
   padding-left: 40px;
 }
 

@@ -51,7 +51,7 @@ scp_cmd -r dist/* "$MISTER_USER@$MISTER_IP:$REMOTE_DIR/"
 # Upload LaunchBox game metadata
 scp_cmd public/launchbox/nes.json "$MISTER_USER@$MISTER_IP:$REMOTE_DIR/launchbox/"
 # Upload SPA server script
-scp_cmd scripts/spa-server.py "$MISTER_USER@$MISTER_IP:$REMOTE_DIR/"
+scp_cmd scripts/spa-server.py "$MISTER_USER@$MISTER_IP:$REMOTE_DIR/server.py"
 
 echo "==> Setting up HTTP server..."
 ssh_cmd bash <<REMOTE_EOF
