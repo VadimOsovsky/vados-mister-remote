@@ -2,7 +2,7 @@ import type { ConsoleKey, PlatformDef, SortMode } from './types';
 
 // ── CONTROLS ──
 const LAUNCH_CORE = { id: 'launch_core', label: 'Launch', action: '', type: 'launch' } as const;
-const RESET = { id: 'reset', label: 'Reset', action: 'user' } as const;
+const RESET = { id: 'reset', label: 'Reset console', action: 'user' } as const;
 const FLIP_DISK = { id: 'flip_disk', label: 'Flip Disk', action: 'user' } as const;
 
 // ── PLATFORMS ──
@@ -47,6 +47,7 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
   },
   fds: {
     name: 'FDS',
+    coverScale: 0.85,
     logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c7/Family_Computer_Disk_System_logo.png',
     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Nintendo-Famicom-Disk-System.png/960px-Nintendo-Famicom-Disk-System.png',
     theme: 'theme-famicom',

@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Drawer } from 'vaul';
+import { GameFormDrawer } from '../game-sheet/GameFormDrawer';
 import { useAppContext } from '../../AppContext';
 import { EditGameForm } from '../game-sheet/EditGameForm';
 import { addCustomGame, getGameOverrides } from '../../lib/storage';
 import type { LaunchBoxGame } from '../../types';
-import '../game-sheet/GameSheet.css';
-import '../game-sheet/EditGameForm.css';
 
 function createGameStub(): LaunchBoxGame {
     return {
@@ -44,28 +42,15 @@ export function AddGameSheet({ open, onOpenChange }: {
     }
 
     return (
-        <Drawer.Root open={open} onOpenChange={onOpenChange}>
-            <Drawer.Portal>
-                <Drawer.Overlay className="sheet-overlay" />
-                <Drawer.Content className="sheet" aria-describedby={undefined}>
-                    <Drawer.Handle className="sheet-handle" />
-                    <Drawer.Title className="sr-only">Add Game</Drawer.Title>
-                    <div className="sheet-content">
-                        <div className="sheet-title-bar">
-                            <div className="sheet-title">Add Game</div>
-                        </div>
-                        <EditGameForm
-                            game={stub}
-                            regions={platform.imageRegions}
-                            activeConsole={activeConsole}
-                            onSave={handleSave}
-                            onCancel={() => onOpenChange(false)}
-                            onDelete={() => {}}
-                            isNew
-                        />
-                    </div>
-                </Drawer.Content>
-            </Drawer.Portal>
-        </Drawer.Root>
+        <GameFormDrawer open={open} onOpenChange={onOpenChange} title="Add game">
+            <EditGameForm
+                game={stub}
+                regions={platform.imageRegions}
+                activeConsole={activeConsole}
+                onSave={handleSave}
+                onCancel={() => onOpenChange(false)}
+                isNew
+            />
+        </GameFormDrawer>
     );
 }

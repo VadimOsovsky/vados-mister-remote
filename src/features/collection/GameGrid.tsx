@@ -1,56 +1,85 @@
-import { type RefObject, useEffect, useMemo, useRef, useState } from 'react';
+import { type ReactNode, type RefObject, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { ConsoleKey, LaunchBoxGame } from '../../types';
 import { useAppContext } from '../../AppContext';
-import { TrophyBadgeIcon } from '../../lib/icons';
 import { LazyImage } from '../../kit/LazyImage';
 import { getImageUrl, resolveImages, resolveTitle } from '../../services/launchbox';
 import { PLATFORMS } from '../../constants';
-import { getGameOverrides } from '../../lib/storage';
-import { getGamePrice } from '../../lib/pricing';
+import { getGameOverrides, getSaveSlots } from '../../lib/storage';
+import { getPreviewCover } from './previewCovers';
 import './GameGrid.css';
 
 const PAGE_SIZE = 50;
-const COLS = 2;
+const shelfBreakpoints = ['(max-width: 520px)', '(max-width: 900px)', '(max-width: 1100px)'];
 
-function GameCard({ game, regions, activeConsole, onSelect, showPrice }: {
+function subscribeShelfWidth(callback: () => void) {
+    const queries = shelfBreakpoints.map(query => window.matchMedia(query));
+    queries.forEach(query => query.addEventListener('change', callback));
+    return () => queries.forEach(query => query.removeEventListener('change', callback));
+}
+
+function getShelfColumns() {
+    const index = shelfBreakpoints.findIndex(query => window.matchMedia(query).matches);
+    return index === -1 ? 6 : index + 2;
+}
+
+export function GameCard({ game, regions, activeConsole, onSelect, preview, recent }: {
     game: LaunchBoxGame;
     regions: string[];
     activeConsole: ConsoleKey;
     onSelect: (game: LaunchBoxGame) => void;
-    showPrice?: boolean;
+    recent?: { selected: boolean; time: ReactNode; mockSaves?: number; mockFavorite?: boolean };
+    preview?: boolean;
 }) {
     const { beatenIds } = useAppContext();
     const overrides = getGameOverrides(game.id, activeConsole);
     const images = resolveImages(game, regions);
     const displayTitle = overrides.title || resolveTitle(game, PLATFORMS[activeConsole].nameRegions);
-    const frontSrc = overrides.boxFrontUrl || (images.front ? getImageUrl(images.front, 300) : undefined);
+    const localCover = preview ? getPreviewCover(activeConsole, game.id) : undefined;
+    const frontSrc = overrides.boxFrontUrl || localCover || (images.front ? getImageUrl(images.front, 300) : undefined);
+    const directCover = images.front ? getImageUrl(images.front) : undefined;
+    const coverScale = PLATFORMS[activeConsole].coverScale;
+    const slots = getSaveSlots(game.id);
+    const playerCount = game.maxPlayers.trim();
     const isBeaten = beatenIds.includes(game.id);
     return (
-        <div
+        <button type="button" aria-label={recent ? `Open ${displayTitle}` : displayTitle} aria-pressed={recent?.selected}
             className={`game-card${isBeaten ? ' beaten' : ''}`}
             onClick={() => onSelect(game)}
         >
-            <div className="card-art-wrap">
-                <LazyImage src={frontSrc} alt={displayTitle} className="card-art" />
-                {isBeaten && <div className="card-beaten">{TrophyBadgeIcon}</div>}
-                {showPrice && <div className="card-price">${getGamePrice(game)}</div>}
-            </div>
-            <div className="card-badge">
-                <div className="card-title">{displayTitle}</div>
-                <div className="card-year">{game.year}</div>
-            </div>
-        </div>
+            <span className="card-frame">
+                <span className="card-art-wrap">
+                    <LazyImage src={frontSrc} fallbackSrc={directCover} alt="" className="card-art"
+                        style={coverScale === undefined ? undefined : { scale: coverScale }} />
+                    {recent?.mockFavorite && <span className="recent-bookmark" role="img" aria-label="Favorite">★</span>}
+                    {isBeaten && <span className="card-beaten">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 4 4 10-10" /></svg>
+                    </span>}
+                </span>
+                <span className="card-status">
+                    <span className="save-dots" role="img" aria-label={(recent?.mockSaves ?? slots.filter(Boolean).length) + ' of 4 save slots used'}>
+                        {slots.map((slot, index) => <i key={index} className={slot?.beaten ? 'complete' : slot || index < (recent?.mockSaves ?? 0) ? 'used' : ''} />)}
+                    </span>
+                    {/^[1-9]\d*$/.test(playerCount) && <span className="player-badge">{playerCount}P</span>}
+                </span>
+            </span>
+            <span className="card-badge">
+                <span className="card-title">{displayTitle}</span>
+                <span className="card-year">{recent ? recent.time : [game.year, game.publisher].filter(Boolean).join(' · ')}</span>
+            </span>
+        </button>
     );
 }
 
-export function GameGrid({ games, regions, activeConsole, onSelect, scrollRef, showPrice }: {
+export function GameGrid({ games, regions, activeConsole, onSelect, scrollRef, renderStoreCard, preview }: {
     games: LaunchBoxGame[];
     regions: string[];
     activeConsole: ConsoleKey;
     onSelect: (game: LaunchBoxGame) => void;
     scrollRef?: RefObject<HTMLDivElement | null>;
-    showPrice?: boolean;
+    renderStoreCard?: (game: LaunchBoxGame) => ReactNode;
+    preview?: boolean;
 }) {
     const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
     const gridRef = useRef<HTMLDivElement>(null);
@@ -64,9 +93,22 @@ export function GameGrid({ games, regions, activeConsole, onSelect, scrollRef, s
         () => games.slice(0, visibleCount),
         [games, visibleCount],
     );
-    const rowCount = Math.ceil(visibleGames.length / COLS);
+    const shelfColumns = useSyncExternalStore(subscribeShelfWidth, getShelfColumns);
+    const columns = renderStoreCard ? Math.min(shelfColumns, 4) : shelfColumns;
+    const rowCount = Math.ceil(visibleGames.length / columns);
 
-    const scrollMargin = gridRef.current?.offsetTop ?? 0;
+    const [scrollMargin, setScrollMargin] = useState(0);
+    useLayoutEffect(() => {
+        const grid = gridRef.current;
+        if (!grid) return;
+        const measure = () => setScrollMargin(grid.offsetTop);
+        measure();
+        const observer = new ResizeObserver(measure);
+        for (let sibling = grid.previousElementSibling; sibling; sibling = sibling.previousElementSibling) {
+            observer.observe(sibling);
+        }
+        return () => observer.disconnect();
+    }, [games]);
 
     const virtualizer = useVirtualizer({
         count: rowCount,
@@ -90,11 +132,11 @@ export function GameGrid({ games, regions, activeConsole, onSelect, scrollRef, s
     return (
         <div
             ref={gridRef}
-            className="game-grid"
+            className={renderStoreCard ? "game-grid shop-grid" : "game-grid shelf-grid"}
             style={{ height: virtualizer.getTotalSize() }}
         >
             {virtualItems.map(virtualRow => {
-                const startIndex = virtualRow.index * COLS;
+                const startIndex = virtualRow.index * columns;
                 return (
                     <div
                         key={virtualRow.key}
@@ -102,12 +144,14 @@ export function GameGrid({ games, regions, activeConsole, onSelect, scrollRef, s
                         data-index={virtualRow.index}
                         className="game-grid-row"
                         style={{
+                            gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
                             transform: `translateY(${virtualRow.start - scrollMargin}px)`,
                         }}
                     >
-                        {Array.from({ length: COLS }, (_, col) => {
+                        {Array.from({ length: columns }, (_, col) => {
                             const game = visibleGames[startIndex + col];
-                            if (!game) return <div key={col} />;
+                            if (!game) return null;
+                            if (renderStoreCard) return renderStoreCard(game);
                             return (
                                 <GameCard
                                     key={game.id}
@@ -115,7 +159,7 @@ export function GameGrid({ games, regions, activeConsole, onSelect, scrollRef, s
                                     regions={regions}
                                     activeConsole={activeConsole}
                                     onSelect={onSelect}
-                                    showPrice={showPrice}
+                                    preview={preview}
                                 />
                             );
                         })}

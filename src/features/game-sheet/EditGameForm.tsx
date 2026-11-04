@@ -2,20 +2,21 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ConsoleKey, GameOverrides, LaunchBoxGame } from '../../types';
 import type { WizzoGameSearchResult } from '../../services/wizzoApi';
 import { useAppContext } from '../../AppContext';
-import { TrashIcon } from '../../lib/icons';
+import { SearchIcon, TrashIcon } from '../../lib/icons';
 import { getGameOverrides, setGameOverrides, getRomMapping, setRomMapping } from '../../lib/storage';
 import { getImageUrl, resolveImages, resolveTitle } from '../../services/launchbox';
 import { PLATFORMS } from '../../constants';
 import './EditGameForm.css';
 
-export function EditGameForm({ game, regions, activeConsole, onSave, onCancel, onDelete, isNew }: {
+export function EditGameForm({ game, regions, activeConsole, onSave, onCancel, onDelete, isNew, initialField }: {
     game: LaunchBoxGame;
     regions: string[];
     activeConsole: ConsoleKey;
     onSave: () => void;
     onCancel: () => void;
-    onDelete: () => void;
+    onDelete?: () => void;
     isNew?: boolean;
+    initialField?: 'rom';
 }) {
     const [draft, setDraft] = useState<GameOverrides>(() => {
         if (isNew) return getGameOverrides(game.id, activeConsole);
@@ -141,115 +142,119 @@ export function EditGameForm({ game, regions, activeConsole, onSave, onCancel, o
             setConfirmDelete(true);
             return;
         }
-        onDelete();
+        onDelete?.();
     }
 
     return (
         <div className="edit-game-form">
-            <div className="edit-game-section">
-                <div className="edit-game-section-title">Game Info</div>
-                <label className="edit-game-field">
-                    <span className="edit-game-label">Title</span>
-                    <input
-                        className="edit-game-input edit-game-input-title"
-                        type="text"
-                        placeholder="Game title"
-                        value={draft.title ?? ''}
-                        onChange={e => set('title', e.target.value)}
-                    />
-                </label>
-                <div className="edit-game-field rom-autocomplete" ref={romFieldRef}>
-                    <span className="edit-game-label">ROM (MiSTer)</span>
-                    <div className="rom-autocomplete-anchor">
+            <div className="edit-game-fields">
+                <div className="edit-game-section">
+                    <div className="edit-game-section-title">Game Info</div>
+                    <label className="edit-game-field">
+                        <span className="edit-game-label">Title</span>
+                        <input
+                            className="edit-game-input edit-game-input-title"
+                            type="text"
+                            placeholder="Game title"
+                            value={draft.title ?? ''}
+                            onChange={e => set('title', e.target.value)}
+                        />
+                    </label>
+                    <div className="edit-game-field rom-autocomplete" ref={romFieldRef}>
+                        <span className="edit-game-label">ROM (MiSTer)</span>
+                        <div className="rom-autocomplete-anchor">
+                            <span className="search-icon" aria-hidden="true">{SearchIcon}</span>
+                            <input
+                                className="edit-game-input"
+                                type="text"
+                                placeholder="Search ROMs on MiSTer..."
+                                autoComplete="off"
+                                value={draft.romName ?? ''}
+                                autoFocus={initialField === 'rom'}
+                                onChange={e => handleRomInputChange(e.target.value)}
+                                onFocus={() => { if (romResults.length) setRomDropdownOpen(true); }}
+                                onKeyDown={handleRomKeyDown}
+                            />
+                            {romLoading && <span className="rom-autocomplete-spinner" />}
+                            {romDropdownOpen && romResults.length > 0 && (
+                                <ul className="rom-autocomplete-dropdown">
+                                    {romResults.map((r, i) => (
+                                        <li
+                                            key={r.path}
+                                            className={`rom-autocomplete-item${i === romHighlight ? ' rom-autocomplete-item-active' : ''}`}
+                                            onPointerDown={() => handleRomSelect(r)}
+                                        >
+                                            <span className="rom-autocomplete-name">{r.name}</span>
+                                            <span className="rom-autocomplete-path">{r.path}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="edit-game-section">
+                    <div className="edit-game-section-title">Images</div>
+                    <label className="edit-game-field">
+                        <span className="edit-game-label">Box Front URL</span>
                         <input
                             className="edit-game-input"
-                            type="text"
-                            placeholder="Search ROMs on MiSTer..."
-                            autoComplete="off"
-                            value={draft.romName ?? ''}
-                            onChange={e => handleRomInputChange(e.target.value)}
-                            onFocus={() => { if (romResults.length) setRomDropdownOpen(true); }}
-                            onKeyDown={handleRomKeyDown}
+                            type="url"
+                            placeholder="https://..."
+                            value={draft.boxFrontUrl ?? ''}
+                            onChange={e => set('boxFrontUrl', e.target.value)}
                         />
-                        {romLoading && <span className="rom-autocomplete-spinner" />}
-                        {romDropdownOpen && romResults.length > 0 && (
-                            <ul className="rom-autocomplete-dropdown">
-                                {romResults.map((r, i) => (
-                                    <li
-                                        key={r.path}
-                                        className={`rom-autocomplete-item${i === romHighlight ? ' rom-autocomplete-item-active' : ''}`}
-                                        onPointerDown={() => handleRomSelect(r)}
-                                    >
-                                        <span className="rom-autocomplete-name">{r.name}</span>
-                                        <span className="rom-autocomplete-path">{r.path}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        )}
-                    </div>
+                    </label>
+                    <label className="edit-game-field">
+                        <span className="edit-game-label">Box Back URL</span>
+                        <input
+                            className="edit-game-input"
+                            type="url"
+                            placeholder="https://..."
+                            value={draft.boxBackUrl ?? ''}
+                            onChange={e => set('boxBackUrl', e.target.value)}
+                        />
+                    </label>
+                    <label className="edit-game-field">
+                        <span className="edit-game-label">Cartridge URL</span>
+                        <input
+                            className="edit-game-input"
+                            type="url"
+                            placeholder="https://..."
+                            value={draft.cartridgeUrl ?? ''}
+                            onChange={e => set('cartridgeUrl', e.target.value)}
+                        />
+                    </label>
+                    <label className="edit-game-field">
+                        <span className="edit-game-label">Manual Photo URL</span>
+                        <input
+                            className="edit-game-input"
+                            type="url"
+                            placeholder="https://..."
+                            value={draft.manualPhotoUrl ?? ''}
+                            onChange={e => set('manualPhotoUrl', e.target.value)}
+                        />
+                    </label>
+                    <label className="edit-game-field">
+                        <span className="edit-game-label">Manual URL</span>
+                        <input
+                            className="edit-game-input"
+                            type="url"
+                            placeholder="https://..."
+                            value={draft.manualUrl ?? ''}
+                            onChange={e => set('manualUrl', e.target.value)}
+                        />
+                    </label>
                 </div>
             </div>
 
-            <div className="edit-game-section">
-                <div className="edit-game-section-title">Images</div>
-                <label className="edit-game-field">
-                    <span className="edit-game-label">Box Front URL</span>
-                    <input
-                        className="edit-game-input"
-                        type="url"
-                        placeholder="https://..."
-                        value={draft.boxFrontUrl ?? ''}
-                        onChange={e => set('boxFrontUrl', e.target.value)}
-                    />
-                </label>
-                <label className="edit-game-field">
-                    <span className="edit-game-label">Box Back URL</span>
-                    <input
-                        className="edit-game-input"
-                        type="url"
-                        placeholder="https://..."
-                        value={draft.boxBackUrl ?? ''}
-                        onChange={e => set('boxBackUrl', e.target.value)}
-                    />
-                </label>
-                <label className="edit-game-field">
-                    <span className="edit-game-label">Cartridge URL</span>
-                    <input
-                        className="edit-game-input"
-                        type="url"
-                        placeholder="https://..."
-                        value={draft.cartridgeUrl ?? ''}
-                        onChange={e => set('cartridgeUrl', e.target.value)}
-                    />
-                </label>
-                <label className="edit-game-field">
-                    <span className="edit-game-label">Manual Photo URL</span>
-                    <input
-                        className="edit-game-input"
-                        type="url"
-                        placeholder="https://..."
-                        value={draft.manualPhotoUrl ?? ''}
-                        onChange={e => set('manualPhotoUrl', e.target.value)}
-                    />
-                </label>
-                <label className="edit-game-field">
-                    <span className="edit-game-label">Manual URL</span>
-                    <input
-                        className="edit-game-input"
-                        type="url"
-                        placeholder="https://..."
-                        value={draft.manualUrl ?? ''}
-                        onChange={e => set('manualUrl', e.target.value)}
-                    />
-                </label>
-            </div>
-
             <div className="edit-game-actions">
-                <button className="sheet-btn sheet-btn-primary" onClick={handleSave} disabled={titleMissing}>Save</button>
-                <button className="sheet-btn sheet-btn-secondary" onClick={onCancel}>Cancel</button>
+                <button className="sheet-btn sheet-btn-primary playroom-press" onClick={handleSave} disabled={titleMissing}>{isNew ? 'Save' : 'Save changes'}</button>
+                <button className="sheet-btn sheet-btn-secondary playroom-press" onClick={onCancel}>Cancel</button>
             </div>
 
-            {!isNew && (
+            {onDelete && (
                 <div className="edit-game-danger">
                     <button
                         className={`edit-game-delete-btn${confirmDelete ? ' edit-game-delete-btn-confirm' : ''}`}

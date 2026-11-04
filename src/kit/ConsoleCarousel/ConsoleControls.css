@@ -39,3 +39,21 @@
   height: 20px;
   opacity: 0.85;
 }
+
+.console-sheet .console-ctrl-btn {
+  background: var(--card);
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  font: var(--font-label);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.console-sheet .console-ctrl-btn {
+  min-height: 46px;
+  width: auto;
+  aspect-ratio: auto;
+  padding: 8px 12px;
+  flex-direction: row;
+}

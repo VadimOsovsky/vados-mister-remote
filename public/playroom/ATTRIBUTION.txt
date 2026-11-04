@@ -1,0 +1,5 @@
+Hardware photographs: Evan-Amos / Vanamo Online Game Museum.
+Source file pages listed in SOURCES.json.
+NES, Famicom, FDS: public domain per their source pages. SNES-Mod1-Console-Set: CC BY-SA 3.0, https://creativecommons.org/licenses/by-sa/3.0/ . Other photographs retain the licenses stated on their linked source pages.
+WebP delivery copies: resized and re-encoded, photographic content unchanged. Original PNGs retained.
+NES/Famicom/FDS sources were already referenced by the parent application src/constants.ts.

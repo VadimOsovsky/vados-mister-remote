@@ -1,28 +1,33 @@
 import { useState } from 'react';
+import './LazyImage.css';
 
-export function LazyImage({ src, alt, className, style }: {
+export function LazyImage({ src, fallbackSrc, alt, className, style }: {
     src?: string;
+    fallbackSrc?: string;
     alt: string;
     className?: string;
     style?: React.CSSProperties;
 }) {
-    const [loaded, setLoaded] = useState(false);
-    const [error, setError] = useState(false);
+    const [loadedSource, setLoadedSource] = useState<string>();
+    const [failedSources, setFailedSources] = useState<string[]>([]);
+    const imageSrc = [src, fallbackSrc].find(source => source && !failedSources.includes(source));
 
-    if (!src || error) {
-        return <div className="card-art-placeholder">🎮</div>;
+    if (!imageSrc) {
+        return <span className="card-art-placeholder" aria-hidden="true">🎮</span>;
     }
 
     return (
         <img
-            src={src}
+            key={imageSrc}
+            src={imageSrc}
             alt={alt}
-            className={`${className || ''} ${loaded ? 'loaded' : ''}`}
+            className={`lazy-image ${className || ''}`}
+            data-loaded={loadedSource === imageSrc}
             style={style}
             loading="lazy"
             decoding="async"
-            onLoad={() => setLoaded(true)}
-            onError={() => setError(true)}
+            onLoad={() => setLoadedSource(imageSrc)}
+            onError={() => setFailedSources(sources => [...sources, imageSrc])}
         />
     );
 }

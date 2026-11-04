@@ -22,20 +22,27 @@ export const GridIcon = (
 );
 
 export const StoreIcon = (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
-         strokeLinejoin="round">
-        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
-        <path d="M3 6h18"/>
-        <path d="M16 10a4 4 0 0 1-8 0"/>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M5 8h14l1 12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1L5 8Zm3 0V6a4 4 0 0 1 8 0v2m-6 6h4m-2-2v4" />
     </svg>
 );
 
 export const SettingsIcon = (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
-         strokeLinejoin="round">
-        <circle cx="12" cy="12" r="3"/>
-        <path
-            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M10 3h4l.6 2.4 1.5.9 2.4-.7 2 3.4-1.8 1.7v2.6l1.8 1.7-2 3.4-2.4-.7-1.5.9L14 21h-4l-.6-2.4-1.5-.9-2.4.7-2-3.4 1.8-1.7v-2.6L3.5 9l2-3.4 2.4.7 1.5-.9L10 3Z" />
+        <circle cx="12" cy="12" r="3" />
+    </svg>
+);
+
+export const FileIcon = (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M5 3h9l5 5v13H5zM14 3v5h5M8 12h8m-8 4h5" />
+    </svg>
+);
+
+export const FlipIcon = (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M3 9a9 9 0 0 1 15-3l3 3m0-6v6h-6M21 15a9 9 0 0 1-15 3l-3-3m0 6v-6h6" />
     </svg>
 );
 
@@ -54,12 +61,11 @@ export const ResetIcon = (
 );
 
 export const DiskIcon = (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
-         strokeLinejoin="round">
-        <rect x="4" y="2" width="16" height="20" rx="2"/>
-        <rect x="8" y="2" width="8" height="8"/>
-        <rect x="8" y="14" width="8" height="8" rx="1"/>
-        <line x1="13" y1="3" x2="13" y2="6"/>
+    <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"
+         strokeLinejoin="round" aria-hidden="true">
+        <path d="M4 4h16a1 1 0 0 1 1 1v14H3V5a1 1 0 0 1 1-1Z" fill="var(--gold, #ffdb54)"/>
+        <rect x="6" y="7" width="12" height="6" rx="1" fill="var(--card, #fff8e7)"/>
+        <path d="M9 10h6M6 16v3m12-3v3m-8-3h4" fill="none"/>
     </svg>
 );
 
@@ -223,5 +229,11 @@ export const TrophyBadgeIcon = (
         <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22"/>
         <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22"/>
         <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
+    </svg>
+);
+
+export const BackArrowIcon = (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="m10 6-6 6 6 6M4 12h16" />
     </svg>
 );

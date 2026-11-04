@@ -193,3 +193,10 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.rp-input-row .rp-input { padding-inline-start: 36px; }
+
+.rp-input-row .search-icon {
+  z-index: 1;
+  color: #fff9;
+}

@@ -13,7 +13,7 @@ npm run dev          # Start Vite dev server with HMR
 npm run build        # TypeScript check + Vite production build (tsc -b && vite build)
 npm run lint         # ESLint (flat config with TS + React Hooks plugins)
 npm run preview      # Preview production build locally
-npm run parse-launchbox  # Parse LaunchBox XML data into JSON (tsx scripts/parse-launchbox.ts)
+npm run build-library  # Download LaunchBox metadata and generate public/launchbox/*.json
 ```
 
 No test framework is configured yet.

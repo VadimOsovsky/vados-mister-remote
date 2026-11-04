@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="384" height="384" viewBox="0 0 384 384">
+  <!-- Variant 2: the original block/checker language, with a different rhythm and silhouette. -->
+  <defs>
+    <pattern id="check" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M0 0h12v12H0Zm12 12h12v12H12Z" fill="#fff" opacity=".065"/></pattern>
+    <pattern id="fine" width="12" height="12" patternUnits="userSpaceOnUse"><path d="M0 0h6v6H0Zm6 6h6v6H6Z" fill="#fff" opacity=".055"/></pattern>
+  </defs>
+  <path d="M24 24h72v72H24ZM216 192h96v72h-96Z" fill="url(#check)"/>
+  <path d="M288 48h72v48h-72ZM144 312h72v48h-72Z" fill="url(#fine)"/>
+  <path d="M144 0h72v96h48v48H144ZM0 192h72v96H0ZM312 120h72v96h-48v-48h-24ZM72 264h48v48h48v72H72ZM264 288h120v48h-72v48h-48Z" fill="#fff" opacity=".035"/>
+  <path d="M96 96h24v24H96ZM168 216h24v24h-24ZM336 240h24v24h-24Z" fill="#fff" opacity=".055"/>
+</svg>

@@ -30,11 +30,6 @@
   transform: scale(0.96);
 }
 
-.game-card.selected {
-  outline: 3px solid var(--accent);
-  outline-offset: 2px;
-}
-
 .card-art-wrap {
   position: relative;
   aspect-ratio: 1;
@@ -52,12 +47,6 @@
   height: 100%;
   object-fit: contain;
   display: block;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.card-art.loaded {
-  opacity: 1;
 }
 
 .card-art-placeholder {
@@ -68,15 +57,6 @@
   justify-content: center;
   font-size: 32px;
   opacity: 0.3;
-}
-
-.card-fav {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  font-size: 20px;
-  z-index: 2;
-  line-height: 1;
 }
 
 .card-beaten {
@@ -124,27 +104,6 @@
   opacity: 0.6;
   flex-shrink: 0;
   margin-left: 6px;
-}
-
-/* ── Price Tag (Store cards) ── */
-.card-price {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  z-index: 2;
-  padding: 2px 7px;
-  border-radius: 6px;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(4px);
-  font-family: 'Sora', sans-serif;
-  font-size: 11px;
-  font-weight: 700;
-  color: #fff;
-  letter-spacing: -0.01em;
-  line-height: 1.4;
-  pointer-events: none;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
 
 /* ── BEATEN CARD: Golden Trophy Treatment ── */
@@ -195,4 +154,157 @@
 
 .game-card.beaten .card-year {
   opacity: 0.7;
+}
+
+.collection-page .shelf-grid .game-grid-row {
+  padding: 4px 20px 16px;
+  gap: 20px;
+  align-items: start;
+}
+
+.collection-page .game-card,.collection-page .game-card.beaten {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  text-align: left;
+  min-width: 0;
+  color: var(--ink);
+  overflow: visible;
+  position: relative;
+}
+
+.collection-page .game-card:is(:active, .is-key-pressed) {
+  transform: none;
+  filter: none;
+}
+
+.collection-page .game-card:is(:active, .is-key-pressed) .card-frame {
+  transform: translateY(3px);
+  box-shadow: 0 2px 0 var(--card-shadow), inset 0 0 0 3px var(--card);
+}
+
+.card-frame { display: block; }
+
+.collection-page .card-frame {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  border: 2px solid var(--ink);
+  border-radius: 13px;
+  background: radial-gradient(#18294712 1px, transparent 1.5px) 0 0 / 6px 6px, var(--card);
+  --card-shadow: color-mix(in srgb, var(--ink) 70%, transparent);
+  box-shadow: 0 4px 0 var(--card-shadow), inset 0 0 0 0 var(--card);
+  transition: transform var(--motion) var(--ease), box-shadow var(--motion) var(--ease);
+}
+
+.collection-page .card-art-wrap {
+  aspect-ratio: 1;
+  min-height: 0;
+  background: none;
+  overflow: visible;
+  padding: 8px;
+}
+
+.collection-page .card-art {
+  position: static;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 3px;
+  box-shadow: 0 2px 4px #0003;
+}
+
+.collection-page .card-art-wrap::after {
+  display: none;
+}
+
+.collection-page .card-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-height: 26px;
+  margin: 0 6px;
+  padding: 3px 0;
+  border-top: 1px solid var(--line);
+}
+
+.save-dots {
+  display: flex;
+  gap: 3px;
+}
+
+.save-dots i {
+  width: 9px;
+  height: 9px;
+  border: 1.5px solid var(--ink);
+  border-radius: 50%;
+}
+
+.save-dots .used {
+  background: #349cef;
+}
+
+.save-dots .complete {
+  background: var(--gold);
+}
+
+.collection-page .card-badge {
+  background: none !important;
+  display: block;
+  padding: 8px 0 0;
+}
+
+.collection-page .card-title {
+  display: block;
+  font: var(--font-title-card);
+  white-space: nowrap;
+  color: var(--ink) !important;
+}
+
+.collection-page .card-year {
+  display: block;
+  font: var(--font-caption);
+  margin: 2px 0 0;
+  color: var(--muted) !important;
+  opacity: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.collection-page .card-beaten {
+  top: -9px;
+  right: -7px;
+  width: 30px;
+  height: 30px;
+  animation: none !important;
+  filter: none;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--gold);
+  color: var(--ink);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 0 0 2px var(--card);
+}
+
+.collection-page .card-beaten svg {
+  width: 20px;
+  height: 20px;
+}
+
+@media (hover: hover) {
+  .collection-page .game-card:hover .card-frame {
+    background-color: color-mix(in srgb, var(--card) 90%, var(--gold));
+  }
+}
+
+@media (min-width: 700px) {
+  .collection-page .shelf-grid .game-grid-row {
+    padding-left: 32px;
+    padding-right: 32px;
+    gap: 24px;
+  }
 }

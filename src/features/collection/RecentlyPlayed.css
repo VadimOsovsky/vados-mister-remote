@@ -1,0 +1,177 @@
+.recent-shelf {
+  --recent-card-width: 280px;
+  --recent-gutter: 42px;
+}
+
+.recent-shelf-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 20px var(--recent-gutter) 0;
+}
+
+.recent-console strong {
+  display: block;
+  font: var(--font-label);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.recent-console span {
+  display: block;
+  margin-top: 3px;
+  font: var(--font-label-nav);
+  letter-spacing: 1.8px;
+  opacity: .65;
+  text-transform: uppercase;
+}
+
+.recent-section-label {
+  font: var(--font-label-nav);
+  letter-spacing: .6px;
+  opacity: .75;
+}
+
+.recent-shelf-heading h2 {
+  grid-column: 1 / -1;
+  margin: 0;
+  font: var(--font-heading-page);
+  letter-spacing: -.4px;
+}
+
+.recent-shelf .recent-track { padding-block: 24px 12px; }
+
+.recent-track:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+
+.recent-track .recent-card { width: var(--recent-card-width); min-width: 0; }
+
+.collection-page .recent-card .game-card {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border-radius: 10px;
+  transform: scale(.94);
+  opacity: .78;
+  transition: transform var(--motion) var(--ease), opacity var(--motion) var(--ease),
+    translate var(--motion) var(--ease), filter var(--motion) var(--ease);
+}
+
+.collection-page .recent-card[data-selected=true] .game-card {
+  transform: scale(1);
+  opacity: 1;
+}
+
+.collection-page .recent-card .game-card:is(:active, .is-key-pressed) {
+  translate: 0 1px;
+  filter: brightness(.94);
+}
+
+.collection-page .recent-card .game-card .card-frame {
+  position: relative;
+  aspect-ratio: 1;
+  grid-template-rows: minmax(0, 1fr) auto;
+  border: 3px solid var(--card);
+  border-radius: 22px;
+  background-color: var(--card);
+  box-shadow: 5px 9px 0 #0004;
+  transform: none;
+}
+
+.collection-page .recent-card[data-selected=true] .game-card .card-frame {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px var(--card), 0 0 0 7px var(--focus), 5px 9px 0 #0004;
+}
+
+.collection-page .recent-card .card-art-wrap {
+  position: static;
+  aspect-ratio: auto;
+  padding: 8px 27px 4px;
+}
+
+.collection-page .recent-card .card-status {
+  min-height: 29px;
+  margin: 0 10px 9px;
+  padding: 7px 0 0;
+}
+
+.recent-bookmark {
+  position: absolute;
+  top: -1px;
+  left: 12px;
+  width: 22px;
+  height: 31px;
+  padding-top: 4px;
+  text-align: center;
+  font: var(--font-label);
+  color: var(--card);
+  background: var(--ink);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%);
+}
+
+.recent-card .save-dots i { width: 12px; height: 12px; }
+
+.recent-card .player-badge {
+  display: grid;
+  place-items: center;
+  min-width: 37px;
+  min-height: 23px;
+  font: var(--font-label-section);
+  line-height: 1;
+  background: var(--card);
+  box-shadow: 0 1px 0 var(--ink);
+}
+
+.collection-page .recent-card .card-beaten {
+  width: 34px;
+  height: 34px;
+  right: -5px;
+  top: -5px;
+}
+
+.collection-page .recent-card .card-badge { padding-top: 17px; text-align: center; }
+.collection-page .recent-card .card-title { font: var(--font-label); color: var(--card) !important; }
+.collection-page .recent-card .card-year { margin: 8px 0 0; color: var(--card) !important; opacity: .7; }
+
+.recent-actions {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 8px var(--recent-gutter) 24px;
+  font: var(--font-caption);
+}
+
+.recent-actions p { margin: 0; }
+.recent-actions .playroom-primary {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 7px;
+  width: min(100%, var(--recent-card-width));
+  height: 43px;
+  padding-block: 0;
+  border-radius: 10px;
+  font: var(--font-label-section);
+  box-shadow: 0 0 0 2px var(--card), 0 4px 0 2px var(--ink);
+}
+
+.recent-actions .playroom-primary:not(:disabled):is(:active, .is-key-pressed) {
+  box-shadow: 0 0 0 2px var(--card), 0 2px 0 2px var(--ink);
+}
+
+.recent-actions .playroom-primary svg { width: 15px; height: 15px; }
+.recent-actions .playroom-primary:disabled { opacity: .6; }
+
+@media (max-width: 520px) {
+  .recent-shelf {
+    --recent-card-width: clamp(244px, 66vw, 294px);
+    --recent-gutter: 20px;
+  }
+  .recent-shelf-heading { padding-top: 18px; }
+  .recent-shelf .recent-track { padding-bottom: 8px; }
+  .recent-actions .playroom-primary { height: 41px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .collection-page .recent-card .game-card { transition: none; }
+}

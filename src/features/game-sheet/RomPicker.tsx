@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { WizzoGameSearchResult } from '../../services/wizzoApi';
+import { SearchIcon } from '../../lib/icons';
 import './RomPicker.css';
 
 export function RomPicker({
@@ -15,11 +16,10 @@ export function RomPicker({
     closeRomPicker: () => void;
     selectRom: (r: WizzoGameSearchResult) => void;
 }) {
-    const [highlight, setHighlight] = useState(-1);
+    const [selection, setSelection] = useState({ results: romSearchResults, index: -1 });
+    const highlight = selection.results === romSearchResults ? selection.index : -1;
     const inputRef = useRef<HTMLInputElement>(null);
     const listRef = useRef<HTMLUListElement>(null);
-
-    useEffect(() => { setHighlight(-1); }, [romSearchResults]);
 
     // Auto-focus input on mount
     useEffect(() => {
@@ -40,10 +40,10 @@ export function RomPicker({
         if (!romSearchResults.length) return;
         if (e.key === 'ArrowDown') {
             e.preventDefault();
-            setHighlight(i => (i + 1) % romSearchResults.length);
+            setSelection({ results: romSearchResults, index: (highlight + 1) % romSearchResults.length });
         } else if (e.key === 'ArrowUp') {
             e.preventDefault();
-            setHighlight(i => (i <= 0 ? romSearchResults.length - 1 : i - 1));
+            setSelection({ results: romSearchResults, index: highlight <= 0 ? romSearchResults.length - 1 : highlight - 1 });
         } else if (e.key === 'Enter' && highlight >= 0) {
             e.preventDefault();
             selectRom(romSearchResults[highlight]);
@@ -82,6 +82,7 @@ export function RomPicker({
 
             {/* Search input — same size/shape as the button it replaced */}
             <div className="rp-input-row">
+                <span className="search-icon" aria-hidden="true">{SearchIcon}</span>
                 <input
                     ref={inputRef}
                     className="rp-input"

@@ -1,0 +1,17 @@
+.expandable-description p { margin: 16px 0 0; font: var(--font-body); white-space: pre-line; overflow-wrap: anywhere; }
+.description-clamped { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden; }
+.expandable-description button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: var(--font-label-section);
+}
+.expandable-description button span { display: inline-flex; }
+.expandable-description button svg { width: 16px; height: 16px; transition: transform var(--motion) var(--ease); }
+.expandable-description button[aria-expanded="true"] svg { transform: rotate(180deg); }
+.expandable-description button:is(:active, .is-key-pressed) { opacity: .6; }

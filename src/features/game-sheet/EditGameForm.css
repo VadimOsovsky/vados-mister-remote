@@ -248,3 +248,10 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.edit-game-fields {
+  display: grid;
+  gap: 16px;
+}
+
+.rom-autocomplete-anchor .edit-game-input { padding-inline-start: 36px; }

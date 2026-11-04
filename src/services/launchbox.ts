@@ -155,6 +155,7 @@ export async function loadPlatformGames(consoleKey: ConsoleKey): Promise<LaunchB
  * Load only the collection games for a specific console variant.
  */
 export async function loadCollectionGames(consoleKey: ConsoleKey, collectionIds: string[]): Promise<LaunchBoxGame[]> {
+  if (!collectionIds.length) return [];
   const allGames = await loadPlatformGames(consoleKey);
   const collectionSet = new Set(collectionIds);
   const lbGames = allGames.filter(g => collectionSet.has(g.id));

@@ -1,0 +1,129 @@
+.store-rom-dialog header svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+.store-rom-dialog {
+  position: fixed;
+  z-index: 110;
+  inset: auto 0 0;
+  margin-inline: auto;
+  width: min(480px, 100%);
+  max-height: calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: var(--ink);
+  background: var(--paper);
+  border-radius: 24px 24px 0 0;
+  box-shadow: 0 -8px 36px #0005;
+}
+.store-rom-dialog header {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 16px 20px;
+  color: var(--card);
+  background: var(--ink);
+}
+.store-rom-dialog header .store-kicker { font: var(--font-caption); letter-spacing: .08em; }
+.store-rom-dialog h2 { margin: 4px 0 0; font: var(--font-heading-dialog); }
+.store-rom-dialog header .playroom-button {
+  background: transparent;
+  color: var(--card);
+  border-color: #fff6;
+}
+.store-rom-content {
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 16px 20px 4px;
+}
+
+.store-rom-game { display: flex; gap: 12px; align-items: center; }
+.store-rom-game strong, .store-rom-file strong { display: block; font: var(--font-label); overflow-wrap: anywhere; }
+.store-rom-game small, .store-rom-file small { display: block; color: var(--muted); font: var(--font-caption); overflow-wrap: anywhere; }
+.store-rom-mark {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  background: var(--gold);
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+}
+.store-rom-mark svg, .store-rom-search svg, .store-rom-file svg { width: 20px; height: 20px; flex: none; }
+.store-rom-content > p { color: var(--muted); font: var(--font-field); margin: 16px 0; }
+.store-rom-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--field-height);
+  padding-inline: 12px;
+  background: var(--card);
+  border: 2px solid var(--ink);
+  border-radius: var(--field-radius);
+  box-shadow: 0 3px var(--field-shadow-color);
+}
+.store-rom-search input { flex: 1; min-width: 0; border: 0; background: none; color: inherit; font: var(--font-field); }
+.store-rom-search input::-webkit-search-cancel-button { display: none; }
+.store-rom-clear {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+}
+.store-rom-clear svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.store-rom-clear:active { background: var(--paper); }
+.store-rom-search input:focus-visible { outline: 0; }
+.store-rom-search:focus-within { outline: 3px solid var(--focus); outline-offset: 2px; }
+.store-rom-count {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 16px 0 8px;
+  color: var(--muted);
+  font: var(--font-caption);
+}
+
+.store-rom-results {
+  display: grid;
+  gap: 8px;
+  max-height: min(264px, 32dvh);
+  padding: 2px 4px 4px 2px;
+  overflow: auto;
+}
+.store-rom-results > p { font: var(--font-field); color: var(--muted); }
+
+.store-rom-file {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+  cursor: pointer;
+}
+.store-rom-file:has(:checked) { border-color: var(--ink); background: color-mix(in srgb, var(--gold) 32%, var(--card)); }
+.store-rom-file:active { filter: brightness(.94); }
+.store-rom-file-icon { display: grid; place-items: center; color: var(--muted); }
+.store-rom-file-icon small { font: var(--font-label-nav); text-transform: uppercase; }
+.store-rom-file input { margin: 0; width: 16px; height: 16px; accent-color: var(--ink); }
+.store-rom-dialog footer { flex: none; padding: 12px 20px calc(16px + env(safe-area-inset-bottom)); }
+.store-rom-dialog footer p {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: var(--font-caption);
+  color: var(--muted);
+  margin: 0 0 12px;
+}
+.store-rom-actions { display: flex; gap: 12px; }
+.store-rom-actions .playroom-primary { flex: 1; justify-content: space-between; gap: 8px; }

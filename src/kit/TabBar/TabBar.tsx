@@ -8,13 +8,13 @@ interface TabItem {
     label: string;
 }
 
-export function TabBar({ items }: { items: TabItem[] }) {
+export function TabBar({ items, search }: { items: TabItem[]; search?: string }) {
     return (
         <nav className="tab-bar">
             {items.map((item) => (
                 <NavLink
                     key={item.to}
-                    to={item.to}
+                    to={{ pathname: item.to, search }}
                     className={({ isActive }) => `tab-item ${isActive ? 'active' : ''}`}
                 >
                     {item.icon}

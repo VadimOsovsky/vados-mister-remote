@@ -1,23 +1,24 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Routes, Route, Navigate } from 'react-router';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router';
 
 import { PLATFORMS } from './constants';
-import type { ConsoleKey } from './types';
-import { readHost, getCollectionIds, addCollectionId, removeCollectionId, getBeatenIds, addBeatenId, removeBeatenId, readActiveConsole, writeActiveConsole, getWalletBalance, setWalletBalance, getBeatenRewardedMap, addBeatenRewardedId } from './lib/storage';
+import type { ConsoleKey, LaunchBoxGame } from './types';
+import { readHost, getCollectionIds, addCollectionId, removeCollectionId, getBeatenIds, addBeatenId, removeBeatenId, readActiveConsole, writeActiveConsole, getWalletBalance, setWalletBalance, setRomMapping, getBeatenRewardedMap, addBeatenRewardedId } from './lib/storage';
 import { initWallet, BEATEN_REWARD } from './lib/wallet';
 import { GridIcon, StoreIcon, RemoteIcon, SettingsIcon } from './lib/icons';
 import { useConnection } from './hooks/useConnection';
-import { useGameSheet } from './hooks/useGameSheet';
 import { AppContext } from './AppContext';
 import { TabBar } from './kit/TabBar/TabBar';
 import { CollectionPage } from './features/collection/CollectionPage';
 import { StorePage } from './features/store/StorePage';
+import { StoreGamePage } from './features/store/StoreGamePage';
 import { SettingsPage } from './features/settings/SettingsPage';
 import { RemotePage } from './features/remote/RemotePage';
-import { GameSheet } from './features/game-sheet/GameSheet';
+import { OwnedGamePage } from './features/game-sheet/OwnedGamePage';
 
 import './styles/themes.css';
 import './App.css';
+import './styles/playroom.css';
 
 const TAB_ITEMS = [
     { to: '/collection', icon: GridIcon, label: 'Collection' },
@@ -32,16 +33,51 @@ export default function MisterRemote() {
     const { connected, api } = useConnection(misterHost);
     const platform = PLATFORMS[activeConsole];
 
-    const sheet = useGameSheet();
+    const location = useLocation();
+    const navigate = useNavigate();
+    const isGamePage = location.pathname.startsWith('/collection/game/') || location.pathname.startsWith('/store/game/');
+
+    const routeGame = (location.state as { game?: LaunchBoxGame } | null)?.game;
+
+    function openGame(game: LaunchBoxGame) {
+        navigate('/collection/game/' + encodeURIComponent(game.id) + location.search, { state: { game } });
+    }
+
+    function closeGame() {
+        navigate('/collection' + location.search, { replace: true });
+    }
+
+    useEffect(() => {
+        let pressed: HTMLElement | null = null;
+        const release = () => {
+            pressed?.classList.remove('is-key-pressed');
+            pressed = null;
+        };
+        const press = (event: KeyboardEvent) => {
+            if (event.repeat || (event.key !== 'Enter' && event.key !== ' ')) return;
+            if (!(event.target instanceof HTMLElement)) return;
+            if (!event.target.matches('button:not(:disabled), a[href]')) return;
+            if (event.key === ' ' && event.target.matches('a')) return;
+            release();
+            pressed = event.target;
+            pressed.classList.add('is-key-pressed');
+        };
+        document.addEventListener('keydown', press);
+        document.addEventListener('keyup', release);
+        document.addEventListener('focusout', release);
+        window.addEventListener('blur', release);
+        return () => {
+            release();
+            document.removeEventListener('keydown', press);
+            document.removeEventListener('keyup', release);
+            document.removeEventListener('focusout', release);
+            window.removeEventListener('blur', release);
+        };
+    }, []);
 
     const [collectionIds, setCollectionIds] = useState<string[]>(() => getCollectionIds(activeConsole));
     const [beatenIds, setBeatenIds] = useState<string[]>(() => getBeatenIds(activeConsole));
     const [balance, setBalance] = useState(() => initWallet());
-
-    useEffect(() => {
-        setCollectionIds(getCollectionIds(activeConsole));
-        setBeatenIds(getBeatenIds(activeConsole));
-    }, [activeConsole]);
 
     const addToCollection = useCallback((gameId: string) => {
         setCollectionIds(addCollectionId(activeConsole, gameId));
@@ -51,12 +87,21 @@ export default function MisterRemote() {
         setCollectionIds(removeCollectionId(activeConsole, gameId));
     }, [activeConsole]);
 
-    const purchaseGame = useCallback((gameId: string, price: number) => {
-        const newBalance = balance - price;
+    const purchaseGame = useCallback((gameId: string, price: number, romPath: string) => {
+        const currentBalance = getWalletBalance();
+        const owned = getCollectionIds(activeConsole);
+        if (currentBalance < price || owned.includes(gameId)) {
+            setBalance(currentBalance);
+            setCollectionIds(owned);
+            return false;
+        }
+        const newBalance = currentBalance - price;
+        setRomMapping(gameId, activeConsole, romPath);
         setWalletBalance(newBalance);
         setBalance(newBalance);
         setCollectionIds(addCollectionId(activeConsole, gameId));
-    }, [activeConsole, balance]);
+        return true;
+    }, [activeConsole]);
 
     const markAsBeaten = useCallback((gameId: string) => {
         setBeatenIds(addBeatenId(activeConsole, gameId));
@@ -82,6 +127,8 @@ export default function MisterRemote() {
 
     const switchConsole = useCallback((key: ConsoleKey) => {
         setActiveConsole(key);
+        setCollectionIds(getCollectionIds(key));
+        setBeatenIds(getBeatenIds(key));
         writeActiveConsole(key);
     }, []);
 
@@ -95,30 +142,25 @@ export default function MisterRemote() {
             balance, purchaseGame,
         }}>
             <div className={`app ${platform.theme}`}>
-                <div className="app-content">
+                <div className={isGamePage ? "app-content owned-game-layout" : "app-content"}>
                     <Routes>
-                        <Route path="/collection" element={<CollectionPage onSelectGame={sheet.openSheet} />} />
+                        <Route path="/collection" element={<CollectionPage onSelectGame={openGame} />} />
+                        <Route path="/collection/game/:gameId" element={routeGame ? (
+                            <OwnedGamePage
+                                key={location.key}
+                                selectedGame={routeGame}
+                                onClose={closeGame}
+                            />
+                        ) : <Navigate to={'/collection' + location.search} replace />} />
                         <Route path="/store" element={<StorePage />} />
+                        <Route path="/store/game/:gameId" element={<StoreGamePage />} />
                         <Route path="/remote" element={<RemotePage />} />
                         <Route path="/settings" element={<SettingsPage />} />
                         <Route path="*" element={<Navigate to="/collection" replace />} />
                     </Routes>
                 </div>
 
-                <TabBar items={TAB_ITEMS} />
-
-                <GameSheet
-                    selectedGame={sheet.selectedGame}
-                    sheetTab={sheet.sheetTab}
-                    setSheetTab={sheet.setSheetTab}
-                    galleryOpen={sheet.galleryOpen}
-                    setGalleryOpen={sheet.setGalleryOpen}
-                    galleryIndex={sheet.galleryIndex}
-                    setGalleryIndex={sheet.setGalleryIndex}
-                    editMode={sheet.editMode}
-                    setEditMode={sheet.setEditMode}
-                    onClose={sheet.closeSheet}
-                />
+                {!isGamePage && <TabBar items={TAB_ITEMS} search={import.meta.env.DEV && new URLSearchParams(location.search).get('preview') === '1' ? '?preview=1' : ''} />}
             </div>
         </AppContext>
     );

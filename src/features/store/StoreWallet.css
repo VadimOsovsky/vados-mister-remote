@@ -1,0 +1,27 @@
+.store-wallet {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 2px solid color-mix(in srgb, var(--card) 44%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--ink) 85%, transparent);
+  padding: 8px;
+  font: var(--font-heading-page);
+  font-variant-numeric: tabular-nums;
+}
+
+.store-wallet.compact { border: 0; padding: 0; background: transparent; }
+.store-wallet small { display: block; font: var(--font-caption); opacity: .8; }
+.store-wallet strong { display: block; white-space: nowrap; }
+.store-coin {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 3px double currentColor;
+  border-radius: 50%;
+  color: var(--gold);
+  font: var(--font-label);
+}
+.store-wallet.compact .store-coin { color: var(--ink); background: var(--gold); }

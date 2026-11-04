@@ -12,8 +12,9 @@ const SORT_LABELS: Record<SortMode, string> = {
     most: 'Most',
 };
 
-export function SearchBar({ value, onChange, sort, sortCycle, onSortChange }: {
+export function SearchBar({ value, onChange, sort, sortCycle, onSortChange, placeholder = "Search games..." }: {
     value: string;
+    placeholder?: string;
     onChange: (value: string) => void;
     sort?: SortMode;
     sortCycle?: SortMode[];
@@ -32,18 +33,18 @@ export function SearchBar({ value, onChange, sort, sortCycle, onSortChange }: {
         <div className="search-bar">
             <div className="search-input-wrap">
                 <span className="search-icon">{SearchIcon}</span>
-                <input
+                <input aria-label="Search games"
                     className="search-input"
                     type="text"
-                    placeholder="Search games..."
+                    placeholder={placeholder}
                     value={value}
                     onChange={(e) => onChange(e.target.value)}
                 />
             </div>
-            <button className="sort-button" onClick={handleSort}>
+            {onSortChange && <button className="sort-button" onClick={handleSort}>
                 {SortIcon}
                 <span>{SORT_LABELS[currentSort]}</span>
-            </button>
+            </button>}
         </div>
     );
 }

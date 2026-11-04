@@ -1,63 +1,53 @@
 import { useAppContext } from '../../AppContext';
-import { OsdIcon, ResetIcon } from '../../lib/icons';
+import { ChevronDownIcon, OsdIcon, ResetIcon } from '../../lib/icons';
+import { PlayroomConsoleHeader } from '../../kit/PlayroomConsoleHeader';
 import { KEYBOARD_KEYS } from '../../services/wizzoApi';
 import './RemotePage.css';
+
+const directions = ['up', 'left', 'right', 'down'] as const;
 
 export function RemotePage() {
     const { api } = useAppContext();
 
-    const press = (key: string) => {
+    function press(key: keyof typeof KEYBOARD_KEYS) {
         navigator.vibrate?.(10);
-        api.sendKey(key);
-    };
+        api.sendKey(KEYBOARD_KEYS[key]);
+    }
 
     return (
-        <div className="remote-page">
-            <div className="remote-header">Remote</div>
-
-            <div className="remote-body">
-                <div className="remote-actions">
-                    <button className="remote-btn" onClick={() => press(KEYBOARD_KEYS.reset)}>
-                        {ResetIcon}
-                        <span>Reset</span>
-                    </button>
-                    <button className="remote-btn" onClick={() => press(KEYBOARD_KEYS.osd)}>
-                        {OsdIcon}
-                        <span>OSD</span>
-                    </button>
-                    <button className="remote-btn" onClick={() => press(KEYBOARD_KEYS.back)}>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
-                             strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M15 18l-6-6 6-6"/>
-                        </svg>
-                        <span>Back</span>
-                    </button>
+        <div className="page-layout remote-page">
+            <PlayroomConsoleHeader />
+            <main className="page-scroll">
+                <div className="remote-main">
+                    <div className="remote-intro">
+                        <p className="playroom-kicker">Your MiSTer, within reach</p>
+                        <h1>Remote control<span>.</span></h1>
+                    </div>
+                    <section className="remote-deck" aria-label="MiSTer remote">
+                        <p className="playroom-kicker remote-deck-top">MiSTer remote</p>
+                        <div className="remote-menu-actions">
+                            <button className="playroom-button playroom-press" onClick={() => press('osd')}>{OsdIcon} OSD menu</button>
+                            <button className="playroom-button playroom-press" onClick={() => press('back')}>
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 5-7 7 7 7M3 12h12a6 6 0 0 1 6 6" /></svg> Back
+                            </button>
+                        </div>
+                        <div className="remote-pad" role="group" aria-label="Menu navigation">
+                            {directions.map(direction => (
+                                <button key={direction} className={`playroom-button playroom-press remote-${direction}`}
+                                    aria-label={direction[0].toUpperCase() + direction.slice(1)} onClick={() => press(direction)}>
+                                    {ChevronDownIcon}
+                                </button>
+                            ))}
+                            <button className="playroom-button playroom-primary playroom-press remote-ok" onClick={() => press('confirm')}>OK</button>
+                        </div>
+                        <div className="remote-reset-row">
+                            <span>Back to the beginning</span>
+                            <button className="playroom-button playroom-press" onClick={() => press('reset')}>{ResetIcon} Reset game</button>
+                        </div>
+                    </section>
+                    <p className="remote-hint">Control MiSTer menus with the directional pad.</p>
                 </div>
-
-                <div className="dpad">
-                    <div className="dpad-empty"/>
-                    <button className="dpad-btn dpad-up" onClick={() => press(KEYBOARD_KEYS.up)}>
-                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 8l-5 7h10z"/></svg>
-                    </button>
-                    <div className="dpad-empty"/>
-
-                    <button className="dpad-btn dpad-left" onClick={() => press(KEYBOARD_KEYS.left)}>
-                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 12l7-5v10z"/></svg>
-                    </button>
-                    <button className="dpad-center" onClick={() => press(KEYBOARD_KEYS.confirm)}>
-                        OK
-                    </button>
-                    <button className="dpad-btn dpad-right" onClick={() => press(KEYBOARD_KEYS.right)}>
-                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 12l-7-5v10z"/></svg>
-                    </button>
-
-                    <div className="dpad-empty"/>
-                    <button className="dpad-btn dpad-down" onClick={() => press(KEYBOARD_KEYS.down)}>
-                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 16l-5-7h10z"/></svg>
-                    </button>
-                    <div className="dpad-empty"/>
-                </div>
-            </div>
+            </main>
         </div>
     );
 }

@@ -1,0 +1,14 @@
+.lazy-image {
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+.lazy-image[data-loaded="true"] {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lazy-image {
+    transition: none;
+  }
+}

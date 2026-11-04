@@ -53,6 +53,7 @@ export interface PlatformDef {
   lbPlatform: string;        // LaunchBox JSON file name (without .json)
   wizzoSystemId: string;     // MiSTer/Wizzo system ID for searchGames() API
   imageRegions: string[];    // Priority order for image region resolution
+  coverScale?: number;       // Collection cover scale, defaults to 1
   nameRegions?: string[];    // Priority order for alternate name resolution
   collectionGroup?: ConsoleKey; // Share collection storage with another console
   imageUrl?: string;

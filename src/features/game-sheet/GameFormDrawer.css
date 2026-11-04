@@ -1,0 +1,177 @@
+/* ── BOTTOM SHEET OVERLAY ── */
+.sheet-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: var(--bg-overlay);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* ── BOTTOM SHEET (vaul drawer content) ── */
+.sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 201;
+  max-height: 85dvh;
+  border-radius: 16px 16px 0 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Sheet content */
+.sheet-content {
+  position: relative;
+  z-index: 1;
+  padding: 0 16px 16px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Drag handle */
+.sheet-handle {
+  display: flex;
+  justify-content: center;
+  padding: 2px 0;
+  margin-top: 6px;
+  margin-bottom: 6px;
+  position: relative;
+  z-index: 1;
+  opacity: .4 !important;
+}
+
+/* ── Shared button styles ── */
+.sheet-btn {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 3px solid rgba(255, 255, 255, 0.12);
+  font-family: 'Sora', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sheet-btn:active {
+  transform: scale(0.96);
+}
+
+.sheet-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.sheet-btn-primary {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.sheet-btn-primary:disabled {
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.3);
+  cursor: default;
+}
+
+.sheet-btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.add-game-sheet .sheet-btn {
+  background: var(--card);
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  font: var(--font-label);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.sheet.add-game-sheet {
+  background: var(--paper);
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  border-bottom: 0;
+  border-radius: 24px 24px 0 0;
+  max-height: 90dvh;
+  max-width: 600px;
+  margin-inline: auto;
+}
+
+.add-game-title {
+  padding: 12px 20px 16px;
+  font: var(--font-heading-dialog);
+  line-height: 1.2;
+}
+
+.add-game-sheet .sheet-content,
+.add-game-sheet .edit-game-form {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.add-game-sheet .sheet-content { padding-inline: 0; }
+.add-game-sheet .edit-game-form { gap: 0; }
+
+.add-game-sheet .edit-game-fields {
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 4px 20px 16px;
+}
+
+.add-game-sheet .edit-game-section {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  gap: 12px;
+}
+
+.add-game-sheet .edit-game-section-title {
+  color: var(--muted);
+  font: var(--font-label-small);
+  letter-spacing: .09em;
+}
+
+.add-game-sheet .edit-game-label {
+  color: var(--ink);
+  font: var(--font-label);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.add-game-sheet .edit-game-input {
+  min-height: 44px;
+  background: var(--card);
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  color: var(--ink);
+  font-family: inherit;
+}
+
+.add-game-sheet .edit-game-input::placeholder { color: var(--muted); }
+.add-game-sheet .edit-game-input:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+.add-game-sheet .edit-game-actions {
+  flex: none;
+  padding: 12px 20px 4px;
+  border-top: 1px solid var(--line);
+}
+
+.add-game-sheet .sheet-btn-primary {
+  background: radial-gradient(#ffffff90 1px, transparent 1.5px) 0 0 / 5px 5px, var(--gold);
+}

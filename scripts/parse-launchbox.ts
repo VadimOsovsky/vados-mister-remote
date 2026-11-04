@@ -1,10 +1,10 @@
-import { createWriteStream, createReadStream, mkdirSync, existsSync, unlinkSync } from 'fs';
-import { writeFile } from 'fs/promises';
+import { createWriteStream, createReadStream, mkdirSync, existsSync } from 'fs';
+import { rename, rm, writeFile } from 'fs/promises';
 import { pipeline } from 'stream/promises';
-import { createUnzip } from 'zlib';
+import { Readable } from 'node:stream';
+import type { ReadableStream } from 'node:stream/web';
 import { join } from 'path';
 import { SaxesParser } from 'saxes';
-import { Writable, Transform } from 'stream';
 
 // ── Platform mapping ──
 const PLATFORM_MAP: Record<string, string> = {
@@ -91,24 +91,13 @@ async function downloadMetadata() {
   const res = await fetch(METADATA_URL);
   if (!res.ok || !res.body) throw new Error(`Download failed: ${res.status}`);
 
-  const fileStream = createWriteStream(METADATA_ZIP);
-  // @ts-ignore - Node fetch body is a web ReadableStream
-  const reader = res.body.getReader();
-
-  const total = Number(res.headers.get('content-length') || 0);
-  let downloaded = 0;
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    fileStream.write(value);
-    downloaded += value.length;
-    if (total > 0) {
-      process.stdout.write(`\r  ${(downloaded / 1024 / 1024).toFixed(1)} / ${(total / 1024 / 1024).toFixed(1)} MB`);
-    }
+  const partialZip = METADATA_ZIP + '.part';
+  try {
+    await pipeline(Readable.fromWeb(res.body as ReadableStream<Uint8Array>), createWriteStream(partialZip));
+    await rename(partialZip, METADATA_ZIP);
+  } finally {
+    await rm(partialZip, { force: true });
   }
-  fileStream.end();
-  console.log('\n  Done.');
 }
 
 // ── Extract and parse XML from ZIP ──
@@ -119,17 +108,19 @@ async function parseMetadataZip(): Promise<{ games: Map<string, RawGame>; images
   const images: RawGameImage[] = [];
   const altNames: RawGameAlternateName[] = [];
 
-  // We need to extract the zip first, then parse the XML
-  // Use unzipper or manual approach
-  const { exec } = await import('child_process');
-  const { promisify } = await import('util');
-  const execAsync = promisify(exec);
+  const { execFile } = await import('node:child_process');
+  const { promisify } = await import('node:util');
+  const extract = promisify(execFile);
 
   const extractDir = join(import.meta.dirname, '..', '.cache', 'metadata');
   mkdirSync(extractDir, { recursive: true });
 
   console.log('  Extracting ZIP...');
-  await execAsync(`unzip -o "${METADATA_ZIP}" -d "${extractDir}"`, { maxBuffer: 1024 * 1024 * 10 });
+  if (process.platform === 'win32') {
+    await extract('tar.exe', ['-xf', METADATA_ZIP, '-C', extractDir]);
+  } else {
+    await extract('unzip', ['-oq', METADATA_ZIP, '-d', extractDir]);
+  }
 
   // Find the XML file
   const { readdirSync } = await import('fs');
@@ -143,8 +134,6 @@ async function parseMetadataZip(): Promise<{ games: Map<string, RawGame>; images
   return new Promise((resolve, reject) => {
     const parser = new SaxesParser();
 
-    let currentElement = '';
-    let currentTag = '';
     let textBuffer = '';
     let currentGame: Partial<RawGame> = {};
     let currentImage: Partial<RawGameImage> = {};
@@ -161,7 +150,6 @@ async function parseMetadataZip(): Promise<{ games: Map<string, RawGame>; images
     const altNameFields = new Set(['DatabaseID', 'AlternateName', 'Region']);
 
     parser.on('opentag', (node) => {
-      currentTag = node.name;
       textBuffer = '';
 
       if (node.name === 'Game') {
@@ -184,11 +172,11 @@ async function parseMetadataZip(): Promise<{ games: Map<string, RawGame>; images
       const tag = node.name;
 
       if (inGame && gameFields.has(tag)) {
-        (currentGame as any)[tag] = textBuffer.trim();
+        currentGame[tag as keyof RawGame] = textBuffer.trim();
       } else if (inGameImage && imageFields.has(tag)) {
-        (currentImage as any)[tag] = textBuffer.trim();
+        currentImage[tag as keyof RawGameImage] = textBuffer.trim();
       } else if (inGameAltName && altNameFields.has(tag)) {
-        (currentAltName as any)[tag] = textBuffer.trim();
+        currentAltName[tag as keyof RawGameAlternateName] = textBuffer.trim();
       }
 
       if (tag === 'Game' && inGame) {

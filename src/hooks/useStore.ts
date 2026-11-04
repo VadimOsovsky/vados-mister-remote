@@ -5,11 +5,12 @@ import { hasImageInRegions, loadPlatformGames, searchGames } from '../services/l
 import { SORT_FNS } from '../services/sorting';
 import { useAppContext } from '../AppContext';
 import { readStoreSort, writeStoreSort } from '../lib/storage';
+import { getStorePreviewIds } from '../features/store/storePreview';
 
-export function useStore(activeConsole: ConsoleKey) {
+export function useStore(activeConsole: ConsoleKey, preview = false) {
     const { collectionIds } = useAppContext();
-    const [games, setGames] = useState<LaunchBoxGame[]>([]);
-    const [loading, setLoading] = useState(false);
+    const [catalog, setCatalog] = useState<{ consoleKey: ConsoleKey; games: LaunchBoxGame[]; error?: boolean }>();
+    const loading = catalog?.consoleKey !== activeConsole;
     const [search, setSearch] = useState('');
     const [sort, _setSort] = useState<SortMode>(() => readStoreSort() ?? 'popular');
     const setSort = (s: SortMode) => { _setSort(s); writeStoreSort(s); };
@@ -18,23 +19,28 @@ export function useStore(activeConsole: ConsoleKey) {
 
     useEffect(() => {
         let cancelled = false;
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetching requires loading state toggle
-        setLoading(true);
         loadPlatformGames(activeConsole).then(data => {
-            if (!cancelled) setGames(data);
-        }).finally(() => {
-            if (!cancelled) setLoading(false);
+            if (!cancelled) setCatalog({ consoleKey: activeConsole, games: data });
+        }).catch(() => {
+            if (!cancelled) setCatalog({ consoleKey: activeConsole, games: [], error: true });
         });
         return () => { cancelled = true; };
     }, [activeConsole]);
 
     const filteredGames = useMemo(() => {
+        if (loading || !catalog) return [];
+        const { games } = catalog;
+        if (preview) {
+            const ordered = getStorePreviewIds(activeConsole).flatMap(id => games.filter(game => game.id === id));
+            const sorted = sort === 'popular' ? ordered : ordered.sort(SORT_FNS[sort]);
+            return search ? searchGames(sorted, search) : sorted;
+        }
         const collectionSet = new Set(collectionIds);
         const regionFiltered = games
             .filter(g => hasImageInRegions(g, platform.imageRegions) && !collectionSet.has(g.id))
             .sort(SORT_FNS[sort]);
         return search ? searchGames(regionFiltered, search) : regionFiltered;
-    }, [games, search, platform.imageRegions, sort, collectionIds]);
+    }, [catalog, search, platform.imageRegions, sort, collectionIds, activeConsole, loading, preview]);
 
-    return { loading, search, setSearch, sort, setSort, filteredGames };
+    return { loading, error: !loading && catalog?.error, search, setSearch, sort, setSort, filteredGames };
 }

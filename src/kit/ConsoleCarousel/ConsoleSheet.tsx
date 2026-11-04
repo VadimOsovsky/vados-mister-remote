@@ -1,19 +1,28 @@
+import { useState } from 'react';
 import { Drawer } from 'vaul';
 import { useAppContext } from '../../AppContext';
 import { PLATFORMS } from '../../constants';
-import { ChevronDownIcon } from '../../lib/icons';
-import { ConsoleCarousel } from './ConsoleCarousel';
+import { ChevronDownIcon, SearchIcon } from '../../lib/icons';
 import { ConsoleControls } from './ConsoleControls';
 import type { ConsoleKey } from '../../types';
 import './ConsoleSheet.css';
 
-export function ConsoleBadge({ onClick }: { onClick: () => void }) {
-    const { platform } = useAppContext();
+const consolePhotos: Partial<Record<ConsoleKey, string>> = {
+    nes_ntsc: '/playroom/nes.webp',
+    nes_pal: '/playroom/nes.webp',
+    famicom: '/playroom/famicom.webp',
+    fds: '/playroom/fds.webp',
+};
+
+export function ConsoleBadge({ onClick, expanded }: { onClick: () => void; expanded: boolean }) {
+    const { platform, activeConsole } = useAppContext();
+    const photo = consolePhotos[activeConsole];
 
     return (
-        <button className="console-badge" onClick={onClick}>
-            <img src={platform.logo} alt={platform.name} className="console-badge-img" draggable={false} />
-            {ChevronDownIcon}
+        <button className="console-badge playroom-press" onClick={onClick} aria-haspopup="dialog" aria-expanded={expanded}>
+            {photo && <img className="console-badge-photo" src={photo} alt="" />}
+            <span>{platform.name}</span>
+            <span className="console-badge-chevron" aria-hidden="true">{ChevronDownIcon}</span>
         </button>
     );
 }
@@ -25,29 +34,59 @@ export function ConsoleSheet({ open, onOpenChange, onSwitch }: {
 }) {
     const { activeConsole } = useAppContext();
     const platform = PLATFORMS[activeConsole];
+    const [search, setSearch] = useState('');
+    const options = (Object.keys(PLATFORMS) as ConsoleKey[]).filter(key =>
+        (PLATFORMS[key].name + ' ' + PLATFORMS[key].branding).toLowerCase().includes(search.trim().toLowerCase()),
+    );
     const hasControls = !!platform.controls?.length;
 
+    function changeOpen(nextOpen: boolean) {
+        if (!nextOpen) setSearch('');
+        onOpenChange(nextOpen);
+    }
+
+    function selectConsole(key: ConsoleKey) {
+        if (key !== activeConsole) onSwitch(key);
+        changeOpen(false);
+    }
+
     return (
-        <Drawer.Root open={open} onOpenChange={onOpenChange}>
+        <Drawer.Root open={open} onOpenChange={changeOpen}>
             <Drawer.Portal>
                 <Drawer.Overlay className="console-sheet-overlay" />
                 <Drawer.Content className="console-sheet" aria-describedby={undefined}>
                     <Drawer.Handle className="console-sheet-handle" />
-                    <Drawer.Title className="sr-only">Select Console</Drawer.Title>
+                    <Drawer.Title className="picker-title">What are we playing?</Drawer.Title>
 
                     <div className="console-sheet-body">
                         <div className="console-sheet-branding">{platform.branding}</div>
 
-                        <ConsoleCarousel
-                            activeConsole={activeConsole}
-                            onSwitch={onSwitch}
-                        />
+                        <div className="picker-search-wrap">
+                            <span className="search-icon" aria-hidden="true">{SearchIcon}</span>
+                            <input className="picker-search" type="search" aria-label="Search consoles"
+                                placeholder="Search consoles..." value={search} onChange={event => setSearch(event.target.value)} />
+                        </div>
+                        <div className="picker-options">
+                            {options.map(key => {
+                                const option = PLATFORMS[key];
+                                const photo = consolePhotos[key];
+                                return (
+                                    <button key={key} className="picker-option playroom-press" aria-pressed={key === activeConsole}
+                                        onClick={() => selectConsole(key)}>
+                                        {photo && <img src={photo} alt="" />}
+                                        <span>{option.name}</span>
+                                    </button>
+                                );
+                            })}
+                            {!options.length && <p>No matching consoles</p>}
+                        </div>
 
                         {hasControls && (
-                            <>
+                            <section aria-label={`${platform.name} controls`}>
                                 <div className="console-sheet-divider" />
+                                <h3 className="console-sheet-actions-title">{platform.name} controls</h3>
                                 <ConsoleControls activeConsole={activeConsole} />
-                            </>
+                            </section>
                         )}
                     </div>
                 </Drawer.Content>

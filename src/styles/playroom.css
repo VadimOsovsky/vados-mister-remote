@@ -1,0 +1,322 @@
+/* Shared visual foundation. Legacy feature tokens bridge screens during migration. */
+
+@font-face {
+  font-family: Rubik;
+  src: url('/playroom/rubik.ttf') format('truetype');
+  font-weight: 300 900;
+  font-display: swap;
+}
+
+:root {
+  --font-family-ui: Rubik, system-ui, sans-serif;
+  --font-body: 400 16px/1.5 var(--font-family-ui);
+  --font-heading-page-size: 20px;
+  --font-heading-page: 550 var(--font-heading-page-size)/1.3 var(--font-family-ui);
+  --font-heading-dialog: 700 24px/1.2 var(--font-family-ui);
+  --font-title-card: 550 12px/1.45 var(--font-family-ui);
+  --font-caption: 400 11px/1.5 var(--font-family-ui);
+  --font-label: 600 14px/1.25 var(--font-family-ui);
+  --font-label-small: 700 11px/1.2 var(--font-family-ui);
+  --font-label-nav: 600 9px/1.2 var(--font-family-ui);
+  --font-label-section: 600 13px/1.5 var(--font-family-ui);
+  --font-filter-size: 13px;
+  --font-filter: 500 var(--font-filter-size)/1.2 var(--font-family-ui);
+  --font-field: 400 12px/1.4 var(--font-family-ui);
+  --font-badge: 700 11px/1 var(--font-family-ui);
+  --field-height: 44px;
+  --field-radius: 12px;
+}
+
+body {
+  font: var(--font-body);
+}
+
+button,input,textarea,select {
+  font-family: var(--font-family-ui);
+}
+
+body {
+  color-scheme: light;
+}
+
+:root,.app,body[class*="theme-"] {
+  --ink: #182947;
+  --paper: #e7e8e4;
+  --card: #f7f6ef;
+  --gold: #ffdb54;
+  --muted: #697182;
+  --line: #b8bfca;
+  --focus: #72dcff;
+  --stage: #192c50;
+  --motion: 200ms;
+  --ease: cubic-bezier(.2,.7,.3,1);
+}
+
+.theme-famicom {
+  --ink: #741324 !important;
+  --paper: #efe5cf !important;
+  --card: #fff8e7 !important;
+  --gold: #efc66c !important;
+  --muted: #8b7168 !important;
+  --line: #cfbda3 !important;
+  --focus: #ffd586 !important;
+  --stage: #8e1423 !important;
+}
+
+.theme-av-famicom,.theme-dendy {
+  --ink: #303442 !important;
+  --paper: #e9e6df !important;
+  --card: #faf7ee !important;
+  --stage: #303442 !important;
+}
+
+.app,body[class*="theme-"] {
+  --field-shadow-color: color-mix(in srgb, var(--ink) 25%, transparent);
+  --bg-primary: var(--paper);
+  --bg-secondary: var(--paper);
+  --bg-card: var(--card);
+  --bg-card-inner: var(--card);
+  --bg-input: var(--card);
+  --bg-pill: var(--card);
+  --bg-pill-active: var(--gold);
+  --bg-tab-bar: var(--ink);
+  --text-primary: var(--ink);
+  --text-secondary: var(--muted);
+  --text-tertiary: var(--muted);
+  --text-on-card: var(--ink);
+  --text-on-accent: var(--ink);
+  --accent: var(--ink);
+  --accent-hover: var(--muted);
+  --accent-badge: var(--card);
+  --text-badge: var(--ink);
+  --border-main: var(--line);
+  --border-card: 2px solid var(--ink);
+  --border-input: 2px solid var(--ink);
+  --tab-bar-text: var(--card);
+  --tab-bar-active: var(--gold);
+  --tab-bar-border: var(--ink);
+}
+
+button:enabled,
+a[href],
+input:is([type="radio"], [type="checkbox"]):enabled,
+summary {
+  cursor: pointer;
+}
+
+button,a,input {
+  touch-action: manipulation;
+}
+
+button,a {
+  transition: background-color var(--motion) var(--ease),color var(--motion) var(--ease),box-shadow var(--motion) var(--ease),transform var(--motion) var(--ease);
+}
+
+button:focus-visible,a:focus-visible,input:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 4px;
+}
+
+button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+button:not(:disabled):is(:active, .is-key-pressed) {
+  filter: brightness(.95);
+}
+
+.shelf-tools {
+  padding: 16px 20px 12px;
+}
+
+@media (min-width: 700px) {
+  .shelf-tools { padding-inline: 32px; }
+}
+
+.shelf-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.shelf-filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.shelf-filters button,.playroom-primary {
+  border: 2px solid var(--ink);
+  border-radius: 24px;
+  background: var(--card);
+  padding: 10px 12px;
+  font: var(--font-label);
+  color: var(--ink);
+}
+
+.shelf-filters span {
+  color: var(--muted);
+  margin-left: 5px;
+}
+
+:is(.shelf-filters button, .owned-tabs .owned-tab) {
+  min-height: 34px;
+  border-radius: 24px;
+  padding: 6px 12px;
+  font: var(--font-filter);
+}
+
+.shelf-filters [aria-pressed=true],.playroom-primary {
+  background: radial-gradient(#ffffffa0 1px,transparent 1.5px) 0 0/5px 5px,var(--gold);
+}
+
+.playroom-field-action {
+  height: var(--field-height);
+  border-radius: var(--field-radius);
+  color: var(--ink);
+  background: var(--card);
+  border: var(--border-input);
+}
+
+.shelf-no-results {
+  padding: 36px;
+  text-align: center;
+  color: var(--muted);
+  font: var(--font-body);
+}
+
+@media (prefers-reduced-motion:reduce) {
+  *,*::before,*::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+.playroom-press {
+  box-shadow: 0 var(--press-shadow-depth, 2px) 0 var(--press-shadow-color, var(--ink));
+  transition: transform var(--motion) var(--ease), box-shadow var(--motion) var(--ease), filter var(--motion) var(--ease);
+}
+
+.playroom-press:not(:disabled):not([aria-disabled="true"]):is(:active, .is-key-pressed) {
+  transform: translateY(var(--press-travel, 1px));
+  box-shadow: 0 calc(var(--press-shadow-depth, 2px) - var(--press-travel, 1px)) 0 var(--press-shadow-color, var(--ink));
+  filter: brightness(.94);
+}
+
+.playroom-field-action {
+  --press-shadow-color: var(--field-shadow-color);
+  --press-shadow-depth: 3px;
+  --press-travel: 1px;
+}
+
+@media (max-width: 520px) {
+  :root { --font-heading-page-size: 19px; --font-filter-size: 11px; }
+}
+
+@media (max-width: 360px) {
+  :root { --font-heading-page-size: 17px; --font-filter-size: 9px; }
+}
+
+.playroom-stage {
+  --hero-stage: var(--stage);
+  --hero-stage-light: color-mix(in srgb, var(--hero-stage) 88%, white);
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--hero-stage);
+  color: var(--card);
+  border-block: 4px solid var(--ink);
+}
+
+.theme-nes-ntsc .playroom-stage,
+.theme-nes-pal .playroom-stage { --hero-stage-light: #30436a; }
+.theme-famicom .playroom-stage {
+  --hero-stage: #762b3d;
+  --hero-stage-light: #9c4652;
+}
+
+.playroom-stage::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: -70px;
+  background-image: url('/playroom/pixel-weave.svg'), linear-gradient(155deg, var(--hero-stage-light), var(--hero-stage));
+  background-size: 352px 352px, cover;
+  background-position: 18px 0, center;
+  transform: rotate(-7deg) scale(1.06);
+}
+
+@media (max-width: 520px) {
+  .playroom-stage::before { background-size: 312px 312px, cover; }
+}
+:root {
+  --font-heading-display: 700 clamp(28px, 7.5vw, 36px)/1.12 var(--font-family-ui);
+}
+
+.playroom-kicker {
+  margin: 0;
+  font: var(--font-label-small);
+  text-transform: uppercase;
+  letter-spacing: .12em;
+}
+.app { --playroom-punctuation: #e53643; }
+.playroom-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  background-color: var(--card);
+  color: var(--ink);
+  font: var(--font-label);
+}
+.playroom-button.playroom-primary { background-color: var(--gold); }
+.playroom-button:disabled { opacity: .55; cursor: default; }
+.playroom-button svg { flex: none; width: 20px; height: 20px; }
+.playroom-button svg:not([fill]) { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+.playroom-button.playroom-icon-button {
+  flex: none;
+  width: var(--field-height);
+  height: var(--field-height);
+  padding: 0;
+}
+
+.player-badge {
+  font: var(--font-badge);
+  letter-spacing: .3px;
+  font-variant-numeric: tabular-nums;
+  border: 1.5px solid var(--ink);
+  border-radius: 5px;
+  padding: 2px 6px;
+}
+
+.store-kicker {
+  font: var(--font-label-small);
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  opacity: .75;
+}
+
+/* ── Lightbox safe area overrides (iPhone notch / Dynamic Island) ── */
+.yarl__toolbar {
+  padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) 8px 8px;
+}
+
+.yarl__navigation_prev {
+  padding-left: max(16px, env(safe-area-inset-left));
+}
+
+.yarl__navigation_next {
+  padding-right: max(16px, env(safe-area-inset-right));
+}
+
+.yarl__slide_image {
+  border-radius: 4px;
+}

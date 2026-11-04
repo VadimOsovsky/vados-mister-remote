@@ -74,10 +74,9 @@
 }
 
 .console-sheet-branding {
-  text-align: center;
-  font-family: 'Sora', sans-serif;
-  font-size: 11px;
-  font-weight: 700;
+  padding-inline: 20px;
+  text-align: left;
+  font: var(--font-label-small);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--text-tertiary);
@@ -85,9 +84,146 @@
   transition: color 0.25s ease;
 }
 
+.console-sheet-actions-title {
+  margin: 0 20px 12px;
+  color: var(--text-secondary);
+  font: var(--font-label-section);
+}
+
 .console-sheet-divider {
   height: 1px;
   background: var(--border-main);
   margin: 4px 24px 12px;
   opacity: 0.6;
+}
+
+.playroom-header .console-badge {
+  height: 40px;
+  min-width: 90px;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  padding: 4px 8px;
+  color: var(--ink);
+  background: var(--card);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: var(--font-label);
+}
+
+.console-badge-photo {
+  width: 32px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.console-badge-chevron {
+  display: grid;
+  place-items: center;
+}
+
+.playroom-header .console-badge-chevron {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--gold) 55%, var(--card));
+}
+
+.playroom-header .console-badge-chevron svg {
+  color: var(--ink);
+  opacity: 1;
+  transition: transform var(--motion) cubic-bezier(.3, 1.35, .45, 1);
+}
+
+.playroom-header .console-badge[aria-expanded="true"] .console-badge-chevron svg {
+  transform: rotate(180deg);
+}
+
+.console-badge svg {
+  width: 16px;
+  height: 16px;
+}
+
+.playroom-header .console-badge-img {
+  max-height: 20px;
+  max-width: 85px;
+  object-fit: contain;
+}
+
+.picker-title {
+  padding: 12px 20px 8px;
+  color: var(--ink);
+  font: var(--font-heading-dialog);
+}
+
+.console-sheet {
+  max-height: 90dvh;
+}
+
+.console-sheet-body {
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.picker-search-wrap {
+  margin: 12px 20px;
+  position: relative;
+}
+
+.picker-search {
+  width: 100%;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  background: var(--card);
+  color: var(--ink);
+  padding: 10px 12px;
+}
+
+.picker-search-wrap .picker-search { padding-inline-start: 36px; }
+
+.picker-options {
+  padding: 4px 20px 16px;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.picker-option {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  min-height: 96px;
+  border: 2px solid var(--ink);
+  border-radius: 14px;
+  background: var(--card);
+  color: var(--ink);
+  padding: 8px;
+  font: var(--font-label);
+  cursor: pointer;
+}
+
+.picker-option img {
+  width: 100%;
+  height: 52px;
+  object-fit: contain;
+}
+
+.picker-option[aria-pressed=true] {
+  background: color-mix(in srgb, var(--gold) 35%, var(--card));
+}
+
+@media (min-width: 700px) {
+  .picker-options {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.console-sheet .console-controls {
+  flex-wrap: wrap;
+  padding: 0 16px 4px;
+}
+
+@media (max-width: 360px) {
+  .playroom-header .console-badge { min-width: 0; gap: 6px; }
 }

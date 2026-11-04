@@ -68,3 +68,23 @@
 .sort-button:active {
   transform: scale(0.96);
 }
+
+:is(.collection-page, .store-page) .search-bar {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+}
+
+:is(.collection-page, .store-page) .search-input {
+  height: var(--field-height);
+  border-radius: var(--field-radius);
+  box-shadow: 0 3px 0 var(--field-shadow-color);
+  font: var(--font-field);
+  padding-left: 40px;
+}
+
+:is(.collection-page, .store-page) .search-icon {
+  width: 20px;
+  height: 20px;
+}

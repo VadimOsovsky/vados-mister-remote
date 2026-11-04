@@ -1,42 +1,3 @@
-/* ── PAGE LAYOUT ── */
-.page-layout {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
-.page-scroll {
-  flex: 1;
-  overflow-y: auto;
-  min-height: 0;
-}
-
-.page-scroll::-webkit-scrollbar { width: 0; }
-
-/* ── HEADER ── */
-.header {
-  flex-shrink: 0;
-  padding: 10px 14px 0;
-  padding-top: calc(10px + env(safe-area-inset-top));
-  background: var(--bg-primary);
-}
-
-.header-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.header-title {
-  font-family: 'Sora', sans-serif;
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  color: var(--text-primary);
-}
-
 .add-game-btn {
   display: flex;
   align-items: center;
@@ -62,33 +23,55 @@
   height: 18px;
 }
 
-/* ── LOADING BAR ── */
-.loading-bar-wrap {
-  height: 2px;
-  margin: 0 14px;
-  overflow: hidden;
-}
-.loading-bar {
-  height: 100%;
-  width: 30%;
-  border-radius: 1px;
-  background: var(--accent, #e74c3c);
-  animation: loading-slide 1.2s ease-in-out infinite;
-}
-@keyframes loading-slide {
-  0% { transform: translateX(-100%); }
-  50% { transform: translateX(250%); }
-  100% { transform: translateX(-100%); }
+.collection-page .add-game-btn {
+  width: var(--field-height);
+  flex-shrink: 0;
 }
 
-/* ── SECTION LABEL ── */
-.section-label {
-  font-family: 'Sora', sans-serif;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-tertiary);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  padding: 0 14px;
-  margin-bottom: 10px;
+.shelf-empty {
+  text-align: center;
+  padding: 36px 24px 60px;
+}
+
+.shelf-empty svg {
+  width: min(280px, 100%);
+  height: auto;
+}
+
+.shelf-empty h2 {
+  font: var(--font-heading-dialog);
+  margin: 12px 0;
+}
+
+.shelf-empty p {
+  color: var(--muted);
+  margin-bottom: 24px;
+}
+
+.collection-page .loading-bar-wrap {
+  margin: 0 20px;
+}
+
+.collection-page .shelf-tools:has(+ .loading-bar-wrap + .shelf-empty) {
+  padding-bottom: 8px;
+}
+
+@media (min-width: 700px) {
+  .collection-page .page-scroll { width: 100%; max-width: 1200px; margin-inline: auto; }
+}
+
+@media (max-width: 360px) {
+  .collection-page .playroom-logo { width: 126px; }
+}
+
+.shelf-heading h1 {
+  font: var(--font-heading-page);
+  letter-spacing: -.4px;
+}
+
+.shelf-search-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
 }

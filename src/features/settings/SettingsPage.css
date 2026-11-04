@@ -1,92 +1,49 @@
-/* ── SETTINGS PANEL ── */
-.settings-panel {
-  flex: 1;
-  overflow-y: auto;
-  padding: 14px;
-  padding-top: calc(14px + env(safe-area-inset-top));
-}
-
-.settings-header {
-  font-family: 'Sora', sans-serif;
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  color: var(--text-primary);
+.settings-main { max-width: 620px; margin-inline: auto; padding: 24px; }
+.settings-intro { margin-bottom: 24px; }
+.settings-intro h1 { margin: 8px 0 0; font: var(--font-heading-display); letter-spacing: -.035em; }
+.settings-intro h1 span { color: var(--playroom-punctuation); }
+.settings-card {
+  padding: 22px;
   margin-bottom: 24px;
+  border: 2px solid var(--ink);
+  border-radius: 24px;
+  background: var(--card);
+  box-shadow: 0 5px 0 color-mix(in srgb, var(--ink) 65%, transparent);
 }
-
-.settings-section {
-  margin-bottom: 20px;
-}
-
-.settings-section-title {
-  font-family: 'Sora', sans-serif;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-secondary);
-  margin-bottom: 10px;
-}
-
-.settings-field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-bottom: 12px;
-}
-
-.settings-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-secondary);
-}
-
-.settings-input {
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: var(--border-input);
-  background: var(--bg-input);
-  color: var(--text-primary);
-  font-family: 'DM Sans', sans-serif;
-  font-size: 15px;
-  outline: none;
-  box-sizing: border-box;
-  transition: border-color 0.2s;
-}
-
-.settings-input:focus {
-  border-color: var(--accent);
-}
-
-.settings-input::placeholder {
-  color: var(--text-tertiary);
-}
-
-.settings-save {
-  width: 100%;
-  padding: 12px;
+.settings-card-heading { display: flex; gap: 12px; align-items: center; }
+.settings-card-heading h2 { margin: 4px 0 0; font: var(--font-heading-page); }
+.settings-symbol {
+  width: 48px;
+  height: 48px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--ink);
   border-radius: 12px;
-  border: none;
-  background: var(--accent);
-  color: var(--text-on-accent);
-  font-family: 'Sora', sans-serif;
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.2s;
-  margin-top: 8px;
+  background: var(--paper);
 }
-
-.settings-save:active {
-  background: var(--accent-hover);
-  transform: scale(0.98);
+.settings-symbol svg { width: 24px; height: 24px; }
+.settings-card > p { margin: 18px 0 20px; font: var(--font-field); line-height: 1.65; color: var(--muted); }
+.settings-card form { display: grid; gap: 12px; }
+.settings-card label { font: var(--font-label-section); }
+.settings-card input {
+  width: 100%;
+  min-width: 0;
+  height: 48px;
+  border: 2px solid var(--line);
+  border-radius: var(--field-radius);
+  background: var(--paper);
+  color: var(--ink);
+  padding-inline: 12px;
+  font: var(--font-body);
 }
-
-.settings-hint {
-  text-align: center;
-  font-size: 11px;
-  color: var(--text-tertiary);
-  margin-top: 12px;
+.settings-card .playroom-button { width: 100%; }
+.settings-local { display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--muted); font: var(--font-caption); text-align: center; margin: 24px 0 0; }
+.settings-local svg { width: 16px; height: 16px; flex: none; }
+.index-progress { margin-top: 16px; }
+.index-progress > div { display: flex; justify-content: space-between; gap: 12px; font: var(--font-field); }
+.index-progress progress { width: 100%; height: 12px; accent-color: var(--ink); }
+@media (max-width: 360px) {
+  .settings-main { padding-inline: 16px; }
+  .settings-card { padding: 16px; }
 }
