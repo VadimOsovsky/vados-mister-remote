@@ -6,7 +6,7 @@
   background: var(--bg-tab-bar);
   left: 12px;
   right: 12px;
-  bottom: calc(10px + var(--app-safe-area-bottom, env(safe-area-inset-bottom)));
+  bottom: max(10px, var(--app-safe-area-bottom, env(safe-area-inset-bottom)));
   margin: auto;
   max-width: 800px;
   border: 2px solid var(--card);

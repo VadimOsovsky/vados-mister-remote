@@ -36,7 +36,7 @@ body {
 }
 
 :is(.collection-page, .store-page, .remote-page, .settings-page) .page-scroll {
-  padding-bottom: calc(78px + var(--app-safe-area-bottom, env(safe-area-inset-bottom)));
+  padding-bottom: calc(68px + max(10px, var(--app-safe-area-bottom, env(safe-area-inset-bottom))));
 }
 
 /* ── PAGE LAYOUT ── */
