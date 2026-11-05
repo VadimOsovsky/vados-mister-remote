@@ -7,6 +7,7 @@ serves index.html so the client-side router can handle them.
 import http.server
 import json
 import os
+import re
 import sys
 import threading
 from pathlib import Path
@@ -26,11 +27,28 @@ def read_state():
 
 
 class SPAHandler(http.server.SimpleHTTPRequestHandler):
+    def is_versioned_asset(self):
+        return bool(re.fullmatch(r"/assets/[^/]+-[A-Za-z0-9_-]{8,}\.[^/]+", urlsplit(self.path).path))
+
+    def end_headers(self):
+        # HTML, metadata and worker scripts keep stable URLs across releases.
+        # Only build assets with content hashes can be cached indefinitely.
+        policy = "public, max-age=31536000, immutable" if self.is_versioned_asset() else "no-store"
+        self.send_header("Cache-Control", policy)
+        super().end_headers()
+
+    def send_head(self):
+        if not self.is_versioned_asset():
+            # Old clients may still send validators for a previously cached shell.
+            for header in ("If-Modified-Since", "If-None-Match"):
+                if header in self.headers:
+                    del self.headers[header]
+        return super().send_head()
+
     def send_json(self, status, data):
         body = json.dumps(data).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
-        self.send_header("Cache-Control", "no-store")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
