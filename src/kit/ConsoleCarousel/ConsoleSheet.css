@@ -44,17 +44,10 @@
 }
 
 .console-sheet {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
   z-index: 201;
   border-radius: 16px 16px 0 0;
   background: var(--bg-primary);
   border-top: 1px solid var(--border-main);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
 }
 
 .console-sheet-handle {
@@ -135,6 +128,14 @@
   transition: transform var(--motion) cubic-bezier(.3, 1.35, .45, 1);
 }
 
+.theme-av-famicom .playroom-header .console-badge-chevron {
+  background: var(--button-accent);
+}
+
+.theme-av-famicom .playroom-header .console-badge-chevron svg {
+  color: var(--button-text);
+}
+
 .playroom-header .console-badge[aria-expanded="true"] .console-badge-chevron svg {
   transform: rotate(180deg);
 }
@@ -156,13 +157,19 @@
   font: var(--font-heading-dialog);
 }
 
-.console-sheet {
-  max-height: 90dvh;
-}
-
 .console-sheet-body {
   min-height: 0;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.console-sheet-handle,
+.picker-title,
+.console-sheet-branding,
+.picker-search-wrap,
+.console-sheet-footer {
+  flex-shrink: 0;
 }
 
 .picker-search-wrap {
@@ -182,6 +189,9 @@
 .picker-search-wrap .picker-search { padding-inline-start: 36px; }
 
 .picker-options {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
   padding: 4px 20px 16px;
   display: grid;
   gap: 12px;

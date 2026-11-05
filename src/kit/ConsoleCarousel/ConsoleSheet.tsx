@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Drawer } from 'vaul';
+import { BottomSheet } from '../BottomSheet';
 import { useAppContext } from '../../AppContext';
 import { PLATFORMS } from '../../constants';
 import { ChevronDownIcon, SearchIcon } from '../../lib/icons';
@@ -12,6 +13,8 @@ const consolePhotos: Partial<Record<ConsoleKey, string>> = {
     nes_pal: '/playroom/nes.webp',
     famicom: '/playroom/famicom.webp',
     fds: '/playroom/fds.webp',
+    dendy: '/playroom/dendy.png',
+    av_famicom: '/playroom/av-famicom.png',
 };
 
 export function ConsoleBadge({ onClick, expanded }: { onClick: () => void; expanded: boolean }) {
@@ -51,46 +54,41 @@ export function ConsoleSheet({ open, onOpenChange, onSwitch }: {
     }
 
     return (
-        <Drawer.Root open={open} onOpenChange={changeOpen}>
-            <Drawer.Portal>
-                <Drawer.Overlay className="console-sheet-overlay" />
-                <Drawer.Content className="console-sheet" aria-describedby={undefined}>
-                    <Drawer.Handle className="console-sheet-handle" />
-                    <Drawer.Title className="picker-title">What are we playing?</Drawer.Title>
+        <BottomSheet open={open} onOpenChange={changeOpen} overlayClassName="console-sheet-overlay" className="console-sheet">
+            <Drawer.Handle className="console-sheet-handle" />
+            <Drawer.Title className="picker-title">What are we playing?</Drawer.Title>
 
-                    <div className="console-sheet-body">
-                        <div className="console-sheet-branding">{platform.branding}</div>
+            <div className="console-sheet-body">
+                <div className="console-sheet-branding">{platform.branding}</div>
 
-                        <div className="picker-search-wrap">
-                            <span className="search-icon" aria-hidden="true">{SearchIcon}</span>
-                            <input className="picker-search" type="search" aria-label="Search consoles"
-                                placeholder="Search consoles..." value={search} onChange={event => setSearch(event.target.value)} />
-                        </div>
-                        <div className="picker-options">
-                            {options.map(key => {
-                                const option = PLATFORMS[key];
-                                const photo = consolePhotos[key];
-                                return (
-                                    <button key={key} className="picker-option playroom-press" aria-pressed={key === activeConsole}
-                                        onClick={() => selectConsole(key)}>
-                                        {photo && <img src={photo} alt="" />}
-                                        <span>{option.name}</span>
-                                    </button>
-                                );
-                            })}
-                            {!options.length && <p>No matching consoles</p>}
-                        </div>
+                <div className="picker-search-wrap">
+                    <span className="search-icon" aria-hidden="true">{SearchIcon}</span>
+                    <input className="picker-search" type="search" aria-label="Search consoles"
+                        placeholder="Search consoles..." value={search} onChange={event => setSearch(event.target.value)} />
+                </div>
+                <div className="picker-options">
+                    {options.map(key => {
+                        const option = PLATFORMS[key];
+                        const photo = consolePhotos[key];
+                        return (
+                            <button key={key} className="picker-option playroom-press" aria-pressed={key === activeConsole}
+                                onClick={() => selectConsole(key)}>
+                                {photo && <img src={photo} alt="" />}
+                                <span>{option.name}</span>
+                            </button>
+                        );
+                    })}
+                    {!options.length && <p>No matching consoles</p>}
+                </div>
 
-                        {hasControls && (
-                            <section aria-label={`${platform.name} controls`}>
-                                <div className="console-sheet-divider" />
-                                <h3 className="console-sheet-actions-title">{platform.name} controls</h3>
-                                <ConsoleControls activeConsole={activeConsole} />
-                            </section>
-                        )}
-                    </div>
-                </Drawer.Content>
-            </Drawer.Portal>
-        </Drawer.Root>
+                {hasControls && (
+                    <section className="console-sheet-footer" aria-label={`${platform.name} controls`}>
+                        <div className="console-sheet-divider" />
+                        <h3 className="console-sheet-actions-title">{platform.name} controls</h3>
+                        <ConsoleControls activeConsole={activeConsole} />
+                    </section>
+                )}
+            </div>
+        </BottomSheet>
     );
 }

@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 import type { ConsoleKey, PlatformDef } from './types';
-import type { WizzoApi } from './services/wizzoApi';
+import type { WizzoApi, WizzoPlayingResponse } from './services/wizzoApi';
 
 export interface AppContextValue {
     activeConsole: ConsoleKey;
@@ -8,6 +8,8 @@ export interface AppContextValue {
     platform: PlatformDef;
     api: WizzoApi;
     connected: boolean;
+    nowPlaying: WizzoPlayingResponse | null;
+    isGamePlaying: (gameId: string, consoleKey: ConsoleKey) => boolean;
     misterHost: string;
     setMisterHost: (host: string) => void;
     collectionIds: string[];

@@ -35,9 +35,14 @@
 }
 
 .console-ctrl-btn svg {
+  flex-shrink: 0;
   width: 20px;
   height: 20px;
   opacity: 0.85;
+}
+
+.console-ctrl-btn[data-control="flip_disk"] svg {
+  transform: rotate(180deg);
 }
 
 .console-sheet .console-ctrl-btn {

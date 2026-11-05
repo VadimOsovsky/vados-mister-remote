@@ -7,10 +7,11 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "test": "tsx --test tests/*.test.ts",
     "preview": "vite preview",
     "discover-ss-ids": "tsx scripts/discover-ss-ids.ts",
     "build-library": "node ./scripts/parse-launchbox.ts",
-    "deploy-mister": "bash scripts/deploy-mister.sh 192.168.0.111"
+    "deploy-mister": "bash scripts/deploy-mister.sh 192.168.0.118"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",

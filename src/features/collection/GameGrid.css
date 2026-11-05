@@ -2,6 +2,8 @@
 .game-grid {
   position: relative;
   width: 100%;
+  /* The virtualizer owns scroll corrections when row measurements change. */
+  overflow-anchor: none;
 }
 
 .game-grid-row {
@@ -235,6 +237,23 @@
 .save-dots {
   display: flex;
   gap: 3px;
+}
+
+.now-playing-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font: var(--font-caption);
+  color: var(--ink);
+  white-space: nowrap;
+}
+.now-playing-badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  background: var(--gold);
 }
 
 .save-dots i {

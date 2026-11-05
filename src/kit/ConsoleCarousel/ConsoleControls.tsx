@@ -36,7 +36,7 @@ export function ConsoleControls({ activeConsole }: { activeConsole: ConsoleKey }
     return (
         <div className="console-controls">
             {controls.map((ctrl) => (
-                <button key={ctrl.id} className="console-ctrl-btn playroom-press" onClick={() => press(ctrl)}>
+                <button key={ctrl.id} className="console-ctrl-btn playroom-press" data-control={ctrl.id} onClick={() => press(ctrl)}>
                     {CONTROL_ICONS[ctrl.id] ?? null}
                     <span>{ctrl.label}</span>
                 </button>

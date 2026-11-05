@@ -57,7 +57,8 @@
 .owned-button svg { flex: none; width: 18px; height: 18px; }
 .owned-button.owned-icon { flex: none; width: 44px; padding: 0; }
 .owned-gold {
-  background: radial-gradient(#ffffff90 1px, transparent 1.5px) 0 0 / 5px 5px, var(--gold);
+  background: var(--button-fill);
+  color: var(--button-text);
 }
 
 
@@ -143,14 +144,17 @@
 
 .owned-tab span { color: var(--muted); }
 .owned-tab[data-state='active'] {
-  background: radial-gradient(#ffffff90 1px, transparent 1.5px) 0 0 / 5px 5px, var(--gold);
+  background: var(--button-fill);
+  color: var(--button-text);
 }
+.owned-tab[data-state='active'] span { color: var(--button-text-muted); }
 
 .owned-panel { max-width: 860px; margin-inline: auto; padding: 24px 20px; }
 .owned-panel h2 { margin: 0; font: var(--font-heading-page); }
 .owned-eyebrow { margin: 0 0 8px; color: var(--muted); font: var(--font-label-nav); letter-spacing: .12em; text-transform: uppercase; }
 
 .owned-scene { margin: 20px 0 24px; }
+.owned-scene-carousel { width: 100%; min-width: 0; }
 .owned-scene-screen {
   display: grid;
   place-items: center;
@@ -270,7 +274,9 @@
 .owned-save-caption > span, .owned-save-caption small { display: flex; align-items: center; gap: 4px; }
 .owned-save-caption svg { display: block; width: 12px; height: 12px; }
 .owned-save-caption i { width: 8px; height: 8px; border-radius: 50%; border: 1px solid var(--ink); background: #3496ed; }
-.owned-save-caption i.completed, .owned-save-actions button[aria-pressed=true] { background: var(--gold); }
+.owned-save-caption i.completed { background: var(--gold); }
+.owned-save-actions button[aria-pressed=true] { background: var(--button-accent); }
+.owned-save-actions button[aria-pressed=true] { color: var(--button-text); }
 .owned-save-card .owned-medal { top: -8px; right: -8px; }
 .owned-medal {
   position: absolute;
@@ -319,7 +325,7 @@
 .owned-dock {
   position: fixed;
   z-index: 5;
-  bottom: calc(8px + env(safe-area-inset-bottom));
+  bottom: calc(var(--app-viewport-bottom, 0px) + 8px + var(--app-safe-area-bottom, env(safe-area-inset-bottom)));
   left: 50%;
   translate: -50% 0;
   width: min(calc(100% - 24px), 560px);
@@ -331,6 +337,11 @@
   border-radius: 20px;
   background: var(--ink);
   box-shadow: 0 3px 0 var(--field-shadow-color);
+}
+.owned-dock .owned-button {
+  box-sizing: border-box;
+  height: 56px;
+  min-height: 56px;
 }
 .owned-dock .owned-primary { flex: 1; outline: 2px solid var(--card); --press-shadow-color: #0005; }
 .owned-primary small { display: block; font: var(--font-caption); }

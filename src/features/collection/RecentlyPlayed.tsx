@@ -32,14 +32,16 @@ export function RecentlyPlayed({ games, consoleKey, preview, mock, onSelect, onH
     onSelect: (game: LaunchBoxGame) => void;
     onHistoryChange: () => void;
 }) {
-    const { api, connected, platform } = useAppContext();
+    const { api, connected, platform, isGamePlaying } = useAppContext();
     const [selectedId, setSelectedId] = useState(games[0].game.id);
     const [launching, setLaunching] = useState(false);
     const [failed, setFailed] = useState(false);
     const track = useRef<SwiperInstance | null>(null);
     const selected = games.find(({ game }) => game.id === selectedId) ?? games[0];
+    const playing = isGamePlaying(selected.game.id, consoleKey);
 
     async function continuePlaying() {
+        if (playing) return;
         const { game } = selected;
         const romPath = getRomMapping(game.id, consoleKey);
         if (mock || !romPath) {
@@ -107,8 +109,8 @@ export function RecentlyPlayed({ games, consoleKey, preview, mock, onSelect, onH
                 })}
             </Swiper>
             <div className="recent-actions">
-                <button type="button" className="playroom-primary playroom-press" disabled={(!mock && !connected) || launching}
-                    onClick={continuePlaying}>{PlayIcon} {launching ? 'Launching…' : 'Continue'}</button>
+                <button type="button" className="playroom-primary playroom-press" disabled={(!mock && !connected) || launching || playing}
+                    onClick={continuePlaying}>{PlayIcon} {launching ? 'Launching…' : playing ? 'Now playing' : 'Continue'}</button>
                 {failed && <p role="alert">Could not continue. Try again or open the game.</p>}
             </div>
         </section>

@@ -1,6 +1,7 @@
 import './StoreRomDialog.css';
 import { useRef, useState } from 'react';
 import { Drawer } from 'vaul';
+import { BottomSheet } from '../../kit/BottomSheet';
 import type { useRomPicker } from '../../hooks/useRomPicker';
 import type { WizzoGameSearchResult } from '../../services/wizzoApi';
 import { FileIcon, SearchIcon, StoreIcon } from '../../lib/icons';
@@ -17,20 +18,16 @@ export function StoreRomDialog({ picker, title, consoleName, price, preview, can
     canPurchase: boolean;
 }) {
     return (
-        <Drawer.Root autoFocus={false} open={picker.romPickerOpen} onOpenChange={open => { if (!open) picker.closeRomPicker(); }}>
-            <Drawer.Portal>
-                <Drawer.Overlay className="owned-dialog-overlay" />
-                <Drawer.Content className="store-rom-dialog" aria-describedby={undefined}>
-                    <header>
-                        <div><p className="store-kicker">One last thing</p><Drawer.Title>Choose a game file</Drawer.Title></div>
-                        <Drawer.Close className="playroom-button playroom-icon-button playroom-press" aria-label="Close">
-                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
-                        </Drawer.Close>
-                    </header>
-                    {picker.romPickerOpen && <StoreRomForm {...{ picker, title, consoleName, price, preview, canPurchase }} />}
-                </Drawer.Content>
-            </Drawer.Portal>
-        </Drawer.Root>
+        <BottomSheet open={picker.romPickerOpen} onOpenChange={open => { if (!open) picker.closeRomPicker(); }}
+            overlayClassName="owned-dialog-overlay" className="store-rom-dialog">
+            <header>
+                <div><p className="store-kicker">One last thing</p><Drawer.Title>Choose a game file</Drawer.Title></div>
+                <Drawer.Close className="playroom-button playroom-icon-button playroom-press" aria-label="Close">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
+                </Drawer.Close>
+            </header>
+            {picker.romPickerOpen && <StoreRomForm {...{ picker, title, consoleName, price, preview, canPurchase }} />}
+        </BottomSheet>
     );
 }
 

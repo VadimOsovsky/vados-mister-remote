@@ -9,6 +9,7 @@ const FLIP_DISK = { id: 'flip_disk', label: 'Flip Disk', action: 'user' } as con
 export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
   nes_ntsc: {
     name: 'NES',
+    mediaLabel: 'Cartridge',
     logo: '/consoles/nes_logo.png',
     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/NES-Console-Set.png/960px-NES-Console-Set.png',
     theme: 'theme-nes-ntsc',
@@ -21,6 +22,7 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
   },
   nes_pal: {
     name: 'NES (PAL)',
+    mediaLabel: 'Cartridge',
     logo: '/consoles/nes_logo.png',
     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Wikipedia_NES_PAL.jpg/960px-Wikipedia_NES_PAL.jpg',
     theme: 'theme-nes-pal',
@@ -34,6 +36,7 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
   },
   famicom: {
     name: 'Famicom',
+    mediaLabel: 'Cartridge',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/7/7d/Family_Computer_logo.svg',
     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Nintendo-Famicom-Console-Set-FL.png/960px-Nintendo-Famicom-Console-Set-FL.png',
     theme: 'theme-famicom',
@@ -47,6 +50,7 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
   },
   fds: {
     name: 'FDS',
+    mediaLabel: 'Disk',
     coverScale: 0.85,
     logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c7/Family_Computer_Disk_System_logo.png',
     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Nintendo-Famicom-Disk-System.png/960px-Nintendo-Famicom-Disk-System.png',
@@ -62,6 +66,7 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
   },
   av_famicom: {
     name: 'AV Famicom',
+    mediaLabel: 'Cartridge',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/2/28/Famicom_Family_logo.svg',
     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/f/f1/New_Famicom.jpg',
     theme: 'theme-av-famicom',
@@ -76,6 +81,7 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
   },
   dendy: {
     name: 'Dendy',
+    mediaLabel: 'Cartridge',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/3/3d/Dendy_console_logo.svg',
     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Dendy_Junior_with_cart_and_joypads.png/960px-Dendy_Junior_with_cart_and_joypads.png',
     theme: 'theme-dendy',

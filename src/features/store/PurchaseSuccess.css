@@ -1,0 +1,42 @@
+.purchase-success {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: safe center;
+  padding: calc(24px + env(safe-area-inset-top)) 24px calc(24px + var(--app-safe-area-bottom, env(safe-area-inset-bottom)));
+  text-align: center;
+  color: var(--ink);
+  background: radial-gradient(ellipse at 50% 35%, color-mix(in srgb, var(--gold) 25%, transparent), transparent 65%), var(--paper);
+}
+.purchase-success-art { position: relative; width: min(280px, 65vw); flex: none; height: min(280px, 34dvh); margin-bottom: 32px; }
+.purchase-success-cover { position: absolute; inset: 12px 40px 20px; display: grid; place-items: center; animation: purchase-land 900ms cubic-bezier(.2,.8,.3,1) both; }
+.purchase-success-cover img { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; border-radius: 4px; filter: drop-shadow(5px 8px 0 #0002); }
+.purchase-success-cover > span { display: grid; place-items: center; width: 100%; height: 100%; border: 3px solid var(--ink); border-radius: 12px; background: var(--gold); font-size: 64px; }
+.purchase-success-shelf { position: absolute; inset: auto 0 0; height: 16px; border: 2px solid var(--ink); border-radius: 5px; background: var(--card); box-shadow: 0 5px 0 var(--field-shadow-color); }
+.purchase-success-check { position: absolute; right: 20px; bottom: 0; display: grid; place-items: center; width: 52px; height: 52px; border: 3px solid var(--ink); border-radius: 50%; background: var(--gold); font-size: 30px; font-weight: 700; animation: purchase-stamp 500ms 800ms both; }
+.purchase-success-kicker { font: var(--font-label-small); text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+.purchase-success h1 { font: var(--font-heading-dialog); font-size: clamp(26px, 6vw, 38px); margin: 10px 0 16px; outline: none; }
+.purchase-success-title { max-width: 440px; font: var(--font-label-section); overflow-wrap: anywhere; }
+.purchase-success-caption { margin-top: 8px; font: var(--font-field); color: var(--muted); }
+.purchase-success-message { animation: purchase-message 500ms 650ms both; }
+.purchase-success-confetti { position: absolute; inset: 0; }
+.purchase-success-confetti i { position: absolute; left: 5%; top: 35%; width: 9px; height: 15px; border: 1px solid var(--ink); background: var(--gold); animation: purchase-confetti 1500ms 500ms both; }
+.purchase-success-confetti i:nth-child(2n) { background: var(--card); animation-delay: 650ms; }
+.purchase-success-confetti i:nth-child(2) { left: 18%; top: 10%; rotate: 35deg; }
+.purchase-success-confetti i:nth-child(3) { left: 34%; top: 0; rotate: -25deg; }
+.purchase-success-confetti i:nth-child(4) { left: 55%; top: 5%; rotate: 60deg; }
+.purchase-success-confetti i:nth-child(5) { left: 78%; top: 12%; rotate: -40deg; }
+.purchase-success-confetti i:nth-child(6) { left: 94%; top: 32%; rotate: 20deg; }
+.purchase-success-confetti i:nth-child(7) { left: 0; top: 65%; rotate: 55deg; }
+.purchase-success-confetti i:nth-child(8) { left: 98%; top: 70%; rotate: -20deg; }
+@keyframes purchase-land { 0% { opacity: 0; transform: translateY(-70px) rotate(-12deg) scale(.8); } 65% { opacity: 1; transform: translateY(5px) rotate(3deg); } 100% { transform: none; } }
+@keyframes purchase-stamp { from { opacity: 0; transform: scale(.3) rotate(-30deg); } 70% { opacity: 1; transform: scale(1.12); } to { transform: none; } }
+@keyframes purchase-message { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes purchase-confetti { 0% { opacity: 0; transform: translateY(12px) scale(0); } 20% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; transform: translateY(-45px) rotate(140deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .purchase-success * { animation: none; }
+  .purchase-success-confetti { display: none; }
+}

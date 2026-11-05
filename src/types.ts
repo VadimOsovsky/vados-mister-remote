@@ -46,6 +46,7 @@ export interface ConsoleControl {
 // ── PLATFORM DEFINITION ──
 export interface PlatformDef {
   name: string;
+  mediaLabel: string;        // Physical media name: Cartridge, Disk, Disc, etc.
   logo: string;
   theme: string;
   branding: string;

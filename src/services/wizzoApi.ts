@@ -213,8 +213,8 @@ export class WizzoApi {
     return this.post('/games/launch', { path });
   }
 
-  getPlaying(): Promise<WizzoPlayingResponse> {
-    return this.get('/games/playing');
+  getPlaying(signal?: AbortSignal): Promise<WizzoPlayingResponse> {
+    return this.request('/games/playing', { signal, cache: 'no-store' });
   }
 
   listIndexedSystems(): Promise<{ systems: WizzoSystem[] }> {

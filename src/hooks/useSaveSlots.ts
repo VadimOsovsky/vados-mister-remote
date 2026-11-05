@@ -3,6 +3,7 @@ import type { ConsoleKey, LaunchBoxGame, SaveSlot } from '../types';
 import type { WizzoApi } from '../services/wizzoApi';
 import { getSaveSlots, putSaveSlot, deleteSaveSlot, getRomMapping } from '../lib/storage';
 import { loadCollectionSave } from '../services/collectionLauncher';
+import { isRomPlaying } from '../services/nowPlaying';
 
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -39,6 +40,9 @@ export function useSaveSlots(api: WizzoApi, game: LaunchBoxGame, activeConsole: 
             const oldSlot = saveSlots[selectedSlot];
             const playing = await api.getPlaying();
             if (!playing?.gameName || !playing.core) throw new Error('Start the game on MiSTer first.');
+            if (!isRomPlaying(playing, getRomMapping(game.id, activeConsole), activeConsole)) {
+                throw new Error('Launch this game on MiSTer before saving.');
+            }
             const query = new URLSearchParams({
                 core: playing.core,
                 game: playing.gameName,
@@ -90,7 +94,7 @@ export function useSaveSlots(api: WizzoApi, game: LaunchBoxGame, activeConsole: 
         } finally {
             setSavingSlot(false);
         }
-    }, [selectedSlot, game, savingSlot, api, saveSlots]);
+    }, [selectedSlot, game, savingSlot, api, saveSlots, activeConsole]);
 
     const [loadingSlot, setLoadingSlot] = useState(false);
     const hasRomMapping = Boolean(getRomMapping(game.id, activeConsole));
@@ -98,10 +102,12 @@ export function useSaveSlots(api: WizzoApi, game: LaunchBoxGame, activeConsole: 
     const loadSlot = useCallback(async (slotIndex: number | null) => {
         if (slotIndex === null || !saveSlots[slotIndex] || loadingSlot) return;
         setLoadingSlot(true);
+        setSaveError(undefined);
         try {
             await loadCollectionSave(api, activeConsole, game.id, slotIndex);
         } catch (err) {
             console.warn('Load state failed:', err);
+            setSaveError(err instanceof Error ? err.message : 'Could not load on MiSTer.');
         } finally {
             setLoadingSlot(false);
         }

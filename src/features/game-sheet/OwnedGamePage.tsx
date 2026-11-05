@@ -4,15 +4,13 @@ import { useState } from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
 import * as Dialog from '@radix-ui/react-dialog';
 import { GameFormDrawer } from './GameFormDrawer';
-import Lightbox from 'yet-another-react-lightbox';
-import Zoom from 'yet-another-react-lightbox/plugins/zoom';
-import 'yet-another-react-lightbox/styles.css';
+import { PhotoViewer } from '../../kit/PhotoViewer';
 
 import { useAppContext } from '../../AppContext';
 import { useRomPicker } from '../../hooks/useRomPicker';
 import { useSaveSlots } from '../../hooks/useSaveSlots';
 import type { LaunchBoxGame } from '../../types';
-import { BackArrowIcon, BookIcon, FileIcon, PencilIcon, PlayIcon, ResetIcon } from '../../lib/icons';
+import { BackArrowIcon, FileIcon, PencilIcon, PlayIcon, ResetIcon } from '../../lib/icons';
 import { getImageUrl, resolveImages, resolveScreenshots, resolveTitle } from '../../services/launchbox';
 import { getGameOverrides, deleteGameOverrides, removeCustomGame } from '../../lib/storage';
 import { EditGameForm } from './EditGameForm';
@@ -54,7 +52,8 @@ export function OwnedGamePage({ selectedGame, onClose }: {
     const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
     const [boxOpen, setBoxOpen] = useState(false);
     const [editMode, setEditMode] = useState(false);
-    const { activeConsole, platform, api, connected, beatenIds, favoriteIds, toggleFavorite, removeFromCollection, unmarkAsBeaten } = useAppContext();
+    const { activeConsole, platform, api, connected, isGamePlaying, beatenIds, favoriteIds, toggleFavorite, removeFromCollection, unmarkAsBeaten } = useAppContext();
+    const playing = isGamePlaying(selectedGame.id, activeConsole);
     const romPicker = useRomPicker(api, platform, selectedGame, activeConsole);
     const saves = useSaveSlots(api, selectedGame, activeConsole);
     const [editField, setEditField] = useState<'rom' | undefined>();
@@ -73,7 +72,7 @@ export function OwnedGamePage({ selectedGame, onClose }: {
     const library = [
         { title: 'Front cover', caption: 'The face of your collection', src: front, kind: 'front' },
         { title: 'Back cover', caption: 'One more side to the story', src: overrides.boxBackUrl || (images.back && getImageUrl(images.back)), kind: 'back' },
-        { title: 'Cartridge', caption: 'The original adventure, in hand', src: overrides.cartridgeUrl, kind: 'cartridge' },
+        { title: platform.mediaLabel, caption: 'The original adventure, in hand', src: overrides.cartridgeUrl, kind: 'cartridge' },
         { title: 'Manual', caption: 'Keep every little detail', src: overrides.manualPhotoUrl, kind: 'manual' },
     ];
     const slides = library.flatMap(item => item.src ? [{ src: item.src }] : []);
@@ -159,20 +158,25 @@ export function OwnedGamePage({ selectedGame, onClose }: {
                         <p className="owned-eyebrow">The little details</p>
                         <h2>In your collection</h2>
                         <div className="owned-library">
-                            {library.map(({ title, caption, src, kind }, index) => (
-                                <button key={kind} className="owned-library-card owned-button playroom-press"
-                                    onClick={() => {
-                                        if (!src) { edit(); return; }
-                                        setGalleryIndex(library.slice(0, index).filter(item => item.src).length);
-                                    }}>
+                            {library.map(({ title, caption, src, kind }, index) => {
+                                const content = <>
                                     <span className="owned-library-top"><span>0{index + 1}</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10" /></svg></span>
                                     <span className="owned-library-art">
                                         {src ? <LazyImage src={src} alt="" /> : <span className={`owned-placeholder owned-placeholder-${kind}`} aria-hidden="true">+</span>}
                                     </span>
                                     <strong>{title}</strong>
                                     <small>{caption}</small>
-                                </button>
-                            ))}
+                                </>;
+                                const className = 'owned-library-card owned-button playroom-press';
+                                if (kind === 'manual' && overrides.manualUrl) {
+                                    return <a key={kind} className={className} href={overrides.manualUrl} target="_blank" rel="noreferrer">{content}</a>;
+                                }
+                                return <button key={kind} className={className}
+                                    onClick={() => {
+                                        if (!src) { edit(); return; }
+                                        setGalleryIndex(library.slice(0, index).filter(item => item.src).length);
+                                    }}>{content}</button>;
+                            })}
                         </div>
                         <div className="owned-library-tools">
                             {/*{boxFront && <button type="button" className="owned-button playroom-press" onClick={() => setBoxOpen(true)}>*/}
@@ -181,7 +185,6 @@ export function OwnedGamePage({ selectedGame, onClose }: {
                             {/*    </svg>*/}
                             {/*    <span><strong>View in 3D</strong><small>Rotate and zoom the box</small></span><span aria-hidden="true">↗</span>*/}
                             {/*</button>}*/}
-                            {overrides.manualUrl && <a className="owned-button owned-gold playroom-press" href={overrides.manualUrl} target="_blank" rel="noreferrer">{BookIcon}<span><strong>Open manual</strong><small>A little help for your adventure</small></span><span aria-hidden="true">↗</span></a>}
                             <button className="owned-button playroom-press" onClick={() => edit('rom')}>{FileIcon}<span><strong>Game file</strong><small>{overrides.romName || 'Link or change ROM'}</small></span><span aria-hidden="true">→</span></button>
                         </div>
                     </Tabs.Content>
@@ -193,12 +196,12 @@ export function OwnedGamePage({ selectedGame, onClose }: {
             <aside className="owned-dock" aria-label="Play game">
                 {loadIndex !== null && <button className="owned-button owned-new-game playroom-press" disabled={!connected || saves.loadingSlot} onClick={romPicker.handleLaunchGame}>{ResetIcon} Start new game</button>}
                 <button className="owned-button owned-gold owned-primary playroom-press"
-                    disabled={!connected || saves.loadingSlot || (loadIndex !== null && !saves.hasRomMapping)}
+                    disabled={!connected || saves.loadingSlot || (playing && selectedIndex === null) || (loadIndex !== null && !saves.hasRomMapping)}
                     onClick={() => loadIndex === null ? romPicker.handleLaunchGame() : saves.loadSlot(loadIndex)}>
                     {PlayIcon}
                     <span>
-                        {saves.loadingSlot ? 'Loading…' : selectedIndex !== null ? `Load · ${slotLabel(selectedIndex)}` : loadIndex !== null ? 'Continue' : 'Play'}
-                        {activeTab === 'controls' && selectedIndex === null && loadIndex !== null && <small>Latest save · {slotLabel(loadIndex)}</small>}
+                        {saves.loadingSlot ? 'Loading…' : selectedIndex !== null ? `Load · ${slotLabel(selectedIndex)}` : playing ? 'Now playing' : loadIndex !== null ? 'Continue' : 'Play'}
+                        {!playing && activeTab === 'controls' && selectedIndex === null && loadIndex !== null && <small>Latest save · {slotLabel(loadIndex)}</small>}
                     </span>
                 </button>
             </aside>
@@ -221,7 +224,7 @@ export function OwnedGamePage({ selectedGame, onClose }: {
             </Dialog.Root>
             {boxOpen && boxFront && <PreviewBox front={boxFront} back="/playroom/preview/mario3-back.jpg"
                 title={displayTitle} onClose={() => setBoxOpen(false)} />}
-            <Lightbox open={galleryIndex !== null} close={() => setGalleryIndex(null)} index={galleryIndex ?? 0} plugins={[Zoom]} slides={slides} />
+            <PhotoViewer index={galleryIndex} onClose={() => setGalleryIndex(null)} slides={slides} />
         </>
     );
 }

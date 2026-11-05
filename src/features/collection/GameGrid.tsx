@@ -32,7 +32,8 @@ export function GameCard({ game, regions, activeConsole, onSelect, preview, rece
     recent?: { selected: boolean; time: ReactNode; mockSaves?: number };
     preview?: boolean;
 }) {
-    const { beatenIds, favoriteIds } = useAppContext();
+    const { beatenIds, favoriteIds, isGamePlaying } = useAppContext();
+    const playing = isGamePlaying(game.id, activeConsole);
     const overrides = getGameOverrides(game.id, activeConsole);
     const images = resolveImages(game, regions);
     const displayTitle = overrides.title || resolveTitle(game, PLATFORMS[activeConsole].nameRegions);
@@ -44,7 +45,7 @@ export function GameCard({ game, regions, activeConsole, onSelect, preview, rece
     const playerCount = game.maxPlayers.trim();
     const isBeaten = beatenIds.includes(game.id);
     return (
-        <button type="button" aria-label={recent ? `Open ${displayTitle}` : displayTitle} aria-pressed={recent?.selected}
+        <button type="button" aria-label={`${recent ? `Open ${displayTitle}` : displayTitle}${playing ? ' · Now playing' : ''}`} aria-pressed={recent?.selected}
             className={`game-card${isBeaten ? ' beaten' : ''}`}
             onClick={() => onSelect(game)}
         >
@@ -62,7 +63,8 @@ export function GameCard({ game, regions, activeConsole, onSelect, preview, rece
                     <span className="save-dots" role="img" aria-label={(recent?.mockSaves ?? slots.filter(Boolean).length) + ' of 4 save slots used'}>
                         {slots.map((slot, index) => <i key={index} className={slot?.beaten ? 'complete' : slot || index < (recent?.mockSaves ?? 0) ? 'used' : ''} />)}
                     </span>
-                    {/^[1-9]\d*$/.test(playerCount) && <span className="player-badge">{playerCount}P</span>}
+                    {playing ? <span className="now-playing-badge">Playing</span>
+                        : /^[1-9]\d*$/.test(playerCount) && <span className="player-badge">{playerCount}P</span>}
                 </span>
             </span>
             <span className="card-badge">
@@ -101,15 +103,23 @@ export function GameGrid({ games, regions, activeConsole, onSelect, scrollRef, r
     const [scrollMargin, setScrollMargin] = useState(0);
     useLayoutEffect(() => {
         const grid = gridRef.current;
-        if (!grid) return;
-        const measure = () => setScrollMargin(grid.offsetTop);
+        const scroller = scrollRef?.current;
+        if (!grid || !scroller) return;
+        const measure = () => setScrollMargin(
+            grid.getBoundingClientRect().top - scroller.getBoundingClientRect().top - scroller.clientTop + scroller.scrollTop,
+        );
         measure();
         const observer = new ResizeObserver(measure);
-        for (let sibling = grid.previousElementSibling; sibling; sibling = sibling.previousElementSibling) {
-            observer.observe(sibling);
+        observer.observe(scroller);
+        // The store grid is nested inside <main>; its intro is a sibling of
+        // that ancestor, so measuring only the grid's siblings misses it.
+        for (let element: Element | null = grid; element && element !== scroller; element = element.parentElement) {
+            for (let sibling = element.previousElementSibling; sibling; sibling = sibling.previousElementSibling) {
+                observer.observe(sibling);
+            }
         }
         return () => observer.disconnect();
-    }, [games]);
+    }, [games, scrollRef]);
 
     const virtualizer = useVirtualizer({
         count: rowCount,

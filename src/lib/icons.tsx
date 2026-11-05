@@ -63,9 +63,9 @@ export const ResetIcon = (
 export const DiskIcon = (
     <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"
          strokeLinejoin="round" aria-hidden="true">
-        <path d="M4 4h16a1 1 0 0 1 1 1v14H3V5a1 1 0 0 1 1-1Z" fill="var(--gold, #ffdb54)"/>
-        <rect x="6" y="7" width="12" height="6" rx="1" fill="var(--card, #fff8e7)"/>
-        <path d="M9 10h6M6 16v3m12-3v3m-8-3h4" fill="none"/>
+        <path d="M6 3h12a1 1 0 0 1 1 1v17H5V4a1 1 0 0 1 1-1Z" fill="var(--gold, #ffdb54)"/>
+        <rect x="7" y="6" width="10" height="7" rx="1" fill="var(--card, #fff8e7)"/>
+        <path d="M9 10h6M7 17v4m10-4v4m-7-4h4" fill="none"/>
     </svg>
 );
 

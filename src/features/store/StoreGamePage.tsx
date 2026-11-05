@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
-import Lightbox from 'yet-another-react-lightbox';
-import Zoom from 'yet-another-react-lightbox/plugins/zoom';
-import 'yet-another-react-lightbox/styles.css';
+import { Link, useParams, useSearchParams } from 'react-router';
+import { PhotoViewer } from '../../kit/PhotoViewer';
 import { useAppContext } from '../../AppContext';
 import { useRomPicker } from '../../hooks/useRomPicker';
 import { PlayroomHeader } from '../../kit/PlayroomHeader';
@@ -13,6 +11,7 @@ import { getImageUrl, loadPlatformGames, resolveImages, resolveScreenshots, reso
 import type { LaunchBoxGame } from '../../types';
 import { getPreviewCover } from '../collection/previewCovers';
 import { StoreRomDialog } from './StoreRomDialog';
+import { PurchaseSuccess } from './PurchaseSuccess';
 import { formatGamePrice } from '../../lib/pricing';
 import { StoreWallet } from './StoreWallet';
 import { storePrice } from './storePreview';
@@ -62,15 +61,18 @@ function StoreDetailHeader({ backUrl, balance }: { backUrl: string; balance: num
 
 function StoreProduct({ game, preview, backUrl }: { game: LaunchBoxGame; preview: boolean; backUrl: string }) {
     const { api, activeConsole, platform, balance, collectionIds, purchaseGame, freeGames } = useAppContext();
-    const navigate = useNavigate();
     const [back, setBack] = useState(false);
+    const [purchased, setPurchased] = useState(false);
     const [galleryIndex, setGalleryIndex] = useState<number>();
     const title = resolveTitle(game, platform.nameRegions);
     const price = storePrice(game, activeConsole, preview, freeGames);
     const wallet = preview ? 120 : balance;
     const owned = !preview && collectionIds.includes(game.id);
     const romPicker = useRomPicker(api, platform, game, activeConsole, romPath => {
-        if (purchaseGame(game.id, price, romPath)) navigate('/collection');
+        if (purchaseGame(game.id, price, romPath)) {
+            if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+            setPurchased(true);
+        }
     }, !preview);
     const images = resolveImages(game, platform.imageRegions);
     const front = (preview && getPreviewCover(activeConsole, game.id)) || (images.front && getImageUrl(images.front));
@@ -83,6 +85,8 @@ function StoreProduct({ game, preview, backUrl }: { game: LaunchBoxGame; preview
         ['Released', game.year], ['Developer', game.developer], ['Publisher', game.publisher],
         ['Genre', game.genre], ['Players', game.maxPlayers],
     ];
+
+    if (purchased) return <PurchaseSuccess title={title} cover={front || undefined} preview={preview} />;
 
     return (
         <>
@@ -133,8 +137,7 @@ function StoreProduct({ game, preview, backUrl }: { game: LaunchBoxGame; preview
             </aside>
             <StoreRomDialog picker={romPicker} title={title} consoleName={platform.name}
                 price={price} preview={preview} canPurchase={!owned && wallet >= price} />
-            <Lightbox open={galleryIndex !== undefined} close={() => setGalleryIndex(undefined)}
-                index={galleryIndex ?? 0} plugins={[Zoom]} slides={slides} />
+            <PhotoViewer index={galleryIndex ?? null} onClose={() => setGalleryIndex(undefined)} slides={slides} />
         </>
     );
 }

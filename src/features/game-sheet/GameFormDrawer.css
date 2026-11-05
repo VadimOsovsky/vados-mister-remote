@@ -10,16 +10,8 @@
 
 /* ── BOTTOM SHEET (vaul drawer content) ── */
 .sheet {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
   z-index: 201;
-  max-height: 85dvh;
   border-radius: 16px 16px 0 0;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
 }
 
 /* Sheet content */
@@ -106,15 +98,20 @@
   border: 2px solid var(--ink);
   border-bottom: 0;
   border-radius: 24px 24px 0 0;
-  max-height: 90dvh;
   max-width: 600px;
   margin-inline: auto;
 }
 
 .add-game-title {
+  flex-shrink: 0;
   padding: 12px 20px 16px;
   font: var(--font-heading-dialog);
   line-height: 1.2;
+}
+
+.add-game-sheet .sheet-handle,
+.add-game-sheet .owned-edit-header {
+  flex-shrink: 0;
 }
 
 .add-game-sheet .sheet-content,
@@ -164,7 +161,6 @@
 }
 
 .add-game-sheet .edit-game-input::placeholder { color: var(--muted); }
-.add-game-sheet .edit-game-input:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 
 .add-game-sheet .edit-game-actions {
   flex: none;
@@ -173,5 +169,6 @@
 }
 
 .add-game-sheet .sheet-btn-primary {
-  background: radial-gradient(#ffffff90 1px, transparent 1.5px) 0 0 / 5px 5px, var(--gold);
+  background: var(--button-fill);
+  color: var(--button-text);
 }

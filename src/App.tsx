@@ -7,6 +7,11 @@ import { readHost, getCollectionIds, addCollectionId, removeCollectionId, getBea
 import { initWallet, BEATEN_REWARD } from './lib/wallet';
 import { GridIcon, StoreIcon, RemoteIcon, SettingsIcon } from './lib/icons';
 import { useConnection } from './hooks/useConnection';
+import { useNowPlaying } from './hooks/useNowPlaying';
+import { isRomPlaying } from './services/nowPlaying';
+import { getRomMapping } from './lib/storage';
+import { useVisualViewport } from './hooks/useVisualViewport';
+import { useFocusedFieldScroll } from './hooks/useFocusedFieldScroll';
 import { AppContext } from './AppContext';
 import { TabBar } from './kit/TabBar/TabBar';
 import { CollectionPage } from './features/collection/CollectionPage';
@@ -28,9 +33,14 @@ const TAB_ITEMS = [
 ];
 
 export default function MisterRemote() {
+    useVisualViewport();
+    useFocusedFieldScroll();
     const [activeConsole, setActiveConsole] = useState<ConsoleKey>(() => readActiveConsole() ?? 'nes_ntsc');
     const [misterHost, setMisterHost] = useState(readHost);
     const { connected, api } = useConnection(misterHost);
+    const nowPlaying = useNowPlaying(api, connected);
+    const isGamePlaying = useCallback((gameId: string, consoleKey: ConsoleKey) =>
+        isRomPlaying(nowPlaying, getRomMapping(gameId, consoleKey), consoleKey), [nowPlaying]);
     const platform = PLATFORMS[activeConsole];
 
     const location = useLocation();
@@ -149,7 +159,7 @@ export default function MisterRemote() {
     return (
         <AppContext value={{
             activeConsole, setActiveConsole: switchConsole,
-            platform, api, connected,
+            platform, api, connected, nowPlaying, isGamePlaying,
             misterHost, setMisterHost,
             collectionIds, addToCollection, removeFromCollection,
             favoriteIds, toggleFavorite,

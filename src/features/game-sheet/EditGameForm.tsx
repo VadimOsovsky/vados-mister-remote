@@ -217,7 +217,7 @@ export function EditGameForm({ game, regions, activeConsole, onSave, onCancel, o
                         />
                     </label>
                     <label className="edit-game-field">
-                        <span className="edit-game-label">Cartridge URL</span>
+                        <span className="edit-game-label">{platform.mediaLabel} URL</span>
                         <input
                             className="edit-game-input"
                             type="url"

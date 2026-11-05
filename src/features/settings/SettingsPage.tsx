@@ -64,7 +64,7 @@ export function SettingsPage() {
                         <form onSubmit={event => { event.preventDefault(); saveSettings(); }}>
                             <label htmlFor="mister-host">MiSTer IP address</label>
                             <input id="mister-host" value={settingsHost} onChange={event => setSettingsHost(event.target.value)}
-                                placeholder="192.168.0.111" autoComplete="off" spellCheck={false} required />
+                                placeholder="192.168.0.118" autoComplete="off" spellCheck={false} required />
                             <button className="playroom-button playroom-primary playroom-press" type="submit">
                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>
                                 {settingsSaved ? 'Saved!' : 'Save connection'}
