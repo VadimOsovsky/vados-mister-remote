@@ -63,7 +63,23 @@ MARKER="# mister-remote"
 SERVER_CMD="\$PYTHON_BIN \$REMOTE_DIR/server.py \$HTTP_PORT \$REMOTE_DIR"
 
 # Start python http server now (kill old instance first)
-pkill -f "server.py \$HTTP_PORT" 2>/dev/null || true
+\$PYTHON_BIN - <<'PY'
+import os
+import signal
+import time
+
+for pid in os.listdir('/proc'):
+    if not pid.isdigit():
+        continue
+    try:
+        with open('/proc/' + pid + '/cmdline', 'rb') as process:
+            args = process.read().split(b'\0')
+        if b'/media/fat/remote/server.py' in args and b'8183' in args:
+            os.kill(int(pid), signal.SIGTERM)
+    except (OSError, ValueError):
+        pass
+time.sleep(0.5)
+PY
 nohup \$SERVER_CMD >/dev/null 2>&1 &
 echo "SPA server started on port \$HTTP_PORT"
 
