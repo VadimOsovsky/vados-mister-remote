@@ -69,6 +69,20 @@ export const DiskIcon = (
     </svg>
 );
 
+export const FlipDiskIcon = (
+    <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.8"
+         strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M5 13A11 11 0 0 1 24 5m0-4v4h-4M27 19A11 11 0 0 1 8 27m0 4v-4h4" />
+        <g transform="rotate(180 16 16)">
+            <rect x="9" y="9" width="14" height="14" rx=".8" fill="var(--gold, #ffdb54)" />
+            <rect x="10.8" y="10.5" width="10.4" height="3" rx=".4" fill="var(--card, #fff8e7)" strokeWidth="1.2" />
+            <circle cx="16" cy="16" r="1.8" fill="var(--ink)" strokeWidth="1" />
+            <path d="M19.2 17h1.6v3.2h-1.6Z" fill="var(--ink)" strokeWidth="1" />
+            <path d="M12 21.5h8" strokeWidth="1" />
+        </g>
+    </svg>
+);
+
 export const ScreenshotIcon = (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
          strokeLinejoin="round">

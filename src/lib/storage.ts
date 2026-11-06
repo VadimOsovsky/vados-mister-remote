@@ -1,4 +1,5 @@
 import { appStorage } from './sharedStorage';
+import { resolveGameArtwork } from './gameArtwork';
 import type { ConsoleKey, GameOverrides, LaunchBoxGame, SaveSlot, SortMode } from '../types';
 import { PLATFORMS } from '../constants';
 
@@ -10,11 +11,11 @@ const COLLECTION_PREFIX = 'collection';
 const BEATEN_PREFIX = 'beaten';
 const ACTIVE_CONSOLE_KEY = 'active_console';
 const CUSTOM_GAMES_PREFIX = 'custom_games';
-export function readFreeGames(): boolean {
+export function readEconomyDisabled(): boolean {
     return appStorage.getItem('store_free_games') === 'true';
 }
 
-export function writeFreeGames(enabled: boolean): void {
+export function writeEconomyDisabled(enabled: boolean): void {
     appStorage.setItem('store_free_games', String(enabled));
 }
 
@@ -25,7 +26,12 @@ const WALLET_REWARDED_KEY = 'wallet_beaten_rewarded';
 
 export const EMPTY_SLOTS: (SaveSlot | null)[] = [null, null, null, null];
 
+export function isHostedOnMister(): boolean {
+    return !import.meta.env.DEV && window.location.port === '8183';
+}
+
 export function readHost(): string {
+    if (isHostedOnMister()) return window.location.hostname;
     return localStorage.getItem(HOST_KEY) || import.meta.env.VITE_WIZZO_ADDRESS || window.location.hostname;
 }
 
@@ -33,7 +39,7 @@ export function writeHost(host: string): void {
     localStorage.setItem(HOST_KEY, host);
 }
 
-export function getRomMapping(gameId: string, consoleKey: ConsoleKey): string | null {
+export function getOriginalRomMapping(gameId: string, consoleKey: ConsoleKey): string | null {
     try {
         const raw = appStorage.getItem(ROM_MAPPINGS_KEY);
         if (!raw) return null;
@@ -268,4 +274,54 @@ export function addBeatenRewardedId(gameId: string): Record<string, true> {
         appStorage.setItem(WALLET_REWARDED_KEY, JSON.stringify(map));
     } catch { /* localStorage full */ }
     return map;
+}
+
+export interface RomTranslation { language: string; path: string }
+interface RomVersions { selected: string | null; translations: RomTranslation[] }
+export function getRomVersions(gameId: string, consoleKey: ConsoleKey): RomVersions {
+    try {
+        const data = JSON.parse(appStorage.getItem('game_rom_versions_' + gameId + '_' + consoleKey) || '{}');
+        const translations: RomTranslation[] = Array.isArray(data.translations) ? data.translations.filter(
+            (v: RomTranslation) => typeof v?.language === 'string' && typeof v.path === 'string' && v.path.trim()) : [];
+        return { translations, selected: translations.some(v => v.path === data.selected) ? data.selected : null };
+    } catch { return { selected: null, translations: [] }; }
+}
+function writeRomVersions(gameId: string, consoleKey: ConsoleKey, versions: RomVersions) {
+    appStorage.setItem('game_rom_versions_' + gameId + '_' + consoleKey, JSON.stringify(versions));
+}
+export function selectRomVersion(gameId: string, consoleKey: ConsoleKey, path: string | null) {
+    const versions = getRomVersions(gameId, consoleKey);
+    if (path !== null && !versions.translations.some(v => v.path === path)) throw new Error('Unknown game version.');
+    writeRomVersions(gameId, consoleKey, { ...versions, selected: path });
+}
+export function addRomTranslation(gameId: string, consoleKey: ConsoleKey, language: string, path: string) {
+    const versions = getRomVersions(gameId, consoleKey);
+    if (!language.trim() || !path.trim()) throw new Error('Choose a language and a ROM.');
+    if (path === getOriginalRomMapping(gameId, consoleKey) || versions.translations.some(v => v.path === path)) {
+        throw new Error('This ROM is already linked. Choose a different file.');
+    }
+    const filename = (value: string) => value.replace(/\\/g, '/').split('/').pop()?.replace(/\.[^.]+$/, '').toLowerCase();
+    const existing = [getOriginalRomMapping(gameId, consoleKey), ...versions.translations.map(v => v.path)];
+    if (existing.some(value => value && filename(value) === filename(path))) {
+        throw new Error('Use a distinct filename for each translation so MiSTer keeps saves separate.');
+    }
+    writeRomVersions(gameId, consoleKey, { ...versions, translations: [...versions.translations, { language: language.trim(), path }] });
+}
+export function getRomMapping(gameId: string, consoleKey: ConsoleKey): string | null {
+    return getRomVersions(gameId, consoleKey).selected ?? getOriginalRomMapping(gameId, consoleKey);
+}
+// Keep original saves intact; translated ROMs have separate slots.
+export function getGameSaveKey(gameId: string, consoleKey: ConsoleKey): string {
+    const path = getRomVersions(gameId, consoleKey).selected;
+    return path ? gameId + '_translation_' + consoleKey + '_' + encodeURIComponent(path) : gameId;
+}
+
+export function getGameArtworkLanguage(gameId: string, consoleKey: ConsoleKey): string {
+    const versions = getRomVersions(gameId, consoleKey);
+    return versions.translations.find(version => version.path === versions.selected)?.language ?? 'original';
+}
+
+export function getDisplayGameOverrides(gameId: string, consoleKey: ConsoleKey): GameOverrides {
+    const overrides = getGameOverrides(gameId, consoleKey);
+    return { ...overrides, ...resolveGameArtwork(overrides, getGameArtworkLanguage(gameId, consoleKey)) };
 }

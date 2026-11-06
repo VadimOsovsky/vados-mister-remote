@@ -22,8 +22,8 @@ export default defineConfig({
         name: 'Mister Playroom',
         short_name: 'Playroom',
         description: 'Remote control for MiSTer FPGA',
-        theme_color: '#863bff',
-        background_color: '#0a0a0f',
+        theme_color: '#e7e8e4',
+        background_color: '#e7e8e4',
         display: 'standalone',
         icons: [
           {

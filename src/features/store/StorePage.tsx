@@ -17,7 +17,7 @@ const sorts: { mode: SortMode; label: string }[] = [
 ];
 
 export function StorePage() {
-    const { activeConsole, setActiveConsole, platform, balance } = useAppContext();
+    const { activeConsole, setActiveConsole, platform, balance, economyDisabled } = useAppContext();
     const [params] = useSearchParams();
     const preview = import.meta.env.DEV && params.get('preview') === '1';
     const { loading, error, search, setSearch, sort, setSort, filteredGames } = useStore(activeConsole, preview);
@@ -43,7 +43,7 @@ export function StorePage() {
 
     return (
         <div className="page-layout store-page">
-            <PlayroomConsoleHeader alternate={<StoreWallet balance={wallet} compact />} showAlternate={showHeaderBalance} onSwitch={key => {
+            <PlayroomConsoleHeader alternate={<StoreWallet balance={wallet} compact />} showAlternate={showHeaderBalance && !economyDisabled} onSwitch={key => {
                 setActiveConsole(key);
                 setSearch('');
                 scrollRef.current?.scrollTo(0, 0);

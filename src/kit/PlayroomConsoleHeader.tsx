@@ -3,6 +3,7 @@ import { useAppContext } from '../AppContext';
 import { ConsoleBadge, ConsoleSheet } from './ConsoleCarousel/ConsoleSheet';
 import { PlayroomHeader } from './PlayroomHeader';
 import type { ConsoleKey } from '../types';
+import logoUrl from '../assets/playroom-logo.webp';
 
 export function PlayroomConsoleHeader({ onSwitch, alternate, showAlternate = false }: {
     onSwitch?: (key: ConsoleKey) => void;
@@ -15,7 +16,7 @@ export function PlayroomConsoleHeader({ onSwitch, alternate, showAlternate = fal
     const connectionLabel = connected ? 'Connected to MiSTer' : 'Disconnected from MiSTer';
     const logo = (
         <div className="playroom-brand">
-            <img className="playroom-logo" src="/playroom/logo.png" alt="Mister Playroom" />
+            <img className="playroom-logo" src={logoUrl} alt="Mister Playroom" decoding="sync" fetchPriority="high" />
             <span className="playroom-connection-light" data-connected={connected}
                 role="img" aria-label={connectionLabel} title={connectionLabel} />
         </div>

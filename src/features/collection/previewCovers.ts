@@ -1,4 +1,5 @@
 import type { ConsoleKey } from '../../types';
+import { PLATFORMS } from '../../constants';
 
 const nes: Record<string, string> = {
     '135': 'castlevania', '121': 'kirby', '361': 'megaman',
@@ -12,10 +13,10 @@ const fds: Record<string, string> = {
 };
 
 export function getPreviewCover(consoleKey: ConsoleKey, gameId: string) {
-    const name = consoleKey === 'fds' ? fds[gameId]
+    const name = PLATFORMS[consoleKey].lbPlatform === 'fds' ? fds[gameId]
         : consoleKey === 'famicom' || consoleKey === 'av_famicom' ? japan[gameId] ?? nes[gameId]
         : nes[gameId];
-    return name ? `/playroom/preview/${name}.png` : undefined;
+    return name ? `/playroom/preview/${name}.webp` : undefined;
 }
 
 export function getPreviewScreenshot(gameId: string) {

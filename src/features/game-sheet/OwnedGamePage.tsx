@@ -1,20 +1,24 @@
 import { appStorage } from '../../lib/sharedStorage';
 import { FavoriteBookmark, FavoriteStar } from '../collection/FavoriteBookmark';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
 import * as Dialog from '@radix-ui/react-dialog';
 import { GameFormDrawer } from './GameFormDrawer';
 import { PhotoViewer } from '../../kit/PhotoViewer';
+import { GameBackdrop } from '../../kit/GameBackdrop';
 
 import { useAppContext } from '../../AppContext';
 import { useRomPicker } from '../../hooks/useRomPicker';
 import { useSaveSlots } from '../../hooks/useSaveSlots';
 import type { LaunchBoxGame } from '../../types';
-import { BackArrowIcon, FileIcon, PencilIcon, PlayIcon, ResetIcon } from '../../lib/icons';
+import type { WizzoGameSearchResult } from '../../services/wizzoApi';
+import { BackArrowIcon, FlipDiskIcon, FileIcon, PencilIcon, PlayIcon, ResetIcon } from '../../lib/icons';
 import { getImageUrl, resolveImages, resolveScreenshots, resolveTitle } from '../../services/launchbox';
-import { getGameOverrides, deleteGameOverrides, removeCustomGame } from '../../lib/storage';
+import { getGameArtworkLanguage, getGameOverrides, deleteGameOverrides, removeCustomGame, setRomMapping } from '../../lib/storage';
+import { resolveGameArtwork } from '../../lib/gameArtwork';
 import { EditGameForm } from './EditGameForm';
 import { RomPicker } from './RomPicker';
+import { GameLanguages } from './GameLanguages';
 import { OwnedGameAbout, OwnedGameSaves } from './OwnedGamePanels';
 import { slotLabel } from './slotLabel';
 import { getPreviewCover, getPreviewScreenshot } from '../collection/previewCovers';
@@ -44,7 +48,14 @@ function readGameTab(): GameTab {
     return 'main';
 }
 
-export function OwnedGamePage({ selectedGame, onClose }: {
+export function OwnedGamePage(props: { selectedGame: LaunchBoxGame; onClose: () => void }) {
+    const [revision, setRevision] = useState(0);
+    const { activeConsole } = useAppContext();
+    return <OwnedGameContent key={activeConsole + props.selectedGame.id + '_' + revision} {...props}
+        onVersionChange={() => setRevision(value => value + 1)} />;
+}
+function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
+    onVersionChange: () => void;
     selectedGame: LaunchBoxGame;
     onClose: () => void;
 }) {
@@ -52,28 +63,37 @@ export function OwnedGamePage({ selectedGame, onClose }: {
     const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
     const [boxOpen, setBoxOpen] = useState(false);
     const [editMode, setEditMode] = useState(false);
+    const [flippingDisk, setFlippingDisk] = useState(false);
+    const [flipError, setFlipError] = useState<string>();
     const { activeConsole, platform, api, connected, isGamePlaying, beatenIds, favoriteIds, toggleFavorite, removeFromCollection, unmarkAsBeaten } = useAppContext();
     const playing = isGamePlaying(selectedGame.id, activeConsole);
+    const hasFlipDisk = platform.controls?.some(control => control.id === 'flip_disk');
     const romPicker = useRomPicker(api, platform, selectedGame, activeConsole);
     const saves = useSaveSlots(api, selectedGame, activeConsole);
+    const pendingLoadSlot = useRef<number | null>(null);
     const [editField, setEditField] = useState<'rom' | undefined>();
 
     const regions = platform.imageRegions;
     const images = resolveImages(selectedGame, regions);
     const overrides = getGameOverrides(selectedGame.id, activeConsole);
+    const artwork = resolveGameArtwork(overrides, getGameArtworkLanguage(selectedGame.id, activeConsole));
+    const [artworkLanguage, setArtworkLanguage] = useState(() => getGameArtworkLanguage(selectedGame.id, activeConsole));
+    const artworkLanguages = Object.entries(overrides.artworkByLanguage ?? {}).filter(([, value]) => Object.values(value).some(Boolean)).map(([language]) => language);
+    const libraryLanguage = artworkLanguages.includes(artworkLanguage) ? artworkLanguage : 'original';
+    const libraryArtwork = resolveGameArtwork(overrides, libraryLanguage);
     const favorite = favoriteIds.includes(selectedGame.id);
     const preview = import.meta.env.DEV && new URLSearchParams(window.location.search).get('preview') === '1';
-    const front = overrides.boxFrontUrl || (preview && getPreviewCover(activeConsole, selectedGame.id)) || (images.front && getImageUrl(images.front));
+    const front = artwork.boxFrontUrl || (preview && getPreviewCover(activeConsole, selectedGame.id)) || (images.front && getImageUrl(images.front));
     const boxFront = preview && activeConsole === 'nes_ntsc' && selectedGame.id === '112'
         ? getPreviewCover(activeConsole, selectedGame.id) : undefined;
     const previewScreenshot = preview && getPreviewScreenshot(selectedGame.id);
     const screenshots = previewScreenshot ? [previewScreenshot] : resolveScreenshots(selectedGame).map(path => getImageUrl(path));
     const displayTitle = overrides.title || resolveTitle(selectedGame, platform.nameRegions);
     const library = [
-        { title: 'Front cover', caption: 'The face of your collection', src: front, kind: 'front' },
-        { title: 'Back cover', caption: 'One more side to the story', src: overrides.boxBackUrl || (images.back && getImageUrl(images.back)), kind: 'back' },
-        { title: platform.mediaLabel, caption: 'The original adventure, in hand', src: overrides.cartridgeUrl, kind: 'cartridge' },
-        { title: 'Manual', caption: 'Keep every little detail', src: overrides.manualPhotoUrl, kind: 'manual' },
+        { title: 'Front cover', caption: 'The face of your collection', src: libraryArtwork.boxFrontUrl || (preview && getPreviewCover(activeConsole, selectedGame.id)) || (images.front && getImageUrl(images.front)), kind: 'front' },
+        { title: 'Back cover', caption: 'One more side to the story', src: libraryArtwork.boxBackUrl || (images.back && getImageUrl(images.back)), kind: 'back' },
+        { title: platform.mediaLabel, caption: 'The original adventure, in hand', src: libraryArtwork.cartridgeUrl, kind: 'cartridge' },
+        { title: 'Manual', caption: 'Keep every little detail', src: libraryArtwork.manualPhotoUrl, kind: 'manual' },
     ];
     const slides = library.flatMap(item => item.src ? [{ src: item.src }] : []);
     const used = saves.saveSlots.filter(Boolean).length;
@@ -111,6 +131,52 @@ export function OwnedGamePage({ selectedGame, onClose }: {
         onClose();
     }
 
+    async function flipDisk() {
+        if (!connected || !playing || flippingDisk || saves.loadingSlot) return;
+        setFlippingDisk(true);
+        setFlipError(undefined);
+        try {
+            await api.flipDisk();
+            navigator.vibrate?.(10);
+        } catch {
+            setFlipError('Could not flip the disk. Try again.');
+        } finally {
+            setFlippingDisk(false);
+        }
+    }
+
+    function closeGameRomPicker() {
+        pendingLoadSlot.current = null;
+        romPicker.closeRomPicker();
+    }
+
+    function startNewGame() {
+        pendingLoadSlot.current = null;
+        void romPicker.handleLaunchGame();
+    }
+
+    function continueGame() {
+        if (loadIndex === null) {
+            startNewGame();
+        } else if (saves.hasRomMapping) {
+            void saves.loadSlot(loadIndex);
+        } else {
+            pendingLoadSlot.current = loadIndex;
+            romPicker.openRomPicker(displayTitle);
+        }
+    }
+
+    async function selectGameRom(result: WizzoGameSearchResult) {
+        const slot = pendingLoadSlot.current;
+        if (slot === null) {
+            await romPicker.selectRom(result);
+            return;
+        }
+        setRomMapping(selectedGame.id, activeConsole, result.path);
+        closeGameRomPicker();
+        await saves.loadSlot(slot);
+    }
+
     return (
         <>
             <PlayroomHeader>
@@ -120,24 +186,29 @@ export function OwnedGamePage({ selectedGame, onClose }: {
             </PlayroomHeader>
             <main className="owned-game-page page-scroll">
                 <section className="playroom-stage owned-game-hero">
+                    <GameBackdrop src={screenshots[0]} />
                     <div className="owned-hero-inner">
-                        <div className="owned-cover">
+                        <button type="button" className="owned-cover" aria-label="View front cover" disabled={!front} onClick={() => setGalleryIndex(-1)}>
                             <LazyImage src={front || undefined} alt="" />
                             {favorite && <FavoriteBookmark />}
                             {completed && <span className="owned-medal" aria-label="Completed" role="img">✓</span>}
-                        </div>
-                        <div>
-                            <p className="owned-hero-meta">{[selectedGame.publisher, selectedGame.year].filter(Boolean).join(' · ')}</p>
+                        </button>
+                        <div className="owned-hero-copy">
+                            <p className="owned-hero-status owned-hero-extra" data-playing={playing || undefined}>{playing ? 'Now playing' : 'In your collection'}</p>
                             <h1>{displayTitle}</h1>
-                            <div className="owned-tags">
-                                {!!selectedGame.maxPlayers && <span className="player-badge">{selectedGame.maxPlayers}P</span>}
-                                {selectedGame.genre && <span className="owned-genre">{selectedGame.genre}</span>}
+                            {[selectedGame.publisher, selectedGame.year].some(Boolean) && <p className="owned-hero-meta">{[selectedGame.publisher, selectedGame.year].filter(Boolean).join(' · ')}</p>}
+                            <div className="owned-hero-facts owned-hero-extra">
+                                {!!selectedGame.maxPlayers && <span>{selectedGame.maxPlayers} {selectedGame.maxPlayers === '1' ? 'player' : 'players'}</span>}
+                                {selectedGame.genre && <span>{selectedGame.genre}</span>}
+                                {completed && <span className="owned-hero-completed">✓ Completed{completedIndex >= 0 && ' · Slot ' + (completedIndex + 1)}</span>}
                             </div>
+                            <div className="owned-hero-actions">
+                                <GameLanguages game={selectedGame} disabled={saves.savingSlot || saves.loadingSlot || flippingDisk} onChange={onVersionChange} />
                             <button type="button" className="playroom-button playroom-press owned-favorite"
-                                aria-label="Favorite" aria-pressed={favorite} onClick={() => toggleFavorite(selectedGame.id)}>
-                                <FavoriteStar filled={favorite} />
+                                title={favorite ? 'Remove from favorites' : 'Add to favorites'} aria-label={favorite ? 'Remove from favorites' : 'Add to favorites'} aria-pressed={favorite} onClick={() => toggleFavorite(selectedGame.id)}>
+                                <FavoriteStar filled={favorite} /><span>{favorite ? 'Favorited' : 'Favorite'}</span>
                             </button>
-                            {completed && <p className="owned-completed">✓ Completed{completedIndex >= 0 && ` · saved in Slot ${completedIndex + 1}`}</p>}
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -156,7 +227,14 @@ export function OwnedGamePage({ selectedGame, onClose }: {
                     </Tabs.Content>
                     <Tabs.Content value="library" className="owned-panel">
                         <p className="owned-eyebrow">The little details</p>
-                        <h2>In your collection</h2>
+                        <div className="artwork-library-heading"><h2>In your collection</h2>
+                            {artworkLanguages.length > 0 && <label className="artwork-library-language">Materials
+                                <select value={libraryLanguage} onChange={event => { setArtworkLanguage(event.target.value); setGalleryIndex(null); }}>
+                                    <option value="original">Original</option>
+                                    {artworkLanguages.map(language => <option key={language} value={language}>{language}</option>)}
+                                </select>
+                            </label>}
+                        </div>
                         <div className="owned-library">
                             {library.map(({ title, caption, src, kind }, index) => {
                                 const content = <>
@@ -168,8 +246,8 @@ export function OwnedGamePage({ selectedGame, onClose }: {
                                     <small>{caption}</small>
                                 </>;
                                 const className = 'owned-library-card owned-button playroom-press';
-                                if (kind === 'manual' && overrides.manualUrl) {
-                                    return <a key={kind} className={className} href={overrides.manualUrl} target="_blank" rel="noreferrer">{content}</a>;
+                                if (kind === 'manual' && libraryArtwork.manualUrl) {
+                                    return <a key={kind} className={className} href={libraryArtwork.manualUrl} target="_blank" rel="noreferrer">{content}</a>;
                                 }
                                 return <button key={kind} className={className}
                                     onClick={() => {
@@ -179,6 +257,7 @@ export function OwnedGamePage({ selectedGame, onClose }: {
                             })}
                         </div>
                         <div className="owned-library-tools">
+                            {overrides.webManualUrl && <a className="owned-button playroom-press" href={overrides.webManualUrl} target="_blank" rel="noopener noreferrer">{FileIcon}<span><strong>Web manual</strong><small>Read in your browser</small></span><span aria-hidden="true">↗</span></a>}
                             {/*{boxFront && <button type="button" className="owned-button playroom-press" onClick={() => setBoxOpen(true)}>*/}
                             {/*    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" aria-hidden="true">*/}
                             {/*        <path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Zm0 9 8-4.5M12 12 4 7.5M12 12v9" />*/}
@@ -193,17 +272,24 @@ export function OwnedGamePage({ selectedGame, onClose }: {
                     </Tabs.Content>
                 </Tabs.Root>
             </main>
-            <aside className="owned-dock" aria-label="Play game">
-                {loadIndex !== null && <button className="owned-button owned-new-game playroom-press" disabled={!connected || saves.loadingSlot} onClick={romPicker.handleLaunchGame}>{ResetIcon} Start new game</button>}
+            <aside className="owned-dock" aria-label="Game actions" data-has-flip={hasFlipDisk || undefined}>
+                {!romPicker.romPickerOpen && romPicker.romSearchError && <p className="owned-flip-error" role="alert">{romPicker.romSearchError}</p>}
+                {flipError && <p className="owned-flip-error" role="alert">{flipError}</p>}
+                {loadIndex !== null && <button className="owned-button owned-new-game playroom-press" aria-label="Start new game" title="Start new game" disabled={!connected || saves.savingSlot || saves.loadingSlot || flippingDisk} onClick={startNewGame}>{ResetIcon}<span>Start new game</span></button>}
                 <button className="owned-button owned-gold owned-primary playroom-press"
-                    disabled={!connected || saves.loadingSlot || (playing && selectedIndex === null) || (loadIndex !== null && !saves.hasRomMapping)}
-                    onClick={() => loadIndex === null ? romPicker.handleLaunchGame() : saves.loadSlot(loadIndex)}>
+                    disabled={!connected || saves.savingSlot || saves.loadingSlot || flippingDisk || (playing && selectedIndex === null)}
+                    onClick={continueGame}>
                     {PlayIcon}
                     <span>
                         {saves.loadingSlot ? 'Loading…' : selectedIndex !== null ? `Load · ${slotLabel(selectedIndex)}` : playing ? 'Now playing' : loadIndex !== null ? 'Continue' : 'Play'}
-                        {!playing && activeTab === 'controls' && selectedIndex === null && loadIndex !== null && <small>Latest save · {slotLabel(loadIndex)}</small>}
                     </span>
                 </button>
+                {hasFlipDisk && <button className="owned-button owned-flip-disk playroom-press"
+                    disabled={!connected || !playing || saves.loadingSlot || flippingDisk}
+                    aria-label="Flip Disk" aria-busy={flippingDisk}
+                    title={playing ? 'Flip Disk' : 'Launch this game to flip the disk'} onClick={flipDisk}>
+                    {FlipDiskIcon}
+                </button>}
             </aside>
             <GameFormDrawer open={editMode} onOpenChange={setEditMode} title="Edit game"
                 showClose autoFocus={editField !== 'rom'}>
@@ -211,20 +297,20 @@ export function OwnedGamePage({ selectedGame, onClose }: {
                     onSave={closeEdit} onCancel={closeEdit} onDelete={deleteGame} />
             </GameFormDrawer>
             <Dialog.Root open={romPicker.romPickerOpen && !editMode} onOpenChange={open => {
-                if (!open) romPicker.closeRomPicker();
+                if (!open) closeGameRomPicker();
             }}>
                 <Dialog.Portal>
                     <Dialog.Overlay className="owned-dialog-overlay" />
                     <Dialog.Content className="owned-dialog" aria-describedby={undefined}>
                         <Dialog.Title>Choose a game file</Dialog.Title>
                         <Dialog.Close className="owned-button owned-icon playroom-press" aria-label="Close">×</Dialog.Close>
-                        <RomPicker {...romPicker} />
+                        <RomPicker {...romPicker} selectRom={selectGameRom} closeRomPicker={closeGameRomPicker} />
                     </Dialog.Content>
                 </Dialog.Portal>
             </Dialog.Root>
             {boxOpen && boxFront && <PreviewBox front={boxFront} back="/playroom/preview/mario3-back.jpg"
                 title={displayTitle} onClose={() => setBoxOpen(false)} />}
-            <PhotoViewer index={galleryIndex} onClose={() => setGalleryIndex(null)} slides={slides} />
+            <PhotoViewer index={galleryIndex === -1 ? 0 : galleryIndex} onClose={() => setGalleryIndex(null)} slides={galleryIndex === -1 ? [{ src: front || '' }] : slides} />
         </>
     );
 }

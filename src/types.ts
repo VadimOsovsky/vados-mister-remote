@@ -19,7 +19,7 @@ export interface GameWithConsole extends Game {
   _console: string;
 }
 
-export type ConsoleKey = 'nes_ntsc' | 'nes_pal' | 'famicom' | 'av_famicom' | 'dendy' | 'fds';
+export type ConsoleKey = 'nes_ntsc' | 'nes_pal' | 'famicom' | 'av_famicom' | 'av_famicom_fds' | 'dendy' | 'fds';
 export type SortMode = 'az' | 'za' | 'recent' | 'most' | 'popular' | 'year' | 'title';
 export type TabKey = 'games' | 'favorites' | 'recents' | 'settings';
 export type SheetTab = 'info' | 'library' | 'controls';
@@ -86,12 +86,17 @@ export interface LaunchBoxGame {
 }
 
 // ── GAME OVERRIDES (user customizations) ──
-export interface GameOverrides {
-  title?: string;
+export interface GameArtwork {
   boxFrontUrl?: string;
   boxBackUrl?: string;
   cartridgeUrl?: string;
   manualUrl?: string;
   manualPhotoUrl?: string;
+}
+
+export interface GameOverrides extends GameArtwork {
+  title?: string;
   romName?: string;
+  webManualUrl?: string;
+  artworkByLanguage?: Record<string, GameArtwork>;
 }

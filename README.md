@@ -1,4 +1,10 @@
-# React + TypeScript + Vite
+# MiSTer Remote monorepo
+
+The application lives in `src/` and `public/` with its existing root build commands. Standalone HTML game manuals live in [`manuals/`](manuals/README.md) and have an independent GitHub Pages workflow. Manuals are excluded from the Vite output and MiSTer deployment.
+
+Build manuals with `npm run build:manuals`; verify publishing with `npm run test:manuals`. See the [manual authoring and deployment guide](manuals/README.md) for stable URLs and cache behavior.
+
+## React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 

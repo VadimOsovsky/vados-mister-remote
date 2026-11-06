@@ -239,16 +239,16 @@
   gap: 3px;
 }
 
-.now-playing-badge {
+.card-player-status {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font: var(--font-caption);
-  color: var(--ink);
-  white-space: nowrap;
 }
-.now-playing-badge::before {
-  content: '';
+
+.now-playing-dot {
+  position: absolute;
+  right: calc(100% + 4px);
+  color: var(--ink);
   width: 6px;
   height: 6px;
   border: 1px solid currentColor;

@@ -3,8 +3,9 @@ import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router'
 
 import { PLATFORMS } from './constants';
 import type { ConsoleKey, LaunchBoxGame } from './types';
-import { readHost, getCollectionIds, addCollectionId, removeCollectionId, getBeatenIds, addBeatenId, removeBeatenId, readActiveConsole, writeActiveConsole, getWalletBalance, setWalletBalance, setRomMapping, getBeatenRewardedMap, addBeatenRewardedId, readFreeGames, writeFreeGames, getFavoriteIds, setFavorite } from './lib/storage';
-import { initWallet, BEATEN_REWARD } from './lib/wallet';
+import { readHost, getCollectionIds, addCollectionId, removeCollectionId, getBeatenIds, addBeatenId, removeBeatenId, readActiveConsole, writeActiveConsole, getWalletBalance, setRomMapping, readEconomyDisabled, writeEconomyDisabled, getFavoriteIds, setFavorite } from './lib/storage';
+import { visitWallet, rewardBeatenGame, spendWallet } from './lib/wallet';
+import { WalletFeedback } from './features/store/WalletFeedback';
 import { GridIcon, StoreIcon, RemoteIcon, SettingsIcon } from './lib/icons';
 import { useConnection } from './hooks/useConnection';
 import { useNowPlaying } from './hooks/useNowPlaying';
@@ -88,13 +89,35 @@ export default function MisterRemote() {
     const [collectionIds, setCollectionIds] = useState<string[]>(() => getCollectionIds(activeConsole));
     const [favoriteIds, setFavoriteIds] = useState(() => getFavoriteIds(activeConsole));
     const [beatenIds, setBeatenIds] = useState<string[]>(() => getBeatenIds(activeConsole));
-    const [freeGames, updateFreeGames] = useState(readFreeGames);
-    function setFreeGames(enabled: boolean) {
-        writeFreeGames(enabled);
-        updateFreeGames(enabled);
+    const [economyDisabled, updateEconomyDisabled] = useState(readEconomyDisabled);
+    const [balance, setBalance] = useState(getWalletBalance);
+    const [walletNotice, setWalletNotice] = useState<{ amount: number; id: number } | null>(null);
+    const [completion, setCompletion] = useState<{ title: string; balance: number } | null>(null);
+
+    function setEconomyDisabled(enabled: boolean) {
+        writeEconomyDisabled(enabled);
+        setWalletNotice(null);
+        setCompletion(null);
+        updateEconomyDisabled(enabled);
     }
 
-    const [balance, setBalance] = useState(() => initWallet());
+    useEffect(() => {
+        const check = () => {
+            if (document.visibilityState === 'hidden') return;
+            const visit = visitWallet();
+            setBalance(visit.balance);
+            if (visit.reward) setWalletNotice({ amount: visit.reward, id: Date.now() });
+        };
+        check();
+        const timer = window.setInterval(check, 30_000);
+        window.addEventListener('focus', check);
+        document.addEventListener('visibilitychange', check);
+        return () => {
+            window.clearInterval(timer);
+            window.removeEventListener('focus', check);
+            document.removeEventListener('visibilitychange', check);
+        };
+    }, [economyDisabled]);
 
     const addToCollection = useCallback((gameId: string) => {
         setCollectionIds(addCollectionId(activeConsole, gameId));
@@ -113,30 +136,26 @@ export default function MisterRemote() {
     const purchaseGame = useCallback((gameId: string, price: number, romPath: string) => {
         const currentBalance = getWalletBalance();
         const owned = getCollectionIds(activeConsole);
-        if (currentBalance < price || owned.includes(gameId)) {
+        if ((!economyDisabled && currentBalance < price) || owned.includes(gameId)) {
             setBalance(currentBalance);
             setCollectionIds(owned);
             return false;
         }
-        const newBalance = currentBalance - price;
+        const newBalance = economyDisabled ? currentBalance : spendWallet(price);
+        if (newBalance === null) return false;
         setRomMapping(gameId, activeConsole, romPath);
-        setWalletBalance(newBalance);
         setBalance(newBalance);
         setCollectionIds(addCollectionId(activeConsole, gameId));
+        if (!economyDisabled && price > 0) setWalletNotice({ amount: -price, id: Date.now() });
         return true;
-    }, [activeConsole]);
+    }, [activeConsole, economyDisabled]);
 
     const markAsBeaten = useCallback((gameId: string) => {
         setBeatenIds(addBeatenId(activeConsole, gameId));
-        // Award beaten reward (once per game, globally)
-        const rewarded = getBeatenRewardedMap();
-        if (!rewarded[gameId]) {
-            addBeatenRewardedId(gameId);
-            const newBalance = getWalletBalance() + BEATEN_REWARD;
-            setWalletBalance(newBalance);
-            setBalance(newBalance);
-        }
-    }, [activeConsole]);
+        const result = rewardBeatenGame(gameId);
+        setBalance(result.balance);
+        if (result.reward) setCompletion({ title: routeGame?.title ?? 'Your game', balance: result.balance });
+    }, [activeConsole, routeGame]);
 
     const unmarkAsBeaten = useCallback((gameId: string) => {
         setBeatenIds(removeBeatenId(activeConsole, gameId));
@@ -164,8 +183,9 @@ export default function MisterRemote() {
             collectionIds, addToCollection, removeFromCollection,
             favoriteIds, toggleFavorite,
             beatenIds, markAsBeaten, unmarkAsBeaten,
-            balance, purchaseGame, freeGames, setFreeGames,
+            balance, purchaseGame, economyDisabled, setEconomyDisabled,
         }}>
+            {!economyDisabled && <WalletFeedback notice={walletNotice} completion={completion} onDismiss={() => setCompletion(null)} />}
             <div className={`app ${platform.theme}`}>
                 <div className={isGamePage ? "app-content owned-game-layout" : "app-content"}>
                     <Routes>

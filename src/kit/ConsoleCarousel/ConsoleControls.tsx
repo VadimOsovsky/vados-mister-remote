@@ -1,14 +1,14 @@
 import type { ReactNode } from 'react';
 import { PLATFORMS } from '../../constants';
 import { useAppContext } from '../../AppContext';
-import { ResetIcon, DiskIcon, PowerIcon } from '../../lib/icons';
+import { ResetIcon, FlipDiskIcon, PowerIcon } from '../../lib/icons';
 import type { ConsoleKey, ConsoleControl } from '../../types';
 import './ConsoleControls.css';
 
 const CONTROL_ICONS: Record<string, ReactNode> = {
     launch_core: PowerIcon,
     reset: ResetIcon,
-    flip_disk: DiskIcon,
+    flip_disk: FlipDiskIcon,
 };
 
 export function ConsoleControls({ activeConsole }: { activeConsole: ConsoleKey }) {

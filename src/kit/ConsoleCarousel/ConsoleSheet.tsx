@@ -13,8 +13,9 @@ const consolePhotos: Partial<Record<ConsoleKey, string>> = {
     nes_pal: '/playroom/nes.webp',
     famicom: '/playroom/famicom.webp',
     fds: '/playroom/fds.webp',
-    dendy: '/playroom/dendy.png',
-    av_famicom: '/playroom/av-famicom.png',
+    dendy: '/playroom/dendy.webp',
+    av_famicom: '/playroom/av-famicom.webp',
+    av_famicom_fds: '/playroom/av-famicom-fds.webp',
 };
 
 export function ConsoleBadge({ onClick, expanded }: { onClick: () => void; expanded: boolean }) {
@@ -22,9 +23,9 @@ export function ConsoleBadge({ onClick, expanded }: { onClick: () => void; expan
     const photo = consolePhotos[activeConsole];
 
     return (
-        <button className="console-badge playroom-press" onClick={onClick} aria-haspopup="dialog" aria-expanded={expanded}>
+        <button className="console-badge playroom-press" onClick={onClick} aria-haspopup="dialog" aria-expanded={expanded} aria-label={platform.name} title={platform.name}>
             {photo && <img className="console-badge-photo" src={photo} alt="" />}
-            <span>{platform.name}</span>
+            <span className="console-badge-name">{activeConsole === 'av_famicom_fds' ? 'AV FC FDS' : platform.name}</span>
             <span className="console-badge-chevron" aria-hidden="true">{ChevronDownIcon}</span>
         </button>
     );

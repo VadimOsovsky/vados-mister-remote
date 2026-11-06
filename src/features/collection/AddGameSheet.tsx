@@ -43,7 +43,7 @@ export function AddGameSheet({ open, onOpenChange }: {
 
     return (
         <GameFormDrawer open={open} onOpenChange={onOpenChange} title="Add game">
-            <EditGameForm
+            <EditGameForm key={stub.id}
                 game={stub}
                 regions={platform.imageRegions}
                 activeConsole={activeConsole}

@@ -21,8 +21,8 @@ export interface AppContextValue {
     markAsBeaten: (gameId: string) => void;
     unmarkAsBeaten: (gameId: string) => void;
     balance: number;
-    freeGames: boolean;
-    setFreeGames: (enabled: boolean) => void;
+    economyDisabled: boolean;
+    setEconomyDisabled: (enabled: boolean) => void;
     purchaseGame: (gameId: string, price: number, romPath: string) => boolean;
 }
 

@@ -1,9 +1,6 @@
-.app-content.owned-game-layout { padding-bottom: 0; }
-
 .owned-game-page {
   width: 100%;
   color: var(--ink);
-  padding-bottom: calc(112px + env(safe-area-inset-bottom));
 }
 
 .owned-back {
@@ -64,73 +61,72 @@
 
 
 .owned-hero-inner {
-  display: grid;
-  grid-template-columns: minmax(0, 34%) minmax(0, 1fr);
-  align-items: center;
-  gap: 20px;
-  max-width: 860px;
-  margin-inline: auto;
-  padding: 32px 20px;
-}
-
-.owned-cover {
   position: relative;
   display: grid;
-  place-items: center;
-  aspect-ratio: 1;
-  padding: 8px;
-  border: 2px solid var(--ink);
-  border-radius: 16px;
-  background: var(--card);
-  color: var(--ink);
-  box-shadow: 0 0 0 2px var(--card), 0 0 0 5px var(--focus);
+  grid-template-columns: 300px minmax(0, 1fr);
+  align-items: center;
+  gap: 36px;
+  max-width: 860px;
+  margin-inline: auto;
+  padding: 40px 20px;
 }
-
-.owned-cover img, .owned-library-art img {
+.owned-cover {
+  position: relative;
+  display: block;
+  justify-self: start;
+  width: fit-content;
   max-width: 100%;
-  max-height: 100%;
-  min-height: 0;
-  object-fit: contain;
-  border-radius: 3px;
-  box-shadow: 0 2px 4px #0003;
-}
-
-.owned-cover img { width: auto; height: auto; position: absolute; max-width: calc(100% - 16px); max-height: calc(100% - 16px); }
-.owned-cover .favorite-bookmark { left: 12px; }
-.owned-game-hero .owned-favorite {
-  display: grid;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  min-height: 0;
   padding: 0;
-  margin: 12px 0 0 auto;
-  border-color: color-mix(in srgb, var(--card) 55%, transparent);
+  border: 0;
+  border-radius: 3px;
   background: transparent;
   color: var(--card);
 }
-.owned-game-hero .owned-favorite[aria-pressed='true'] {
-  background: var(--card);
-  color: var(--ink);
+.owned-cover:disabled { opacity: 1; }
+.owned-library-art img { max-width: 100%; max-height: 100%; min-height: 0; object-fit: contain; border-radius: 3px; box-shadow: 0 2px 4px #0003; }
+.owned-cover img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 340px;
+  object-fit: contain;
+  border-radius: 3px;
+  box-shadow: 0 10px 24px #0005, 0 2px 5px #0004;
 }
-.owned-hero-meta { margin: 0; font: var(--font-caption); opacity: .8; }
-.owned-game-hero h1 { font: var(--font-heading-dialog); margin: 8px 0 16px; overflow-wrap: anywhere; }
-.owned-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.owned-tags .player-badge,
-.owned-genre {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  height: 20px;
-  padding: 0 8px;
-  border-radius: 5px;
+.owned-cover:has(.card-art-placeholder) { width: 180px; height: 220px; display: grid; place-items: center; background: #ffffff0a; }
+.owned-cover .card-art-placeholder { font-size: 40px; }
+.owned-cover .favorite-bookmark { left: 12px; }
+.owned-hero-copy { min-width: 0; padding-top: 44px; }
+.owned-hero-status { display: flex; align-items: center; gap: 7px; margin: 0 0 12px; font: var(--font-label-nav); text-transform: uppercase; letter-spacing: .12em; opacity: .8; }
+.owned-hero-status[data-playing] { opacity: 1; }
+.owned-hero-status[data-playing]::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #64de98; }
+.owned-hero-facts { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 20px; font: var(--font-filter); line-height: 1.5; }
+.owned-hero-facts > span + span { border-left: 1px solid #ffffff50; padding-left: 16px; }
+.owned-hero-completed { color: var(--gold); }
+.owned-hero-meta { margin: 10px 0 0; font: var(--font-filter); line-height: 1.5; opacity: .8; overflow-wrap: anywhere; }
+.owned-game-hero h1 { margin: 0; font: 700 clamp(26px, 3vw, 36px)/1.12 var(--font-family-ui); letter-spacing: -.025em; text-wrap: balance; overflow-wrap: anywhere; }
+.owned-hero-actions { position: absolute; top: 24px; right: 20px; display: flex; gap: 8px; margin: 0; }
+.owned-game-hero .owned-hero-actions .owned-favorite {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  flex: none; min-height: 44px; width: 44px; height: 44px; padding: 0; margin: 0;
+  border: 1px solid color-mix(in srgb, var(--card) 55%, transparent);
+  border-radius: 10px; background: transparent; color: var(--card); font: var(--font-label-section);
 }
-.owned-tags .player-badge { background: var(--card); color: var(--ink); }
-.owned-genre { border: 1px solid #fff5; font: var(--font-caption); }
-.owned-tags .player-badge,
-.owned-tags .owned-genre { line-height: 1; }
-.owned-completed { font: var(--font-label-small); color: var(--gold); margin: 12px 0 0; }
+.owned-hero-actions > .game-language-trigger { width: 44px; height: 44px; padding: 0; justify-content: center; flex: none; }
+.owned-hero-actions .game-language-trigger > span, .owned-hero-actions .game-language-chevron, .owned-hero-actions .owned-favorite > span { display: none; }
+.owned-favorite svg { width: 20px; height: 20px; }
+.owned-game-hero .owned-favorite[aria-pressed='true'] { background: var(--card); color: var(--ink); }
+@media (max-width: 600px) {
+  .owned-hero-extra { display: none; }
+  .owned-hero-inner { grid-template-columns: minmax(0, 1fr) 44px; gap: 16px; padding-block: 28px; }
+  .owned-hero-copy { display: contents; }
+  .owned-hero-inner > .owned-cover { grid-column: 1; grid-row: 1; width: fit-content; max-width: min(100%, 280px); justify-self: start; }
+  .owned-game-hero h1 { grid-column: 1 / -1; margin: 0; font-size: 30px; text-wrap: pretty; }
+  .owned-hero-meta { grid-column: 1 / -1; margin: -8px 0 0; }
+  .owned-hero-actions { top: 28px; flex-direction: column; gap: 10px; }
+  .owned-cover img { max-height: 320px; }
+}
 
 .owned-tabs-bar { border-bottom: 1px solid var(--line); }
 .owned-tabs {
@@ -323,16 +319,17 @@
 .owned-save-tools { flex-wrap: wrap; margin-top: 16px; }
 
 .owned-dock {
+  height: var(--footer-height);
   position: fixed;
   z-index: 5;
-  bottom: calc(var(--app-viewport-bottom, 0px) + max(8px, var(--app-safe-area-bottom, env(safe-area-inset-bottom))));
+  bottom: calc(var(--app-viewport-bottom, 0px) + var(--game-footer-bottom));
   left: 50%;
   translate: -50% 0;
   width: min(calc(100% - 24px), 560px);
   display: flex;
   gap: 12px;
   align-items: stretch;
-  padding: 12px;
+  padding: 8px;
   border: 2px solid var(--card);
   border-radius: 20px;
   background: var(--ink);
@@ -340,12 +337,30 @@
 }
 .owned-dock .owned-button {
   box-sizing: border-box;
-  height: 56px;
-  min-height: 56px;
+  height: 44px;
+  min-height: 44px;
+  white-space: nowrap;
 }
 .owned-dock .owned-primary { flex: 1; outline: 2px solid var(--card); --press-shadow-color: #0005; }
-.owned-primary small { display: block; font: var(--font-caption); }
 .owned-dock .owned-new-game { color: var(--card); border-color: #ffffff80; background: transparent; --press-shadow-color: #0005; }
+.owned-dock[data-has-flip] .owned-new-game { flex: none; width: 48px; padding-inline: 0; }
+.owned-dock[data-has-flip] .owned-new-game span { display: none; }
+.owned-dock .owned-flip-disk { flex: none; width: 44px; padding: 4px; }
+.owned-flip-disk svg { width: 28px; height: 28px; }
+.owned-dock[data-has-flip] .owned-primary { min-width: 0; }
+.owned-flip-error {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 10px 12px;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  background: var(--card);
+  color: var(--ink);
+  font: var(--font-caption);
+}
 
 .owned-dialog-overlay { position: fixed; inset: 0; background: #0b1329a8; backdrop-filter: blur(6px); z-index: 100; }
 .owned-dialog {

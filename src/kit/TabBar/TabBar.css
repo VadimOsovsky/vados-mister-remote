@@ -6,17 +6,26 @@
   background: var(--bg-tab-bar);
   left: 12px;
   right: 12px;
-  bottom: max(10px, var(--app-safe-area-bottom, env(safe-area-inset-bottom)));
+  bottom: var(--navigation-footer-bottom);
   margin: auto;
   max-width: 800px;
   border: 2px solid var(--card);
   outline: 2px solid var(--ink);
   border-radius: 22px;
   padding: 5px;
-  min-height: 60px;
+  height: var(--footer-height);
+  min-height: var(--footer-height);
   align-items: stretch;
   box-shadow: 0 6px 0 #18294740;
   gap: 4px;
+}
+
+/* Installed WebKit apps can place absolute children above the physical bottom. */
+@media (display-mode: standalone) {
+  .tab-bar {
+    position: fixed;
+    bottom: calc(var(--app-viewport-bottom, 0px) + var(--navigation-footer-bottom));
+  }
 }
 
 .tab-item {

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAppContext } from '../../AppContext';
 import { useSettings } from '../../hooks/useSettings';
+import { isHostedOnMister } from '../../lib/storage';
 import { PlayroomConsoleHeader } from '../../kit/PlayroomConsoleHeader';
 import { OsdIcon, ResetIcon, SearchIcon, StoreIcon } from '../../lib/icons';
 import './SettingsPage.css';
@@ -8,7 +9,8 @@ import './SettingsPage.css';
 type IndexStatus = { label: string; percent?: number; busy: boolean };
 
 export function SettingsPage() {
-    const { api, misterHost, setMisterHost, freeGames, setFreeGames } = useAppContext();
+    const { api, connected, misterHost, setMisterHost, economyDisabled, setEconomyDisabled } = useAppContext();
+    const hostedOnMister = isHostedOnMister();
     const { settingsHost, setSettingsHost, settingsSaved, saveSettings } = useSettings(misterHost, setMisterHost);
     const [indexStatus, setIndexStatus] = useState<IndexStatus>();
     const wsRef = useRef<WebSocket | null>(null);
@@ -60,6 +62,10 @@ export function SettingsPage() {
                             <span className="settings-symbol">{OsdIcon}</span>
                             <div><p className="playroom-kicker">01 · Your device</p><h2 id="connection-title">Connection</h2></div>
                         </div>
+                        {hostedOnMister ? <>
+                            <p>Using the MiSTer address this app was opened from.</p>
+                            <p role="status">{misterHost} · {connected ? 'Connected' : 'MiSTer API unavailable'}</p>
+                        </> : <>
                         <p>Connect to your MiSTer on the same network.</p>
                         <form onSubmit={event => { event.preventDefault(); saveSettings(); }}>
                             <label htmlFor="mister-host">MiSTer IP address</label>
@@ -70,6 +76,7 @@ export function SettingsPage() {
                                 {settingsSaved ? 'Saved!' : 'Save connection'}
                             </button>
                         </form>
+                        </>}
                     </section>
                     <section className="settings-card" aria-labelledby="index-title">
                         <div className="settings-card-heading">
@@ -91,10 +98,10 @@ export function SettingsPage() {
                             <span className="settings-symbol">{StoreIcon}</span>
                             <div><p className="playroom-kicker">03 · Your collection</p><h2 id="store-title">Game store</h2></div>
                         </div>
-                        <p id="free-games-description">Add games from the store without spending your balance.</p>
-                        <button type="button" role="switch" aria-checked={freeGames} aria-describedby="free-games-description"
-                            className="playroom-button playroom-press settings-switch" onClick={() => setFreeGames(!freeGames)}>
-                            Free games <span className="settings-switch-track" aria-hidden="true" />
+                        <p id="economy-description">Pause money and rewards, and add any game from the store. Your balance and past rewards are kept for when you turn the economy back on.</p>
+                        <button type="button" role="switch" aria-checked={economyDisabled} aria-describedby="economy-description"
+                            className="playroom-button playroom-press settings-switch" onClick={() => setEconomyDisabled(!economyDisabled)}>
+                            Disable economy <span className="settings-switch-track" aria-hidden="true" />
                         </button>
                     </section>
                     <p className="settings-local">

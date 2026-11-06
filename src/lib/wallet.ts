@@ -1,35 +1,43 @@
-import { getWalletBalance, setWalletBalance, getLastTopupDate, setLastTopupDate } from './storage';
+import { getWalletBalance, setWalletBalance, getLastTopupDate, setLastTopupDate, getBeatenRewardedMap, addBeatenRewardedId, readEconomyDisabled } from './storage';
 
-const MONTHLY_ALLOWANCE = 100;
-const BEATEN_REWARD = 60;
+export const STARTING_BALANCE = 85;
+export const DAILY_ALLOWANCE = 3;
+export const BEATEN_REWARD = 60;
 
-export { BEATEN_REWARD };
+function dayKey(date: Date): string {
+    return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
+}
 
-export function initWallet(): number {
+export function visitWallet(now = new Date()): { balance: number; reward: number } {
+    if (readEconomyDisabled()) return { balance: getWalletBalance(), reward: 0 };
     const lastTopup = getLastTopupDate();
-
+    const today = dayKey(now);
     if (!lastTopup) {
-        // First launch — grant starting balance
-        setWalletBalance(MONTHLY_ALLOWANCE);
-        setLastTopupDate(new Date().toISOString());
-        return MONTHLY_ALLOWANCE;
+        setWalletBalance(STARTING_BALANCE);
+        setLastTopupDate(today);
+        return { balance: STARTING_BALANCE, reward: 0 };
     }
+    // Migrate monthly timestamps without paying for missed days.
+    const lastDay = /^\d{4}-\d{2}-\d{2}$/.test(lastTopup) ? lastTopup : dayKey(new Date(lastTopup));
+    const balance = getWalletBalance();
+    if (today <= lastDay) return { balance, reward: 0 };
+    setWalletBalance(balance + DAILY_ALLOWANCE);
+    setLastTopupDate(today);
+    return { balance: balance + DAILY_ALLOWANCE, reward: DAILY_ALLOWANCE };
+}
 
-    const last = new Date(lastTopup);
-    const now = new Date();
+export function rewardBeatenGame(gameId: string): { balance: number; reward: number } {
+    const balance = getWalletBalance();
+    if (readEconomyDisabled() || getBeatenRewardedMap()[gameId]) return { balance, reward: 0 };
+    addBeatenRewardedId(gameId);
+    setWalletBalance(balance + BEATEN_REWARD);
+    return { balance: balance + BEATEN_REWARD, reward: BEATEN_REWARD };
+}
 
-    // Check if at least one calendar month has passed
-    const monthsPassed =
-        (now.getFullYear() - last.getFullYear()) * 12 +
-        (now.getMonth() - last.getMonth());
-
-    if (monthsPassed >= 1) {
-        const current = getWalletBalance();
-        const updated = current + MONTHLY_ALLOWANCE;
-        setWalletBalance(updated);
-        setLastTopupDate(now.toISOString());
-        return updated;
-    }
-
-    return getWalletBalance();
+export function spendWallet(price: number): number | null {
+    const balance = getWalletBalance();
+    if (readEconomyDisabled()) return balance;
+    if (!Number.isFinite(price) || price < 0 || balance < price) return null;
+    setWalletBalance(balance - price);
+    return balance - price;
 }

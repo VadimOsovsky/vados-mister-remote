@@ -1,21 +1,16 @@
-import { useRef, useState } from 'react';
-import type { Swiper as SwiperInstance } from 'swiper';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import 'swiper/css';
+import { useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { useAppContext } from '../../AppContext';
 import type { LaunchBoxGame } from '../../types';
 import type { useSaveSlots } from '../../hooks/useSaveSlots';
 import { LockIcon, UnlockIcon, SaveIcon, TrashIcon } from '../../lib/icons';
+import { GameScreenshots } from '../../kit/GameScreenshots';
 import { ExpandableDescription } from '../../kit/ExpandableDescription';
 import { LazyImage } from '../../kit/LazyImage';
 
 import { slotLabel } from './slotLabel';
 
 export function OwnedGameAbout({ game, screenshots }: { game: LaunchBoxGame; screenshots: string[] }) {
-    const [scene, setScene] = useState(0);
-    const swiperRef = useRef<SwiperInstance | null>(null);
-    const count = screenshots.length;
     const facts = [
         ['Released', game.year],
         ['Developer', game.developer],
@@ -27,24 +22,7 @@ export function OwnedGameAbout({ game, screenshots }: { game: LaunchBoxGame; scr
     return <>
         <p className="owned-eyebrow">A place on your shelf</p>
         <h2>About the game</h2>
-        {count > 0 && <figure className="owned-scene">
-            <Swiper className="owned-scene-carousel" rewind slidesPerView={1}
-                onSwiper={swiper => { swiperRef.current = swiper; }}
-                onSlideChange={swiper => setScene(swiper.activeIndex)}>
-                {screenshots.map((src, index) => <SwiperSlide key={src}>
-                    <div className="owned-scene-screen">
-                        <LazyImage src={src} alt={`Gameplay screenshot ${index + 1}`} />
-                    </div>
-                </SwiperSlide>)}
-            </Swiper>
-            {count > 1 && <figcaption className="owned-scene-controls">
-                <button className="owned-button owned-icon playroom-press" aria-label="Previous screenshot" onClick={() => swiperRef.current?.slidePrev()}>‹</button>
-                <div className="owned-scene-dots">
-                    {screenshots.map((src, index) => <button key={src} aria-label={`Screenshot ${index + 1}`} aria-pressed={index === scene} onClick={() => swiperRef.current?.slideTo(index)} />)}
-                </div>
-                <button className="owned-button owned-icon playroom-press" aria-label="Next screenshot" onClick={() => swiperRef.current?.slideNext()}>›</button>
-            </figcaption>}
-        </figure>}
+        <GameScreenshots screenshots={screenshots} />
         <ExpandableDescription text={game.desc} />
         <dl className="owned-facts">
             {facts.map(([label, value]) => value ? <div key={label}><dt>{label}</dt><dd>{value}</dd></div> : null)}
@@ -92,7 +70,7 @@ export function OwnedGameSaves({ gameId, saves, previewScreenshot }: { gameId: s
             </div>
         </section>
         <div className="owned-save-tools">
-            <button className="owned-button playroom-press" disabled={!connected || !playing || !!current?.locked || saves.savingSlot}
+            <button className="owned-button playroom-press" disabled={!connected || !playing || !!current?.locked || saves.savingSlot || saves.loadingSlot}
                 onClick={() => saves.handleSave()}>{SaveIcon}{saves.savingSlot ? 'Saving…' : 'Save to this slot'}</button>
             <button className="owned-button playroom-press" disabled={!current || current.locked} onClick={() => setConfirmDelete(true)}>{TrashIcon} Delete save</button>
         </div>

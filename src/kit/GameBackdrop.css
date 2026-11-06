@@ -1,0 +1,36 @@
+.game-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: .24;
+}
+.game-backdrop img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  image-rendering: pixelated;
+  filter: grayscale(1);
+}
+.game-backdrop::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    125deg,
+    color-mix(in srgb, var(--hero-stage) 75%, transparent) 0%,
+    color-mix(in srgb, var(--hero-stage) 50%, transparent) 45%,
+    color-mix(in srgb, var(--hero-stage) 25%, transparent) 100%
+  );
+}
+.game-backdrop .card-art-placeholder { display: none; }
+.playroom-stage:has(.game-backdrop img[data-loaded="true"])::before {
+  inset: 0;
+  transform: none;
+  background-image: linear-gradient(125deg, var(--hero-stage), var(--hero-stage-light));
+  background-size: cover;
+  background-position: 0 0;
+  background-repeat: no-repeat;
+}

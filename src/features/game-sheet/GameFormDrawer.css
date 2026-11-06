@@ -19,7 +19,7 @@
   position: relative;
   z-index: 1;
   padding: 0 16px 16px;
-  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  padding-bottom: var(--sheet-bottom-padding);
   overflow-y: auto;
   flex: 1;
   min-height: 0;

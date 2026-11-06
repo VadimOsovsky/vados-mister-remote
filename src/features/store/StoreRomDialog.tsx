@@ -5,6 +5,7 @@ import { BottomSheet } from '../../kit/BottomSheet';
 import type { useRomPicker } from '../../hooks/useRomPicker';
 import type { WizzoGameSearchResult } from '../../services/wizzoApi';
 import { FileIcon, SearchIcon, StoreIcon } from '../../lib/icons';
+import { useAppContext } from '../../AppContext';
 import { formatGamePrice } from '../../lib/pricing';
 
 type Picker = ReturnType<typeof useRomPicker>;
@@ -39,9 +40,10 @@ function StoreRomForm({ picker, title, consoleName, price, preview, canPurchase 
     preview: boolean;
     canPurchase: boolean;
 }) {
+    const { economyDisabled, platform } = useAppContext();
     const searchRef = useRef<HTMLInputElement>(null);
     const [selected, setSelected] = useState<string>();
-    const extension = consoleName === 'FDS' ? 'fds' : 'nes';
+    const extension = platform.lbPlatform === 'fds' ? 'fds' : 'nes';
     const regions = ['USA', 'Europe', 'Japan'];
     const results = preview ? Array.from({ length: 12 }, (_, index) => {
         const region = regions[index % regions.length];
@@ -107,7 +109,7 @@ function StoreRomForm({ picker, title, consoleName, price, preview, canPurchase 
                     <Drawer.Close className="playroom-button playroom-press">Cancel</Drawer.Close>
                     <button className="playroom-button playroom-primary playroom-press"
                         disabled={!file || loading || !canPurchase} onClick={() => { if (file) confirm(file); }}>
-                        <span>{price === 0 ? 'Add game' : 'Buy game'}</span><strong>{formatGamePrice(price)}</strong>
+                        <span>{price === 0 ? 'Add game' : 'Buy game'}</span>{!economyDisabled && <strong>{formatGamePrice(price)}</strong>}
                     </button>
                 </div>
             </footer>

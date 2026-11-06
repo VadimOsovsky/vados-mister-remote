@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import type { ConsoleKey, LaunchBoxGame, SaveSlot } from '../types';
 import type { WizzoApi } from '../services/wizzoApi';
-import { getSaveSlots, putSaveSlot, deleteSaveSlot, getRomMapping } from '../lib/storage';
+import { getRomVersions, getGameSaveKey, getSaveSlots, putSaveSlot, deleteSaveSlot, getRomMapping } from '../lib/storage';
 import { loadCollectionSave } from '../services/collectionLauncher';
 import { isRomPlaying } from '../services/nowPlaying';
 
@@ -14,22 +14,29 @@ async function readSaveVersion(query: URLSearchParams): Promise<string | null> {
 }
 
 export function useSaveSlots(api: WizzoApi, game: LaunchBoxGame, activeConsole: ConsoleKey) {
+    const saveKey = getGameSaveKey(game.id, activeConsole);
     const [selectedSlot, setSelectedSlot] = useState(0);
-    const [saveSlots, setSaveSlots] = useState(() => getSaveSlots(game.id));
+    const [saveSlots, setSaveSlots] = useState(() => getSaveSlots(saveKey));
     const [savingSlot, setSavingSlot] = useState(false);
     const [saveError, setSaveError] = useState<string>();
 
+    const hasCompletedVersion = useCallback(() => {
+        const paths = getRomVersions(game.id, activeConsole).translations.map(v => v.path);
+        return [game.id, ...paths.map(path => game.id + '_translation_' + activeConsole + '_' + encodeURIComponent(path))]
+            .some(key => getSaveSlots(key).some(slot => slot?.beaten));
+    }, [game.id, activeConsole]);
+
     function resetSelection() {
-        setSaveSlots(getSaveSlots(game.id));
+        setSaveSlots(getSaveSlots(saveKey));
         setSelectedSlot(0);
     }
 
     const handleToggleLock = useCallback(() => {
         if (!saveSlots[selectedSlot]) return;
         const slot = saveSlots[selectedSlot]!;
-        const updated = putSaveSlot(game.id, selectedSlot, { ...slot, locked: !slot.locked });
+        const updated = putSaveSlot(saveKey, selectedSlot, { ...slot, locked: !slot.locked });
         setSaveSlots(updated);
-    }, [selectedSlot, saveSlots, game]);
+    }, [saveKey, selectedSlot, saveSlots]);
 
     const handleSave = useCallback(async () => {
         if (savingSlot) return;
@@ -84,7 +91,7 @@ export function useSaveSlots(api: WizzoApi, game: LaunchBoxGame, activeConsole: 
             if (!verifyOnDisk && !slot.screenshotFilename) {
                 throw new Error('Could not confirm the save on MiSTer.');
             }
-            setSaveSlots(putSaveSlot(game.id, selectedSlot, slot));
+            setSaveSlots(putSaveSlot(saveKey, selectedSlot, slot));
             if (oldSlot?.screenshotCore && oldSlot.screenshotFilename) {
                 api.deleteScreenshot(oldSlot.screenshotCore, oldSlot.screenshotFilename).catch(() => {});
             }
@@ -94,7 +101,7 @@ export function useSaveSlots(api: WizzoApi, game: LaunchBoxGame, activeConsole: 
         } finally {
             setSavingSlot(false);
         }
-    }, [selectedSlot, game, savingSlot, api, saveSlots, activeConsole]);
+    }, [saveKey, selectedSlot, game, savingSlot, api, saveSlots, activeConsole]);
 
     const [loadingSlot, setLoadingSlot] = useState(false);
     const hasRomMapping = Boolean(getRomMapping(game.id, activeConsole));
@@ -121,19 +128,19 @@ export function useSaveSlots(api: WizzoApi, game: LaunchBoxGame, activeConsole: 
         if (slot.screenshotCore && slot.screenshotFilename) {
             api.deleteScreenshot(slot.screenshotCore, slot.screenshotFilename).catch(() => {});
         }
-        const updated = deleteSaveSlot(game.id, selectedSlot);
+        const updated = deleteSaveSlot(saveKey, selectedSlot);
         setSaveSlots(updated);
-        return updated.some(s => s?.beaten);
-    }, [selectedSlot, saveSlots, game, api]);
+        return hasCompletedVersion();
+    }, [saveKey, selectedSlot, saveSlots, api, hasCompletedVersion]);
 
     /** Toggle beaten flag on selected slot. Returns whether game has any beaten slot after toggle. */
     const handleToggleBeaten = useCallback((): boolean => {
         if (!saveSlots[selectedSlot]) return false;
         const slot = saveSlots[selectedSlot]!;
-        const updated = putSaveSlot(game.id, selectedSlot, { ...slot, beaten: !slot.beaten });
+        const updated = putSaveSlot(saveKey, selectedSlot, { ...slot, beaten: !slot.beaten });
         setSaveSlots(updated);
-        return updated.some(s => s?.beaten);
-    }, [selectedSlot, saveSlots, game]);
+        return hasCompletedVersion();
+    }, [saveKey, selectedSlot, saveSlots, hasCompletedVersion]);
 
     return {
         selectedSlot, setSelectedSlot, resetSelection,

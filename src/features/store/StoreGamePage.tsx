@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router';
 import { PhotoViewer } from '../../kit/PhotoViewer';
+import { GameScreenshots } from '../../kit/GameScreenshots';
+import { GameBackdrop } from '../../kit/GameBackdrop';
 import { useAppContext } from '../../AppContext';
 import { useRomPicker } from '../../hooks/useRomPicker';
 import { PlayroomHeader } from '../../kit/PlayroomHeader';
@@ -9,7 +11,7 @@ import { LazyImage } from '../../kit/LazyImage';
 import { BackArrowIcon, FlipIcon, StoreIcon } from '../../lib/icons';
 import { getImageUrl, loadPlatformGames, resolveImages, resolveScreenshots, resolveTitle } from '../../services/launchbox';
 import type { LaunchBoxGame } from '../../types';
-import { getPreviewCover } from '../collection/previewCovers';
+import { getPreviewCover, getPreviewScreenshot } from '../collection/previewCovers';
 import { StoreRomDialog } from './StoreRomDialog';
 import { PurchaseSuccess } from './PurchaseSuccess';
 import { formatGamePrice } from '../../lib/pricing';
@@ -60,12 +62,12 @@ function StoreDetailHeader({ backUrl, balance }: { backUrl: string; balance: num
 }
 
 function StoreProduct({ game, preview, backUrl }: { game: LaunchBoxGame; preview: boolean; backUrl: string }) {
-    const { api, activeConsole, platform, balance, collectionIds, purchaseGame, freeGames } = useAppContext();
+    const { api, activeConsole, platform, balance, collectionIds, purchaseGame, economyDisabled } = useAppContext();
     const [back, setBack] = useState(false);
     const [purchased, setPurchased] = useState(false);
     const [galleryIndex, setGalleryIndex] = useState<number>();
     const title = resolveTitle(game, platform.nameRegions);
-    const price = storePrice(game, activeConsole, preview, freeGames);
+    const price = storePrice(game, activeConsole, preview, economyDisabled);
     const wallet = preview ? 120 : balance;
     const owned = !preview && collectionIds.includes(game.id);
     const romPicker = useRomPicker(api, platform, game, activeConsole, romPath => {
@@ -79,6 +81,9 @@ function StoreProduct({ game, preview, backUrl }: { game: LaunchBoxGame; preview
     const rear = images.back && getImageUrl(images.back);
     const cover = back ? rear : front;
     const coverLabel = back ? 'Back cover' : 'Front cover';
+    const previewScreenshot = preview && getPreviewScreenshot(game.id);
+    const screenshots = previewScreenshot ? [previewScreenshot] : resolveScreenshots(game).map(src => getImageUrl(src));
+    const backdrop = screenshots[0];
     const slides = [front, rear, ...resolveScreenshots(game).map(src => getImageUrl(src))]
         .filter((src): src is string => Boolean(src)).map(src => ({ src }));
     const facts = [
@@ -86,13 +91,14 @@ function StoreProduct({ game, preview, backUrl }: { game: LaunchBoxGame; preview
         ['Genre', game.genre], ['Players', game.maxPlayers],
     ];
 
-    if (purchased) return <PurchaseSuccess title={title} cover={front || undefined} preview={preview} />;
+    if (purchased) return <PurchaseSuccess title={title} cover={front || undefined} preview={preview} variant={economyDisabled ? 'addition' : 'purchase'} />;
 
     return (
         <>
             <StoreDetailHeader backUrl={backUrl} balance={wallet} />
             <main className="page-scroll store-detail">
                 <section className="playroom-stage box-counter" aria-label="Inspect game box">
+                    <GameBackdrop src={backdrop || undefined} />
                     <p className="store-kicker">{platform.name} · From the game store</p>
                     <div className="counter-art">
                         {cover ? (
@@ -119,6 +125,7 @@ function StoreProduct({ game, preview, backUrl }: { game: LaunchBoxGame; preview
                     </div>
                     <section className="store-description">
                         <h2>About the game</h2>
+                        <GameScreenshots screenshots={screenshots} />
                         <ExpandableDescription text={game.desc} />
                         <dl>
                             {facts.filter(([, value]) => value).map(([label, value]) => (
@@ -129,10 +136,10 @@ function StoreProduct({ game, preview, backUrl }: { game: LaunchBoxGame; preview
                 </article>
             </main>
             <aside className="owned-dock store-dock" aria-label="Purchase">
-                <div className="store-dock-price"><small>Price</small><strong>{formatGamePrice(price)}</strong></div>
+                {!economyDisabled && <div className="store-dock-price"><small>Price</small><strong>{formatGamePrice(price)}</strong></div>}
                 <button className="owned-button owned-gold owned-primary playroom-press"
                     disabled={owned || wallet < price} onClick={() => romPicker.openRomPicker(title)}>
-                    {StoreIcon}<span>{owned ? 'In your collection' : wallet < price ? 'Not enough funds' : freeGames ? 'Add game' : 'Buy game'}</span>
+                    {StoreIcon}<span>{owned ? 'In your collection' : wallet < price ? 'Not enough funds' : economyDisabled ? 'Add game' : 'Buy game'}</span>
                 </button>
             </aside>
             <StoreRomDialog picker={romPicker} title={title} consoleName={platform.name}

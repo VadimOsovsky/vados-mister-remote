@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { ConsoleKey, GameOverrides, LaunchBoxGame } from '../../types';
+import type { ConsoleKey, GameArtwork, GameOverrides, LaunchBoxGame } from '../../types';
 import type { WizzoGameSearchResult } from '../../services/wizzoApi';
 import { useAppContext } from '../../AppContext';
 import { SearchIcon, TrashIcon } from '../../lib/icons';
-import { getGameOverrides, setGameOverrides, getRomMapping, setRomMapping } from '../../lib/storage';
+import { getGameArtworkLanguage, getGameOverrides, setGameOverrides, getOriginalRomMapping, setRomMapping } from '../../lib/storage';
 import { getImageUrl, resolveImages, resolveTitle } from '../../services/launchbox';
 import { PLATFORMS } from '../../constants';
+import { GameArtworkEditor } from './GameArtworkEditor';
+import { cleanGameOverrides } from '../../lib/gameArtwork';
 import './EditGameForm.css';
 
 export function EditGameForm({ game, regions, activeConsole, onSave, onCancel, onDelete, isNew, initialField }: {
@@ -23,13 +25,14 @@ export function EditGameForm({ game, regions, activeConsole, onSave, onCancel, o
         const overrides = getGameOverrides(game.id, activeConsole);
         const images = resolveImages(game, regions);
         return {
+            ...overrides,
             title: overrides.title || resolveTitle(game, PLATFORMS[activeConsole].nameRegions),
             boxFrontUrl: overrides.boxFrontUrl || (images.front ? getImageUrl(images.front) : undefined),
             boxBackUrl: overrides.boxBackUrl || (images.back ? getImageUrl(images.back) : undefined),
             cartridgeUrl: overrides.cartridgeUrl,
             manualPhotoUrl: overrides.manualPhotoUrl,
             manualUrl: overrides.manualUrl,
-            romName: overrides.romName || getRomMapping(game.id, activeConsole)?.split('/').pop() || undefined,
+            romName: overrides.romName || getOriginalRomMapping(game.id, activeConsole)?.split('/').pop() || undefined,
         };
     });
     const [confirmDelete, setConfirmDelete] = useState(false);
@@ -104,7 +107,7 @@ export function EditGameForm({ game, regions, activeConsole, onSave, onCancel, o
         return () => document.removeEventListener('pointerdown', onPointerDown);
     }, []);
 
-    function set(key: keyof GameOverrides, value: string) {
+    function set(key: keyof GameArtwork | 'title' | 'romName' | 'webManualUrl', value: string) {
         setDraft(prev => ({ ...prev, [key]: value || undefined }));
     }
 
@@ -113,11 +116,7 @@ export function EditGameForm({ game, regions, activeConsole, onSave, onCancel, o
     function handleSave() {
         if (titleMissing) return;
         if (isNew) {
-            const cleaned: GameOverrides = {};
-            for (const [k, v] of Object.entries(draft) as [keyof GameOverrides, string | undefined][]) {
-                if (v) cleaned[k] = v;
-            }
-            setGameOverrides(game.id, activeConsole, cleaned);
+            setGameOverrides(game.id, activeConsole, cleanGameOverrides(draft));
             onSave();
             return;
         }
@@ -127,13 +126,9 @@ export function EditGameForm({ game, regions, activeConsole, onSave, onCancel, o
             title: resolveTitle(game, PLATFORMS[activeConsole].nameRegions),
             boxFrontUrl: images.front ? getImageUrl(images.front) : undefined,
             boxBackUrl: images.back ? getImageUrl(images.back) : undefined,
-            romName: getRomMapping(game.id, activeConsole)?.split('/').pop() || undefined,
+            romName: getOriginalRomMapping(game.id, activeConsole)?.split('/').pop() || undefined,
         };
-        const cleaned: GameOverrides = {};
-        for (const [k, v] of Object.entries(draft) as [keyof GameOverrides, string | undefined][]) {
-            if (v && v !== defaults[k]) cleaned[k] = v;
-        }
-        setGameOverrides(game.id, activeConsole, cleaned);
+        setGameOverrides(game.id, activeConsole, cleanGameOverrides(draft, defaults));
         onSave();
     }
 
@@ -194,59 +189,13 @@ export function EditGameForm({ game, regions, activeConsole, onSave, onCancel, o
                     </div>
                 </div>
 
-                <div className="edit-game-section">
-                    <div className="edit-game-section-title">Images</div>
-                    <label className="edit-game-field">
-                        <span className="edit-game-label">Box Front URL</span>
-                        <input
-                            className="edit-game-input"
-                            type="url"
-                            placeholder="https://..."
-                            value={draft.boxFrontUrl ?? ''}
-                            onChange={e => set('boxFrontUrl', e.target.value)}
-                        />
-                    </label>
-                    <label className="edit-game-field">
-                        <span className="edit-game-label">Box Back URL</span>
-                        <input
-                            className="edit-game-input"
-                            type="url"
-                            placeholder="https://..."
-                            value={draft.boxBackUrl ?? ''}
-                            onChange={e => set('boxBackUrl', e.target.value)}
-                        />
-                    </label>
-                    <label className="edit-game-field">
-                        <span className="edit-game-label">{platform.mediaLabel} URL</span>
-                        <input
-                            className="edit-game-input"
-                            type="url"
-                            placeholder="https://..."
-                            value={draft.cartridgeUrl ?? ''}
-                            onChange={e => set('cartridgeUrl', e.target.value)}
-                        />
-                    </label>
-                    <label className="edit-game-field">
-                        <span className="edit-game-label">Manual Photo URL</span>
-                        <input
-                            className="edit-game-input"
-                            type="url"
-                            placeholder="https://..."
-                            value={draft.manualPhotoUrl ?? ''}
-                            onChange={e => set('manualPhotoUrl', e.target.value)}
-                        />
-                    </label>
-                    <label className="edit-game-field">
-                        <span className="edit-game-label">Manual URL</span>
-                        <input
-                            className="edit-game-input"
-                            type="url"
-                            placeholder="https://..."
-                            value={draft.manualUrl ?? ''}
-                            onChange={e => set('manualUrl', e.target.value)}
-                        />
-                    </label>
-                </div>
+                <GameArtworkEditor draft={draft} mediaLabel={platform.mediaLabel} initialLanguage={isNew ? 'original' : getGameArtworkLanguage(game.id, activeConsole)} onWebManualChange={value => set('webManualUrl', value)} onChange={(language, key, value) => {
+                    if (language === 'original') set(key, value);
+                    else setDraft(previous => ({ ...previous, artworkByLanguage: {
+                        ...previous.artworkByLanguage,
+                        [language]: { ...previous.artworkByLanguage?.[language], [key]: value || undefined },
+                    } }));
+                }} />
             </div>
 
             <div className="edit-game-actions">

@@ -63,7 +63,7 @@
 
 .console-sheet-body {
   padding: 0 0 16px;
-  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  padding-bottom: var(--sheet-bottom-padding);
 }
 
 .console-sheet-branding {
@@ -91,8 +91,9 @@
 }
 
 .playroom-header .console-badge {
+  min-width: 0;
+  max-width: 100%;
   height: 40px;
-  min-width: 90px;
   border: 2px solid var(--ink);
   border-radius: 12px;
   padding: 4px 8px;
@@ -104,13 +105,22 @@
   font: var(--font-label);
 }
 
+.console-badge-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .console-badge-photo {
+  flex-shrink: 0;
   width: 32px;
   height: 24px;
   object-fit: contain;
 }
 
 .console-badge-chevron {
+  flex-shrink: 0;
   display: grid;
   place-items: center;
 }

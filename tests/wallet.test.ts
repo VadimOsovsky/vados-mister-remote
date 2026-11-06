@@ -1,0 +1,42 @@
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
+import { appStorage } from '../src/lib/sharedStorage';
+import { visitWallet, rewardBeatenGame, spendWallet } from '../src/lib/wallet';
+
+test('wallet visits, completion rewards and purchases preserve the economy', t => {
+    const values = new Map<string, string>();
+    t.mock.method(appStorage, 'getItem', (key: string) => values.get(key) ?? null);
+    t.mock.method(appStorage, 'setItem', (key: string, value: string) => { values.set(key, value); });
+    const date = (day: number) => new Date(2026, 10, day, 12);
+    assert.deepEqual(visitWallet(date(1)), { balance: 85, reward: 0 });
+    assert.deepEqual(visitWallet(date(1)), { balance: 85, reward: 0 });
+    assert.deepEqual(visitWallet(date(2)), { balance: 88, reward: 3 });
+    assert.deepEqual(visitWallet(date(20)), { balance: 91, reward: 3 });
+    assert.deepEqual(visitWallet(date(19)), { balance: 91, reward: 0 });
+    assert.deepEqual(rewardBeatenGame('mario'), { balance: 151, reward: 60 });
+    assert.deepEqual(rewardBeatenGame('mario'), { balance: 151, reward: 0 });
+    assert.equal(spendWallet(55), 96);
+    assert.equal(spendWallet(0), 96);
+    for (const price of [97, -1, NaN, Infinity]) assert.equal(spendWallet(price), null);
+    assert.equal(values.get('wallet_balance'), '96');
+    values.set('wallet_last_topup', date(1).toISOString());
+    assert.deepEqual(visitWallet(date(1)), { balance: 96, reward: 0 });
+    assert.deepEqual(visitWallet(date(2)), { balance: 99, reward: 3 });
+    assert.equal(values.get('wallet_beaten_rewarded'), '{"mario":true}');
+    values.set('store_free_games', 'true'); // Existing free-games preference now disables the economy.
+    const paused = new Map(values);
+    assert.deepEqual(visitWallet(date(25)), { balance: 99, reward: 0 });
+    assert.deepEqual(rewardBeatenGame('zelda'), { balance: 99, reward: 0 });
+    assert.equal(spendWallet(55), 99);
+    assert.deepEqual(values, paused);
+    values.set('store_free_games', 'false');
+    assert.deepEqual(visitWallet(date(26)), { balance: 102, reward: 3 });
+    assert.deepEqual(rewardBeatenGame('zelda'), { balance: 162, reward: 60 });
+    assert.deepEqual(rewardBeatenGame('mario'), { balance: 162, reward: 0 });
+    values.clear();
+    values.set('store_free_games', 'true');
+    assert.deepEqual(visitWallet(date(1)), { balance: 0, reward: 0 });
+    assert.equal(values.has('wallet_balance'), false);
+    values.set('store_free_games', 'false');
+    assert.deepEqual(visitWallet(date(2)), { balance: 85, reward: 0 });
+});

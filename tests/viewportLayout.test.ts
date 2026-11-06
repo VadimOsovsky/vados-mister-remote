@@ -13,6 +13,13 @@ test('keyboard resizes the app and removes the home-indicator inset', () => {
         height: '480px', top: '30px', bottom: '364px', safeBottom: '0px',
     });
 });
+
+test('installed PWA uses the full vh height rather than the inset dynamic viewport', () => {
+    assert.equal(viewportLayout(874, 812, 0, false, true).height, '100vh');
+    assert.equal(viewportLayout(874, 812, 0, true, true).height, '100vh');
+    assert.equal(viewportLayout(874, 480, 30, true, true).height, '480px');
+    assert.equal(viewportLayout(874, 480, 30, false, true).height, '100vh');
+});
 test('leaving an input restores full height despite stale viewport measurements', () => {
     const layout = viewportLayout(874, 480, 30, false);
     assert.equal(layout.height, '100dvh');

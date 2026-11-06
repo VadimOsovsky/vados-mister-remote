@@ -110,7 +110,7 @@
 .store-rom-file-icon { display: grid; place-items: center; color: var(--muted); }
 .store-rom-file-icon small { font: var(--font-label-nav); text-transform: uppercase; }
 .store-rom-file input { margin: 0; width: 16px; height: 16px; accent-color: var(--ink); }
-.store-rom-dialog footer { flex: none; padding: 12px 20px calc(16px + env(safe-area-inset-bottom)); }
+.store-rom-dialog footer { flex: none; padding: 12px 20px var(--sheet-bottom-padding); }
 .store-rom-dialog footer p {
   overflow: hidden;
   text-overflow: ellipsis;

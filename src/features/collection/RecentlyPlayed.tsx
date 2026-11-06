@@ -4,7 +4,7 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import type { ConsoleKey, LaunchBoxGame } from '../../types';
 import { useAppContext } from '../../AppContext';
-import { getRomMapping, getSaveSlots } from '../../lib/storage';
+import { getRomMapping, getSaveSlots, getGameSaveKey } from '../../lib/storage';
 import { PlayIcon } from '../../lib/icons';
 import { launchCollectionGame, loadCollectionSave } from '../../services/collectionLauncher';
 import { GameCard } from './GameGrid';
@@ -51,7 +51,7 @@ export function RecentlyPlayed({ games, consoleKey, preview, mock, onSelect, onH
         setLaunching(true);
         setFailed(false);
         try {
-            const slots = getSaveSlots(game.id);
+            const slots = getSaveSlots(getGameSaveKey(game.id, consoleKey));
             const latestIndex = slots
                 .map((slot, index) => ({ slot, index }))
                 .filter(({ slot }) => slot !== null)

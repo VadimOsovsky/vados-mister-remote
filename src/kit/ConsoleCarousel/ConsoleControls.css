@@ -41,10 +41,6 @@
   opacity: 0.85;
 }
 
-.console-ctrl-btn[data-control="flip_disk"] svg {
-  transform: rotate(180deg);
-}
-
 .console-sheet .console-ctrl-btn {
   background: var(--card);
   color: var(--ink);

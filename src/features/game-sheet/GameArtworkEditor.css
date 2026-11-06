@@ -1,0 +1,40 @@
+.artwork-editor { padding-top: 20px; border-top: 1px solid var(--line); }
+.artwork-editor-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.artwork-editor-heading > strong { font: var(--font-label); }
+.artwork-editor-heading > small { font: var(--font-caption); color: var(--muted); }
+.artwork-language-label { display: block; margin-bottom: 6px; font: var(--font-label-section); }
+.artwork-language-select { cursor: pointer; }
+.artwork-editor-hint { margin: 10px 0 16px; color: var(--muted); font: var(--font-caption); }
+.artwork-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.artwork-tile { display: flex; flex-direction: column; align-items: stretch; min-width: 0; padding: 8px 6px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); color: var(--ink); text-align: left; }
+.artwork-tile[data-state=active] { border: 2px solid var(--ink); padding: 7px 5px; background-color: color-mix(in srgb, var(--gold) 8%, var(--card)); }
+.artwork-tile-image { display: grid; place-items: center; height: 74px; margin-bottom: 8px; overflow: hidden; }
+.artwork-tile-image img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.artwork-tile-image > .artwork-placeholder { display: block; width: 46px; height: 46px; color: var(--muted); }
+.artwork-tile[data-state=active] .artwork-placeholder { color: var(--ink); }
+.artwork-tile strong { font: var(--font-title-card); overflow-wrap: anywhere; }
+.artwork-tile small { margin-top: 3px; font: var(--font-caption); color: var(--muted); }
+.artwork-field-panel { margin-top: 16px; }
+.artwork-url-row { display: flex; gap: 8px; align-items: center; }
+.artwork-url-row input { min-width: 0; flex: 1; }
+.artwork-clear { display: grid; place-items: center; flex: 0 0 44px; height: 44px; padding: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink); font-size: 20px; }
+.artwork-manual-link { margin-top: 12px; }
+.artwork-library-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.artwork-library-language { display: flex; align-items: center; gap: 8px; font: var(--font-caption); color: var(--muted); }
+.artwork-library-language select { max-width: 190px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--ink); border-radius: 10px; background: var(--card); color: var(--ink); font: var(--font-filter); }
+/* Only the fields scroll; keep the sheet header and actions fixed when a field gains focus. */
+.sheet.add-game-sheet,
+.add-game-sheet .sheet-content,
+.add-game-sheet .edit-game-form { overflow: clip; }
+@media (max-width: 600px) {
+  .artwork-editor { padding-top: 14px; }
+  .artwork-editor-heading { margin-bottom: 12px; }
+  .artwork-editor-hint { margin: 8px 0 12px; }
+  .artwork-tile-image { height: 54px; margin-bottom: 6px; }
+  .artwork-field-panel { margin-top: 12px; }
+}
+
+.artwork-tile:first-child { background-image: radial-gradient(color-mix(in srgb, var(--ink) 9%, transparent) .7px, transparent 1px); background-size: 5px 5px; }
+.artwork-tile-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; color: var(--muted); font: var(--font-caption); letter-spacing: .08em; }
+.artwork-tile-top svg { width: 13px; height: 13px; }
+.artwork-tile-image > .artwork-placeholder { width: 52px; height: 52px; }

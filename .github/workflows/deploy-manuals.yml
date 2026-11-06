@@ -1,0 +1,57 @@
+name: Deploy manuals to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'manuals/**'
+      - 'scripts/build-manuals.mjs'
+      - 'tests/manuals.test.mjs'
+      - '.github/workflows/deploy-manuals.yml'
+  pull_request:
+    paths:
+      - 'manuals/**'
+      - 'scripts/build-manuals.mjs'
+      - 'tests/manuals.test.mjs'
+      - '.github/workflows/deploy-manuals.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: manuals-pages-${{ github.event_name == 'pull_request' && github.ref || 'production' }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test manual publishing and cache revisions
+        run: node --test tests/manuals.test.mjs
+      - name: Build manuals only (no app dependencies)
+        run: node scripts/build-manuals.mjs
+      - uses: actions/upload-pages-artifact@v4
+        if: github.event_name != 'pull_request'
+        with:
+          path: manuals-dist
+
+  deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@v5
+      - name: Deploy manuals
+        id: deployment
+        uses: actions/deploy-pages@v4

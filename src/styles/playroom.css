@@ -8,6 +8,10 @@
 }
 
 :root {
+  --footer-height: 64px;
+  --footer-content-gap: 16px;
+  --navigation-footer-bottom: max(10px, var(--app-safe-area-bottom, env(safe-area-inset-bottom)));
+  --game-footer-bottom: max(8px, var(--app-safe-area-bottom, env(safe-area-inset-bottom)));
   --font-family-ui: Rubik, system-ui, sans-serif;
   --font-body: 400 16px/1.5 var(--font-family-ui);
   --font-heading-page-size: 20px;
@@ -144,7 +148,8 @@ button:focus-visible,a:focus-visible {
 input:focus,
 textarea:focus,
 select:focus,
-.shelf-filters button:focus {
+.shelf-filters button:focus,
+.owned-tabs .owned-tab:focus {
   outline: none;
 }
 

@@ -1,0 +1,9 @@
+[
+  {
+    "id": "nes/super-mario-bros",
+    "title": "Super Mario Bros.",
+    "platform": "Famicom / NES",
+    "languages": ["ja", "en", "ru"],
+    "sourceUrl": "https://www.nintendo.co.jp/clv/manuals/ja/pdf/CLV-P-HAAAJ.pdf"
+  }
+]

@@ -4,6 +4,7 @@ import type { ConsoleKey, LaunchBoxGame } from '../types';
 import { loadCollectionGames, searchGames } from '../services/launchbox';
 import { useAppContext } from '../AppContext';
 import { getRecentGames } from '../lib/recentGames';
+import { PLATFORMS } from '../constants';
 
 // Temporary local preview using real LaunchBox IDs, without writing ownership.
 const PREVIEW_IDS = {
@@ -17,7 +18,7 @@ export function useCollection(activeConsole: ConsoleKey) {
     const preview = import.meta.env.DEV && params.get('preview') === '1';
     const displayedIds = useMemo(() => {
         if (!preview) return collectionIds;
-        return [...new Set([...collectionIds, ...PREVIEW_IDS[activeConsole === 'fds' ? 'fds' : 'nes']])];
+        return [...new Set([...collectionIds, ...PREVIEW_IDS[PLATFORMS[activeConsole].lbPlatform === 'fds' ? 'fds' : 'nes']])];
     }, [activeConsole, collectionIds, preview]);
     const [games, setGames] = useState<LaunchBoxGame[]>([]);
     const [loading, setLoading] = useState(false);
@@ -53,7 +54,7 @@ export function useCollection(activeConsole: ConsoleKey) {
     });
 
     // FDS is the preview example of a shelf without recent games.
-    const mockRecent = preview && activeConsole !== 'fds' && !recentGames.length;
+    const mockRecent = preview && PLATFORMS[activeConsole].lbPlatform !== 'fds' && !recentGames.length;
     if (mockRecent) {
         const now = new Date();
         const yesterday = new Date(now);

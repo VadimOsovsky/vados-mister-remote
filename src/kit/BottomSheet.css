@@ -1,4 +1,5 @@
 .bottom-sheet {
+  --sheet-bottom-padding: max(16px, var(--app-safe-area-bottom, env(safe-area-inset-bottom)));
   position: fixed;
   left: 0;
   right: 0;

@@ -43,8 +43,8 @@ export function RemotePage() {
                             <button className="playroom-button playroom-primary playroom-press remote-ok" onClick={() => press('confirm')}>OK</button>
                         </div>
                         <div className="remote-reset-row">
-                            <span>Back to the beginning</span>
-                            <button className="playroom-button playroom-press" onClick={() => press('reset')}>{ResetIcon} Reset game</button>
+                            <span>Reset the entire MiSTer</span>
+                            <button className="playroom-button playroom-press" onClick={() => press('reset')}>{ResetIcon} Reset MiSTer</button>
                         </div>
                     </section>
                     <p className="remote-hint">Control MiSTer menus with the directional pad.</p>

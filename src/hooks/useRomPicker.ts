@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ConsoleKey, LaunchBoxGame, PlatformDef } from '../types';
 import type { WizzoApi, WizzoGameSearchResult } from '../services/wizzoApi';
-import { getRomMapping, setRomMapping } from '../lib/storage';
+import { getRomMapping, getRomVersions, setRomMapping } from '../lib/storage';
 import { launchCollectionGame } from '../services/collectionLauncher';
 
 export function useRomPicker(api: WizzoApi, platform: PlatformDef, selectedGame: LaunchBoxGame | null, activeConsole: ConsoleKey, onSelect?: (romPath: string) => void, searchEnabled = true) {
@@ -119,7 +119,12 @@ export function useRomPicker(api: WizzoApi, platform: PlatformDef, selectedGame:
                 await launchCollectionGame(api, activeConsole, selectedGame.id, cachedPath);
                 return;
             } catch {
-                // Cached ROM path failed — fall through to picker
+                // Never replace the original mapping after a translated ROM fails.
+                if (getRomVersions(selectedGame.id, activeConsole).selected) {
+                    setRomSearchError('Could not launch this translation. Check the ROM on MiSTer or choose another language.');
+                    return;
+                }
+                // Cached original path failed — fall through to picker
             }
         }
         openRomPicker(selectedGame.title);

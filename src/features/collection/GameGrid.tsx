@@ -6,7 +6,7 @@ import { FavoriteBookmark } from './FavoriteBookmark';
 import { LazyImage } from '../../kit/LazyImage';
 import { getImageUrl, resolveImages, resolveTitle } from '../../services/launchbox';
 import { PLATFORMS } from '../../constants';
-import { getGameOverrides, getSaveSlots } from '../../lib/storage';
+import { getDisplayGameOverrides, getSaveSlots, getGameSaveKey } from '../../lib/storage';
 import { getPreviewCover } from './previewCovers';
 import './GameGrid.css';
 
@@ -34,14 +34,14 @@ export function GameCard({ game, regions, activeConsole, onSelect, preview, rece
 }) {
     const { beatenIds, favoriteIds, isGamePlaying } = useAppContext();
     const playing = isGamePlaying(game.id, activeConsole);
-    const overrides = getGameOverrides(game.id, activeConsole);
+    const overrides = getDisplayGameOverrides(game.id, activeConsole);
     const images = resolveImages(game, regions);
     const displayTitle = overrides.title || resolveTitle(game, PLATFORMS[activeConsole].nameRegions);
     const localCover = preview ? getPreviewCover(activeConsole, game.id) : undefined;
     const frontSrc = overrides.boxFrontUrl || localCover || (images.front ? getImageUrl(images.front, 300) : undefined);
     const directCover = images.front ? getImageUrl(images.front) : undefined;
     const coverScale = PLATFORMS[activeConsole].coverScale;
-    const slots = getSaveSlots(game.id);
+    const slots = getSaveSlots(getGameSaveKey(game.id, activeConsole));
     const playerCount = game.maxPlayers.trim();
     const isBeaten = beatenIds.includes(game.id);
     return (
@@ -63,8 +63,10 @@ export function GameCard({ game, regions, activeConsole, onSelect, preview, rece
                     <span className="save-dots" role="img" aria-label={(recent?.mockSaves ?? slots.filter(Boolean).length) + ' of 4 save slots used'}>
                         {slots.map((slot, index) => <i key={index} className={slot?.beaten ? 'complete' : slot || index < (recent?.mockSaves ?? 0) ? 'used' : ''} />)}
                     </span>
-                    {playing ? <span className="now-playing-badge">Playing</span>
-                        : /^[1-9]\d*$/.test(playerCount) && <span className="player-badge">{playerCount}P</span>}
+                    <span className="card-player-status">
+                        {playing && <span className="now-playing-dot" aria-hidden="true" />}
+                        {/^[1-9]\d*$/.test(playerCount) && <span className="player-badge">{playerCount}P</span>}
+                    </span>
                 </span>
             </span>
             <span className="card-badge">
