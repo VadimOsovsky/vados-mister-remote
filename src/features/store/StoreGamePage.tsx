@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router';
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
 import { PhotoViewer } from '../../kit/PhotoViewer';
 import { GameScreenshots } from '../../kit/GameScreenshots';
 import { GameBackdrop } from '../../kit/GameBackdrop';
@@ -18,6 +18,7 @@ import { PurchaseSuccess } from './PurchaseSuccess';
 import { formatGamePrice } from '../../lib/pricing';
 import { StoreWallet } from './StoreWallet';
 import { storePrice } from './storePreview';
+import { StoreHeart } from './StoreHeart';
 import './StoreGamePage.css';
 
 export function StoreGamePage() {
@@ -55,9 +56,13 @@ export function StoreGamePage() {
 }
 
 function StoreDetailHeader({ backUrl, balance }: { backUrl: string; balance: number }) {
+    const { state } = useLocation();
+    const navigate = useNavigate();
     return (
         <PlayroomHeader>
-            <Link to={backUrl} className="store-back">{BackArrowIcon} Back to store</Link>
+            {state?.fromStore === true
+                ? <button type="button" className="store-back" onClick={() => navigate(-1)}>{BackArrowIcon} Back to store</button>
+                : <Link to={backUrl} replace className="store-back">{BackArrowIcon} Back to store</Link>}
             <StoreWallet balance={balance} compact />
         </PlayroomHeader>
     );
@@ -69,6 +74,8 @@ function StoreProduct({ game, preview, backUrl }: { game: LaunchBoxGame; preview
     const platform = usePlatform();
     const balance = useCollectionState(state => state.balance);
     const collectionIds = useCollectionState(state => state.collectionIds);
+    const favorite = useCollectionState(state => state.favoriteIds.includes(game.id));
+    const toggleFavorite = useCollectionState(state => state.toggleFavorite);
     const purchaseGame = useCollectionState(state => state.purchaseGame);
     const economyDisabled = useCollectionState(state => state.economyDisabled);
     const [back, setBack] = useState(false);
@@ -85,9 +92,12 @@ function StoreProduct({ game, preview, backUrl }: { game: LaunchBoxGame; preview
         }
     }, !preview);
     const images = resolveImages(game, platform.imageRegions);
-    const front = (preview && getPreviewCover(activeConsole, game.id)) || (images.front && getImageUrl(images.front));
+    const localCover = preview && getPreviewCover(activeConsole, game.id);
+    const front = localCover || (images.front && getImageUrl(images.front));
     const rear = images.back && getImageUrl(images.back);
     const cover = back ? rear : front;
+    const coverFile = back ? images.back : images.front;
+    const coverPreview = (!back && localCover) || (coverFile && getImageUrl(coverFile, 300));
     const coverLabel = back ? 'Back cover' : 'Front cover';
     const previewScreenshot = preview && getPreviewScreenshot(game.id);
     const screenshots = previewScreenshot ? [previewScreenshot] : resolveScreenshots(game).map(src => getImageUrl(src));
@@ -112,7 +122,7 @@ function StoreProduct({ game, preview, backUrl }: { game: LaunchBoxGame; preview
                         {cover ? (
                             <button type="button" className="counter-cover" aria-label={`Inspect ${coverLabel.toLowerCase()}`}
                                 onClick={() => setGalleryIndex(back && front ? 1 : 0)}>
-                                <LazyImage key={cover} src={cover} alt={coverLabel} />
+                                <LazyImage key={cover} src={coverPreview || cover} fallbackSrc={cover} alt={coverLabel} priority />
                             </button>
                         ) : <span className="counter-missing">{coverLabel} unavailable</span>}
                     </div>
@@ -126,7 +136,13 @@ function StoreProduct({ game, preview, backUrl }: { game: LaunchBoxGame; preview
                 </section>
                 <article className="store-product">
                     <p className="store-kicker">{[game.publisher, game.year].filter(Boolean).join(' · ')}</p>
-                    <h1>{title}</h1>
+                    <div className="store-product-heading">
+                        <h1>{title}</h1>
+                        <button type="button" className="playroom-button playroom-icon-button playroom-press store-favorite-button"
+                            aria-label="Favorite" aria-pressed={favorite} onClick={() => toggleFavorite(game.id)}>
+                            <StoreHeart filled={favorite} />
+                        </button>
+                    </div>
                     <div className="store-product-badges">
                         {/^[1-9]\d*$/.test(game.maxPlayers.trim()) && <span className="player-badge">{game.maxPlayers.trim()}P</span>}
                         {game.genre && <span>{game.genre}</span>}

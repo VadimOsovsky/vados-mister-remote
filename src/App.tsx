@@ -75,7 +75,7 @@ export default function MisterRemote() {
 
     function openGame(game: LaunchBoxGame) {
         navigate('/collection/game/' + encodeURIComponent(game.id) + location.search, {
-            state: { game, consoleKey: activeConsole },
+            state: { game, consoleKey: activeConsole, fromCollection: true },
         });
     }
 

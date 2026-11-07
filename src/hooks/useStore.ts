@@ -7,11 +7,11 @@ import { useCollectionState } from '../state/collectionState';
 import { readStoreSort, writeStoreSort } from '../lib/storage';
 import { getStorePreviewIds } from '../features/store/storePreview';
 
-export function useStore(activeConsole: ConsoleKey, preview = false) {
+export function useStore(activeConsole: ConsoleKey, preview = false, initialSearch = '') {
     const collectionIds = useCollectionState(state => state.collectionIds);
     const [catalog, setCatalog] = useState<{ consoleKey: ConsoleKey; games: LaunchBoxGame[]; error?: boolean }>();
     const loading = catalog?.consoleKey !== activeConsole;
-    const [search, setSearch] = useState('');
+    const [search, setSearch] = useState(initialSearch);
     const [sort, _setSort] = useState<SortMode>(() => readStoreSort() ?? 'popular');
     const setSort = (s: SortMode) => { _setSort(s); writeStoreSort(s); };
 

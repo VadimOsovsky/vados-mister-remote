@@ -7,6 +7,9 @@
 .store-description h2 { margin: 0; font: var(--font-heading-page); }
 
 .store-back {
+  background: none;
+  border: 0;
+  padding: 0;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -93,3 +96,7 @@
 @media (min-width: 521px) {
   .counter-art { width: min(100%, 390px); }
 }
+
+.store-product-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.store-product-heading h1 { min-width: 0; overflow-wrap: anywhere; }
+.store-favorite-button { flex-shrink: 0; }

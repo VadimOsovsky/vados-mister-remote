@@ -79,7 +79,7 @@ export function GameCard({ game, regions, activeConsole, onSelect, preview, rece
     );
 }
 
-export function GameGrid({ games, regions, activeConsole, onSelect, scrollRef, renderStoreCard, preview }: {
+export function GameGrid({ games, regions, activeConsole, onSelect, scrollRef, renderStoreCard, preview, restore }: {
     games: LaunchBoxGame[];
     regions: string[];
     activeConsole: ConsoleKey;
@@ -87,12 +87,19 @@ export function GameGrid({ games, regions, activeConsole, onSelect, scrollRef, r
     scrollRef?: RefObject<HTMLDivElement | null>;
     renderStoreCard?: (game: LaunchBoxGame) => ReactNode;
     preview?: boolean;
+    restore?: { gameIndex: number; rowOffset: number };
 }) {
-    const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+    const [visibleCount, setVisibleCount] = useState(() =>
+        restore ? Math.ceil((restore.gameIndex + 1) / PAGE_SIZE) * PAGE_SIZE + PAGE_SIZE : PAGE_SIZE,
+    );
+    const previousGames = useRef(games);
+    const restored = useRef(false);
     const gridRef = useRef<HTMLDivElement>(null);
 
     // Reset pagination when games list changes (console switch / search)
     useEffect(() => {
+        if (previousGames.current === games) return;
+        previousGames.current = games;
         setVisibleCount(PAGE_SIZE);
     }, [games]);
 
@@ -104,7 +111,8 @@ export function GameGrid({ games, regions, activeConsole, onSelect, scrollRef, r
     const columns = renderStoreCard ? Math.min(shelfColumns, 4) : shelfColumns;
     const rowCount = Math.ceil(visibleGames.length / columns);
 
-    const [scrollMargin, setScrollMargin] = useState(0);
+    const [measuredMargin, setScrollMargin] = useState<number>();
+    const scrollMargin = measuredMargin ?? 0;
     useLayoutEffect(() => {
         const grid = gridRef.current;
         const scroller = scrollRef?.current;
@@ -131,7 +139,14 @@ export function GameGrid({ games, regions, activeConsole, onSelect, scrollRef, r
         estimateSize: () => 200,
         overscan: 3,
         scrollMargin,
+        scrollPaddingStart: restore?.rowOffset ?? 0,
     });
+
+    useLayoutEffect(() => {
+        if (!restore || restored.current || measuredMargin === undefined || !rowCount) return;
+        restored.current = true;
+        virtualizer.scrollToIndex(Math.floor(restore.gameIndex / columns), { align: 'start' });
+    }, [restore, measuredMargin, rowCount, virtualizer, columns]);
 
     // Load more when scrolling near the end
     const virtualItems = virtualizer.getVirtualItems();

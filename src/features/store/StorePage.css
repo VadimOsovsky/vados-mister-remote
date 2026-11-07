@@ -35,7 +35,7 @@
 .store-catalog .shelf-heading h2 { margin: 0; font: var(--font-heading-page); }
 .store-total { font: var(--font-field); color: var(--muted); white-space: nowrap; }
 .store-sorts button { display: inline-flex; align-items: center; gap: 4px; }
-.store-sorts button svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
+.store-sorts button svg { width: 14px; height: 14px; }
 
 @media (min-width: 521px) {
   .store-intro { padding: 28px 32px; }

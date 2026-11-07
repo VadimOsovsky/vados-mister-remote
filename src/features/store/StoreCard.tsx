@@ -12,7 +12,7 @@ export function StoreCard({ game, consoleKey, preview, onSelect }: {
     game: LaunchBoxGame;
     consoleKey: ConsoleKey;
     preview: boolean;
-    onSelect: (game: LaunchBoxGame) => void;
+    onSelect: (game: LaunchBoxGame, card: HTMLButtonElement) => void;
 }) {
     const platform = PLATFORMS[consoleKey];
     const cover = resolveImages(game, platform.imageRegions).front;
@@ -20,7 +20,7 @@ export function StoreCard({ game, consoleKey, preview, onSelect }: {
     const economyDisabled = useCollectionState(state => state.economyDisabled);
     const price = formatGamePrice(storePrice(game, consoleKey, preview, economyDisabled));
     return (
-        <button type="button" className="shop-card" onClick={() => onSelect(game)}>
+        <button type="button" className="shop-card" onClick={event => onSelect(game, event.currentTarget)}>
             <span className="shop-display">
                 <span className="shop-art">
                     <LazyImage src={(preview && getPreviewCover(consoleKey, game.id)) || (cover ? getImageUrl(cover, 300) : undefined)}

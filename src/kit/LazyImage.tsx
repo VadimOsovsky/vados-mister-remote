@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import './LazyImage.css';
 
-export function LazyImage({ src, fallbackSrc, alt, className, style }: {
+export function LazyImage({ src, fallbackSrc, alt, className, style, priority = false }: {
     src?: string;
     fallbackSrc?: string;
     alt: string;
     className?: string;
     style?: React.CSSProperties;
+    priority?: boolean;
 }) {
     const [loadedSource, setLoadedSource] = useState<string>();
     const [failedSources, setFailedSources] = useState<string[]>([]);
@@ -24,7 +25,8 @@ export function LazyImage({ src, fallbackSrc, alt, className, style }: {
             className={`lazy-image ${className || ''}`}
             data-loaded={loadedSource === imageSrc}
             style={style}
-            loading="lazy"
+            loading={priority ? 'eager' : 'lazy'}
+            fetchPriority={priority ? 'high' : undefined}
             decoding="async"
             onLoad={() => setLoadedSource(imageSrc)}
             onError={() => setFailedSources(sources => [...sources, imageSrc])}

@@ -92,7 +92,9 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
     const libraryArtwork = resolveGameArtwork(overrides, libraryLanguage);
     const favorite = favoriteIds.includes(selectedGame.id);
     const preview = import.meta.env.DEV && new URLSearchParams(window.location.search).get('preview') === '1';
-    const front = artwork.boxFrontUrl || (preview && getPreviewCover(activeConsole, selectedGame.id)) || (images.front && getImageUrl(images.front));
+    const frontOverride = artwork.boxFrontUrl || (preview && getPreviewCover(activeConsole, selectedGame.id));
+    const front = frontOverride || (images.front && getImageUrl(images.front));
+    const frontPreview = frontOverride || (images.front && getImageUrl(images.front, 300));
     const boxFront = preview && activeConsole === 'nes_ntsc' && selectedGame.id === '112'
         ? getPreviewCover(activeConsole, selectedGame.id) : undefined;
     const previewScreenshot = preview && getPreviewScreenshot(selectedGame.id);
@@ -198,7 +200,7 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
                     <GameBackdrop src={screenshots[0]} />
                     <div className="owned-hero-inner">
                         <button type="button" className="owned-cover" aria-label="View front cover" disabled={!front} onClick={() => setGalleryIndex(-1)}>
-                            <LazyImage src={front || undefined} alt="" />
+                            <LazyImage src={frontPreview || undefined} fallbackSrc={front || undefined} alt="" priority />
                             {completed && <span className="owned-medal" aria-label="Completed" role="img">✓</span>}
                         </button>
                         <div className="owned-hero-copy">
