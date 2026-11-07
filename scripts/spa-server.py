@@ -10,6 +10,8 @@ import os
 import re
 import sys
 import threading
+import zipfile
+import zlib
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
@@ -17,6 +19,93 @@ from urllib.parse import parse_qs, urlsplit
 STATE_ROUTE = "/api/playroom/state"
 STATE_LOCK = threading.Lock()
 MAX_STATE_BYTES = 4 * 1024 * 1024
+CHEATS_ROUTE = "/api/playroom/cheats"
+CHEATS_LOCK = threading.Lock()
+MEDIA_ROOT = Path("/media")
+ACTIVE_GAME = Path("/tmp/ACTIVEGAME")
+MAX_NES_BYTES = 64 * 1024 * 1024
+
+
+def nes_rom_path(value):
+    if not isinstance(value, str) or len(value) > 1024 or any(c in value for c in "\0\r\n\\"):
+        raise ValueError("Invalid ROM path")
+    path = Path(value)
+    if ".." in path.parts or path.suffix.lower() != ".nes":
+        raise ValueError("Choose a .nes ROM to use cheats.")
+    if not path.is_absolute():
+        path = MEDIA_ROOT / "fat" / path
+    if not path.resolve().is_relative_to(MEDIA_ROOT):
+        raise ValueError("Invalid ROM path")
+    return path
+
+
+def rom_checksum(rom):
+    for parent in rom.parents:
+        if parent.suffix.lower() == ".zip" and parent.is_file():
+            with zipfile.ZipFile(parent) as archive:
+                entry = archive.getinfo(rom.relative_to(parent).as_posix())
+                if entry.file_size > MAX_NES_BYTES:
+                    raise ValueError("ROM is too large.")
+                return checksum_stream(archive.open(entry), entry.file_size)
+    return checksum_stream(rom.open("rb"), rom.stat().st_size)
+
+
+def checksum_stream(stream, size):
+    with stream:
+        if size > MAX_NES_BYTES:
+            raise ValueError("ROM is too large.")
+        stream.read(size & 1023)
+        crc = 0
+        for chunk in iter(lambda: stream.read(65536), b""):
+            crc = zlib.crc32(chunk, crc)
+        return f"{crc:08X}"
+
+
+def cheat_entries(rom):
+    folder = MEDIA_ROOT / "fat" / "cheats" / "NES"
+    candidates = [rom.with_suffix(".zip"), folder / rom.with_suffix(".zip").name]
+    for path in candidates:
+        if path.is_file() and zipfile.is_zipfile(path):
+            break
+    else:
+        if not folder.is_dir():
+            return {}
+        try:
+            crc = rom_checksum(rom)
+        except (FileNotFoundError, KeyError):
+            return {}
+        matches = sorted(p for p in folder.iterdir() if p.name.upper().endswith(f"[{crc}].ZIP"))
+        if len(matches) != 1:
+            return {}
+        path = matches[0]
+    with zipfile.ZipFile(path) as archive:
+        return {
+            entry.filename: entry.file_size // 16
+            for entry in archive.infolist()
+            if entry.filename.lower().endswith(".gg")
+            and len(entry.filename.encode()) < 256
+            and entry.filename == entry.filename.strip()
+            and not any(c in entry.filename for c in "\0\r\n")
+            and 0 < entry.file_size <= 32 * 16 and entry.file_size % 16 == 0
+        }
+
+
+def supports_cheats():
+    for executable in Path("/proc").glob("[0-9]*/exe"):
+        try:
+            if executable.readlink().name in {"MiSTer", "MiSTer_Zaparoo"}:
+                if b"zaparoo_cheat" in executable.read_bytes():
+                    return True
+        except OSError:
+            pass
+    return False
+
+
+def active_game_revision():
+    try:
+        return str(ACTIVE_GAME.stat().st_mtime_ns)
+    except FileNotFoundError:
+        return ""
 
 
 def read_state():
@@ -27,6 +116,55 @@ def read_state():
 
 
 class SPAHandler(http.server.SimpleHTTPRequestHandler):
+    def do_POST(self):
+        if self.path != CHEATS_ROUTE:
+            return self.send_error(404)
+        if self.headers.get("Origin") != "http://" + self.headers.get("Host", ""):
+            return self.send_error(403)
+        if self.headers.get_content_type() != "application/json":
+            return self.send_error(415)
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+            if not 0 < length <= 16384:
+                return self.send_error(413)
+            request = json.loads(self.rfile.read(length))
+            rom = nes_rom_path(request["rom"])
+            names = request["names"]
+            previous = request["previous"]
+            if not isinstance(previous, str):
+                raise ValueError("Invalid launch revision.")
+            if not isinstance(names, list) or not 0 < len(names) <= 32 or not all(isinstance(n, str) for n in names):
+                raise ValueError("Invalid cheat selection.")
+            with CHEATS_LOCK:
+                revision = active_game_revision()
+                try:
+                    active = ACTIVE_GAME.read_text().strip()
+                except FileNotFoundError:
+                    active = ""
+                if (revision == previous or not active.lower().endswith(".nes")
+                        or nes_rom_path(active).resolve() != rom.resolve()):
+                    return self.send_json(425, {"error": "The selected ROM is not active on MiSTer."})
+                entries = cheat_entries(rom)
+                if len(set(names)) != len(names) or any(n not in entries for n in names):
+                    raise ValueError("Cheat list changed. Reopen the Cheats tab.")
+                if sum(entries[n] for n in names) > 32:
+                    raise ValueError("The NES core supports up to 32 codes.")
+                if not supports_cheats():
+                    return self.send_json(409, {"error": "Start MiSTer with Zaparoo Main to apply cheats."})
+                if active_game_revision() != revision:
+                    return self.send_json(409, {"error": "The active ROM changed before cheats could be applied."})
+                fd = os.open("/dev/MiSTer_cmd", os.O_WRONLY | os.O_NONBLOCK)
+                try:
+                    for name in names:
+                        os.write(fd, f"zaparoo_cheat on {name}\n".encode())
+                finally:
+                    os.close(fd)
+        except (ValueError, KeyError, TypeError) as error:
+            return self.send_json(400, {"error": str(error)})
+        except (OSError, zipfile.BadZipFile):
+            return self.send_json(503, {"error": "MiSTer could not receive the selected cheats."})
+        return self.send_json(200, {"queued": True})
+
     def is_versioned_asset(self):
         return bool(re.fullmatch(r"/assets/[^/]+-[A-Za-z0-9_-]{8,}\.[^/]+", urlsplit(self.path).path))
 
@@ -102,6 +240,20 @@ class SPAHandler(http.server.SimpleHTTPRequestHandler):
 
     def do_GET(self):
         request = urlsplit(self.path)
+        if request.path == CHEATS_ROUTE:
+            query = parse_qs(request.query)
+            try:
+                rom = nes_rom_path(query.get("rom", [""])[0])
+                entries = cheat_entries(rom)
+                return self.send_json(200, {
+                    "supported": supports_cheats(),
+                    "revision": active_game_revision(),
+                    "entries": [{"id": name, "codes": entries[name]} for name in sorted(entries, key=str.casefold)],
+                })
+            except ValueError as error:
+                return self.send_json(400, {"error": str(error)})
+            except (OSError, zipfile.BadZipFile):
+                return self.send_json(503, {"error": "Could not read the MiSTer cheat archive."})
         if request.path == "/api/playroom/save-state":
             query = parse_qs(request.query)
             core = query.get("core", [""])[0]

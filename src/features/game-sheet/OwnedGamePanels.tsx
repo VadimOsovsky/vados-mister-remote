@@ -6,6 +6,7 @@ import type { LaunchBoxGame } from '../../types';
 import type { useSaveSlots } from '../../hooks/useSaveSlots';
 import { LockIcon, UnlockIcon, SaveIcon, TrashIcon } from '../../lib/icons';
 import { GameScreenshots } from '../../kit/GameScreenshots';
+import { GameRating } from '../../kit/GameRating';
 import { ExpandableDescription } from '../../kit/ExpandableDescription';
 import { LazyImage } from '../../kit/LazyImage';
 
@@ -27,6 +28,7 @@ export function OwnedGameAbout({ game, screenshots }: { game: LaunchBoxGame; scr
         <ExpandableDescription text={game.desc} />
         <dl className="owned-facts">
             {facts.map(([label, value]) => value ? <div key={label}><dt>{label}</dt><dd>{value}</dd></div> : null)}
+            <GameRating rating={game.rating} ratingCount={game.ratingCount} />
         </dl>
     </>;
 }

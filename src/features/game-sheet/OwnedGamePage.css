@@ -130,19 +130,27 @@
 .owned-tabs-bar { border-bottom: 1px solid var(--line); }
 .owned-tabs {
   display: flex;
-  flex-wrap: wrap;
+  overflow-x: auto;
   gap: 8px;
   max-width: 860px;
   margin-inline: auto;
   padding: 12px 20px 14px;
 }
 
+.owned-tab { flex: none; white-space: nowrap; }
 .owned-tab span { color: var(--muted); }
 .owned-tab[data-state='active'] {
   background: var(--button-fill);
   color: var(--button-text);
 }
 .owned-tab[data-state='active'] span { color: var(--button-text-muted); }
+.owned-button .owned-cheat-badge {
+  flex: none;
+  color: inherit;
+  font-size: 1em;
+  line-height: 1;
+}
+.owned-tab .owned-cheat-badge { color: inherit; margin-inline-start: -4px; }
 
 .owned-panel { max-width: 860px; margin-inline: auto; padding: 24px 20px; }
 .owned-panel h2 { margin: 0; font: var(--font-heading-page); }
@@ -385,6 +393,40 @@
 .owned-confirm h2 { padding: 0; }
 .owned-confirm p { margin: 8px 0 0; color: var(--muted); }
 .owned-danger { color: white; background: #a32637; }
+
+.owned-button.owned-exit-button {
+  background: radial-gradient(rgb(255 255 255 / 12%) 1px, transparent 1.5px) 0 0 / 5px 5px, #4e5968;
+  border-color: #39434f;
+  color: white;
+}
+.owned-exit-dialog .owned-button.owned-exit-button {
+  background: #a32637;
+  border-color: #781b2a;
+}
+.owned-dialog.owned-exit-dialog {
+  width: min(calc(100% - 32px), 420px);
+  padding: clamp(20px, 6vw, 28px);
+  box-shadow: 0 18px 60px #0b13294d;
+}
+.owned-exit-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 16px;
+  border-radius: 14px;
+  background: #f9dce0;
+  color: #a32637;
+}
+.owned-exit-dialog strong { color: var(--ink); overflow-wrap: anywhere; }
+.owned-exit-dialog .owned-exit-error { color: #a32637; }
+.owned-exit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
+.owned-exit-actions .owned-button { flex: 1; min-height: 44px; white-space: nowrap; }
 
 @media (max-width: 360px) {
   .owned-hero-inner, .owned-panel, .owned-tabs { padding-inline: 16px; }

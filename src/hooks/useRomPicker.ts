@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ConsoleKey, LaunchBoxGame, PlatformDef } from '../types';
 import type { WizzoApi, WizzoGameSearchResult } from '../services/wizzoApi';
 import { getRomMapping, getRomVersions, setRomMapping } from '../lib/storage';
+import { CheatLaunchError } from '../services/gameCheats';
 import { launchCollectionGame } from '../services/collectionLauncher';
 
 export function useRomPicker(api: WizzoApi, platform: PlatformDef, selectedGame: LaunchBoxGame | null, activeConsole: ConsoleKey, onSelect?: (romPath: string) => void, searchEnabled = true) {
@@ -11,6 +12,7 @@ export function useRomPicker(api: WizzoApi, platform: PlatformDef, selectedGame:
     const [romSearchResults, setRomSearchResults] = useState<WizzoGameSearchResult[]>([]);
     const [romSearchLoading, setRomSearchLoading] = useState(false);
     const [romSearchError, setRomSearchError] = useState<string | null>(null);
+    const clearRomSearchError = useCallback(() => setRomSearchError(null), []);
 
     const setRomSearchQuery = useCallback((query: string) => {
         searchVersion.current += 1;
@@ -105,8 +107,9 @@ export function useRomPicker(api: WizzoApi, platform: PlatformDef, selectedGame:
             setRomMapping(selectedGame.id, activeConsole, result.path);
             try {
                 await launchCollectionGame(api, activeConsole, selectedGame.id, result.path);
-            } catch {
-                openRomPicker(selectedGame.title);
+            } catch (error) {
+                if (error instanceof CheatLaunchError) setRomSearchError(error.message);
+                else openRomPicker(selectedGame.title);
             }
         }
     }, [selectedGame, activeConsole, api, openRomPicker, closeRomPicker, onSelect]);
@@ -118,7 +121,11 @@ export function useRomPicker(api: WizzoApi, platform: PlatformDef, selectedGame:
             try {
                 await launchCollectionGame(api, activeConsole, selectedGame.id, cachedPath);
                 return;
-            } catch {
+            } catch (error) {
+                if (error instanceof CheatLaunchError) {
+                    setRomSearchError(error.message);
+                    return;
+                }
                 // Never replace the original mapping after a translated ROM fails.
                 if (getRomVersions(selectedGame.id, activeConsole).selected) {
                     setRomSearchError('Could not launch this translation. Check the ROM on MiSTer or choose another language.');
@@ -134,6 +141,6 @@ export function useRomPicker(api: WizzoApi, platform: PlatformDef, selectedGame:
         romPickerOpen, romSearchQuery, setRomSearchQuery,
         romSearchResults, romSearchLoading, romSearchError,
         openRomPicker, closeRomPicker, searchRoms, selectRom,
-        handleLaunchGame,
+        handleLaunchGame, clearRomSearchError,
     };
 }

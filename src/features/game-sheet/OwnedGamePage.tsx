@@ -1,6 +1,6 @@
-import { appStorage } from '../../lib/sharedStorage';
+import { appStorage, subscribeToValues } from '../../lib/sharedStorage';
 import { FavoriteStar } from '../collection/FavoriteBookmark';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
 import * as Dialog from '@radix-ui/react-dialog';
 import { GameFormDrawer } from './GameFormDrawer';
@@ -15,12 +15,15 @@ import type { LaunchBoxGame } from '../../types';
 import type { WizzoGameSearchResult } from '../../services/wizzoApi';
 import { BackArrowIcon, FlipDiskIcon, FileIcon, PencilIcon, PlayIcon, ResetIcon } from '../../lib/icons';
 import { getImageUrl, resolveImages, resolveScreenshots, resolveTitle } from '../../services/launchbox';
-import { getGameArtworkLanguage, getGameOverrides, deleteGameOverrides, removeCustomGame, setRomMapping } from '../../lib/storage';
+import { getGameArtworkLanguage, getGameOverrides, deleteGameOverrides, getRomMapping, removeCustomGame, setRomMapping } from '../../lib/storage';
+import { readCheatSelection } from '../../services/gameCheats';
+import { isRomPlaying } from '../../services/nowPlaying';
 import { resolveGameArtwork } from '../../lib/gameArtwork';
 import { EditGameForm } from './EditGameForm';
 import { RomPicker } from './RomPicker';
 import { GameLanguages } from './GameLanguages';
 import { OwnedGameAbout, OwnedGameSaves } from './OwnedGamePanels';
+import { OwnedGameCheats } from './OwnedGameCheats';
 import { slotLabel } from './slotLabel';
 import { getPreviewCover, getPreviewScreenshot } from '../collection/previewCovers';
 import { PlayroomHeader } from '../../kit/PlayroomHeader';
@@ -32,10 +35,14 @@ const tabs = [
     { key: 'main', label: 'About' },
     { key: 'library', label: 'Library' },
     { key: 'controls', label: 'Save / Load' },
+    { key: 'cheats', label: 'Cheats' },
 ] as const;
 
 type GameTab = typeof tabs[number]['key'];
 const GAME_TAB_KEY = 'owned_game_tab';
+const stopIcon = <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+    <rect x="5" y="5" width="14" height="14" rx="3" fill="currentColor" />
+</svg>;
 
 function isGameTab(value: string | null): value is GameTab {
     return tabs.some(tab => tab.key === value);
@@ -66,8 +73,15 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
     const [editMode, setEditMode] = useState(false);
     const [flippingDisk, setFlippingDisk] = useState(false);
     const [flipError, setFlipError] = useState<string>();
+    const [exitOpen, setExitOpen] = useState(false);
+    const [exiting, setExiting] = useState(false);
+    const [exitError, setExitError] = useState<string>();
     const activeConsole = useCollectionState(state => state.activeConsole);
     const platform = usePlatform();
+    const hasSelectedCheats = useSyncExternalStore(subscribeToValues, () => {
+        const rom = getRomMapping(selectedGame.id, activeConsole);
+        return Boolean(rom && readCheatSelection(activeConsole, rom).length);
+    });
     const api = useMisterState(state => state.api);
     const connected = useMisterState(state => state.connected);
     const beatenIds = useCollectionState(state => state.beatenIds);
@@ -78,6 +92,12 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
     const playing = useIsGamePlaying(selectedGame.id, activeConsole);
     const hasFlipDisk = platform.controls?.some(control => control.id === 'flip_disk');
     const romPicker = useRomPicker(api, platform, selectedGame, activeConsole);
+    const { romPickerOpen, romSearchError, clearRomSearchError } = romPicker;
+    useEffect(() => {
+        if (romPickerOpen || !romSearchError) return;
+        const timer = window.setTimeout(clearRomSearchError, 3000);
+        return () => window.clearTimeout(timer);
+    }, [romPickerOpen, romSearchError, clearRomSearchError]);
     const saves = useSaveSlots(api, selectedGame, activeConsole);
     const pendingLoadSlot = useRef<number | null>(null);
     const [editField, setEditField] = useState<'rom' | undefined>();
@@ -115,6 +135,28 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
     const selectedIndex = activeTab === 'controls' && saves.saveSlots[saves.selectedSlot]
         ? saves.selectedSlot : null;
     const loadIndex = selectedIndex ?? latestIndex;
+    const actionsBusy = !connected || saves.savingSlot || saves.loadingSlot || flippingDisk;
+    const showExit = playing && selectedIndex === null;
+
+    async function exitGame() {
+        if (actionsBusy || exiting) return;
+        setExiting(true);
+        setExitError(undefined);
+        try {
+            const rom = getRomMapping(selectedGame.id, activeConsole);
+            const current = await api.getPlaying(AbortSignal.timeout(5000));
+            if (useMisterState.getState().api !== api || !isRomPlaying(current, rom, activeConsole)) {
+                setExitError('This game is no longer running on the connected MiSTer.');
+                return;
+            }
+            await api.launchMenu();
+            setExitOpen(false);
+        } catch {
+            setExitError('Could not return to the MiSTer menu. Try again.');
+        } finally {
+            setExiting(false);
+        }
+    }
 
     function edit(field?: 'rom') {
         setEditField(field);
@@ -228,6 +270,8 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
                             {tabs.map(tab => (
                                 <Tabs.Trigger key={tab.key} value={tab.key} className="owned-button owned-tab playroom-press">
                                     {tab.label}{tab.key === 'controls' && <span>{used}/4</span>}
+                                    {tab.key === 'cheats' && hasSelectedCheats &&
+                                        <span className="owned-cheat-badge" aria-label="Cheats selected">✦</span>}
                                 </Tabs.Trigger>
                             ))}
                         </Tabs.List>
@@ -280,20 +324,56 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
                     <Tabs.Content value="controls" className="owned-panel">
                         <OwnedGameSaves gameId={selectedGame.id} title={selectedGame.title} saves={saves} previewScreenshot={previewScreenshot || undefined} />
                     </Tabs.Content>
+                    <Tabs.Content value="cheats" className="owned-panel">
+                        {activeTab === 'cheats' && <OwnedGameCheats gameId={selectedGame.id} consoleKey={activeConsole} onLink={() => edit('rom')} />}
+                    </Tabs.Content>
                 </Tabs.Root>
             </main>
             <aside className="owned-dock" aria-label="Game actions" data-has-flip={hasFlipDisk || undefined}>
-                {!romPicker.romPickerOpen && romPicker.romSearchError && <p className="owned-flip-error" role="alert">{romPicker.romSearchError}</p>}
+                {!romPickerOpen && romSearchError && <p className="owned-flip-error" role="alert">{romSearchError}</p>}
                 {flipError && <p className="owned-flip-error" role="alert">{flipError}</p>}
-                {loadIndex !== null && <button className="owned-button owned-new-game playroom-press" aria-label="Start new game" title="Start new game" disabled={!connected || saves.savingSlot || saves.loadingSlot || flippingDisk} onClick={startNewGame}>{ResetIcon}<span>Start new game</span></button>}
-                <button className="owned-button owned-gold owned-primary playroom-press"
-                    disabled={!connected || saves.savingSlot || saves.loadingSlot || flippingDisk || (playing && selectedIndex === null)}
+                {loadIndex !== null && <button className="owned-button owned-new-game playroom-press" aria-label={hasSelectedCheats ? 'Start new game with selected cheats' : 'Start new game'} title="Start new game" disabled={!connected || saves.savingSlot || saves.loadingSlot || flippingDisk} onClick={startNewGame}>{ResetIcon}<span>Start new game</span>
+                    {hasSelectedCheats && <span className="owned-cheat-badge" aria-hidden="true">✦</span>}
+                </button>}
+                <Dialog.Root open={exitOpen} onOpenChange={open => {
+                    if (exiting) return;
+                    setExitError(undefined);
+                    setExitOpen(open);
+                }}>
+                    {showExit && <Dialog.Trigger asChild>
+                        <button className="owned-button owned-primary owned-exit-button playroom-press" disabled={!!actionsBusy}>
+                            {stopIcon}<span>Exit game</span>
+                        </button>
+                    </Dialog.Trigger>}
+                    <Dialog.Portal>
+                        <Dialog.Overlay className="owned-dialog-overlay" />
+                        <Dialog.Content className="owned-dialog owned-confirm owned-exit-dialog">
+                            <span className="owned-exit-icon">{stopIcon}</span>
+                            <Dialog.Title>Exit game?</Dialog.Title>
+                            <Dialog.Description>
+                                <strong>{displayTitle}</strong> will close and MiSTer will return to its main menu. Unsaved progress will be lost.
+                            </Dialog.Description>
+                            {exitError && <p role="alert" className="owned-exit-error">{exitError}</p>}
+                            <div className="owned-exit-actions">
+                                <Dialog.Close className="owned-button playroom-press" disabled={exiting}>Cancel</Dialog.Close>
+                                <button className="owned-button owned-exit-button playroom-press"
+                                    disabled={!!actionsBusy || exiting} onClick={exitGame}>
+                                    {exiting ? 'Exiting…' : 'Exit game'}
+                                </button>
+                            </div>
+                        </Dialog.Content>
+                    </Dialog.Portal>
+                </Dialog.Root>
+                {!showExit && <button className="owned-button owned-gold owned-primary playroom-press"
+                    disabled={!!actionsBusy}
                     onClick={continueGame}>
                     {PlayIcon}
                     <span>
-                        {saves.loadingSlot ? 'Loading…' : selectedIndex !== null ? `Load · ${slotLabel(selectedIndex)}` : playing ? 'Now playing' : loadIndex !== null ? 'Continue' : 'Play'}
+                        {saves.loadingSlot ? 'Loading…' : selectedIndex !== null ? `Load · ${slotLabel(selectedIndex)}` : loadIndex !== null ? 'Continue' : 'Play'}
                     </span>
-                </button>
+                    {!playing && hasSelectedCheats && <span className="owned-cheat-badge"
+                        title="Cheats selected for next launch" aria-label="Cheats selected">✦</span>}
+                </button>}
                 {hasFlipDisk && <button className="owned-button owned-flip-disk playroom-press"
                     disabled={!connected || !playing || saves.loadingSlot || flippingDisk}
                     aria-label="Flip Disk" aria-busy={flippingDisk}

@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'reac
 import { PhotoViewer } from '../../kit/PhotoViewer';
 import { GameScreenshots } from '../../kit/GameScreenshots';
 import { GameBackdrop } from '../../kit/GameBackdrop';
+import { GameRating } from '../../kit/GameRating';
 import { useCollectionState, usePlatform } from '../../state/collectionState';
 import { useMisterState } from '../../state/misterState';
 import { useRomPicker } from '../../hooks/useRomPicker';
@@ -155,6 +156,7 @@ function StoreProduct({ game, preview, backUrl }: { game: LaunchBoxGame; preview
                             {facts.filter(([, value]) => value).map(([label, value]) => (
                                 <div key={label}><dt>{label}</dt><dd>{value}</dd></div>
                             ))}
+                            <GameRating rating={game.rating} ratingCount={game.ratingCount} />
                         </dl>
                     </section>
                 </article>
