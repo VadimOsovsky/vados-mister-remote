@@ -116,7 +116,7 @@ export function resolveImages(
  * Load all games for a LaunchBox platform (e.g. 'nes', 'snes').
  * Multiple ConsoleKeys may share the same lbPlatform.
  */
-export async function loadPlatformGames(consoleKey: ConsoleKey): Promise<LaunchBoxGame[]> {
+export async function loadPlatformGames(consoleKey: ConsoleKey, { requireCatalog = false } = {}): Promise<LaunchBoxGame[]> {
   const platform = PLATFORMS[consoleKey].lbPlatform;
 
   // Check memory cache
@@ -138,6 +138,7 @@ export async function loadPlatformGames(consoleKey: ConsoleKey): Promise<LaunchB
   // Fetch from static JSON
   const res = await fetch(`/launchbox/${platform}.json`);
   if (!res.ok) {
+    if (requireCatalog) throw new Error(`Could not load LaunchBox data for ${platform}`);
     console.warn(`LaunchBox data for ${platform} not found`);
     return [];
   }
@@ -154,12 +155,13 @@ export async function loadPlatformGames(consoleKey: ConsoleKey): Promise<LaunchB
 /**
  * Load only the collection games for a specific console variant.
  */
-export async function loadCollectionGames(consoleKey: ConsoleKey, collectionIds: string[]): Promise<LaunchBoxGame[]> {
+export async function loadCollectionGames(consoleKey: ConsoleKey, collectionIds: string[], { requireCatalog = false } = {}): Promise<LaunchBoxGame[]> {
   if (!collectionIds.length) return [];
-  const allGames = await loadPlatformGames(consoleKey);
   const collectionSet = new Set(collectionIds);
-  const lbGames = allGames.filter(g => collectionSet.has(g.id));
   const customGames = getCustomGames(consoleKey).filter(g => collectionSet.has(g.id));
+  if (requireCatalog && collectionIds.every(id => customGames.some(game => game.id === id))) return customGames;
+  const allGames = await loadPlatformGames(consoleKey, { requireCatalog });
+  const lbGames = allGames.filter(g => collectionSet.has(g.id));
   return [...lbGames, ...customGames];
 }
 

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { useAppContext } from '../../AppContext';
+import { useCollectionState } from '../../state/collectionState';
+import { useMisterState } from '../../state/misterState';
 import { useSettings } from '../../hooks/useSettings';
 import { isHostedOnMister } from '../../lib/storage';
 import { PlayroomConsoleHeader } from '../../kit/PlayroomConsoleHeader';
@@ -10,7 +11,12 @@ import { version } from '../../../package.json';
 type IndexStatus = { label: string; percent?: number; busy: boolean };
 
 export function SettingsPage() {
-    const { api, connected, misterHost, setMisterHost, economyDisabled, setEconomyDisabled } = useAppContext();
+    const api = useMisterState(state => state.api);
+    const connected = useMisterState(state => state.connected);
+    const misterHost = useMisterState(state => state.misterHost);
+    const setMisterHost = useMisterState(state => state.setMisterHost);
+    const economyDisabled = useCollectionState(state => state.economyDisabled);
+    const setEconomyDisabled = useCollectionState(state => state.setEconomyDisabled);
     const hostedOnMister = isHostedOnMister();
     const { settingsHost, setSettingsHost, settingsSaved, saveSettings } = useSettings(misterHost, setMisterHost);
     const [indexStatus, setIndexStatus] = useState<IndexStatus>();

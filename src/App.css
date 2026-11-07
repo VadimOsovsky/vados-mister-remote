@@ -22,7 +22,7 @@ body {
 
 /* Anchor the standalone shell to the viewport for both scrolling and navigation. */
 @media (display-mode: standalone) {
-  .app:has(> .tab-bar) {
+  .app {
     height: auto;
     bottom: var(--app-viewport-bottom, 0px);
   }
@@ -55,13 +55,10 @@ body {
   flex: 1;
   overflow-y: auto;
   min-height: 0;
-}
-
-/* Let the last item scroll clear of the floating footer. */
-.page-scroll::after {
-  content: '';
-  display: block;
-  height: calc(var(--footer-height) + var(--page-footer-bottom) + var(--footer-content-gap));
+  /* Keep the last item clear of the floating footer, including on focus. */
+  --footer-clearance: calc(var(--footer-height) + var(--page-footer-bottom) + var(--footer-content-gap));
+  padding-block-end: var(--footer-clearance);
+  scroll-padding-block-end: var(--footer-clearance);
 }
 
 .page-scroll::-webkit-scrollbar { width: 0; }

@@ -7,7 +7,8 @@ import { GameFormDrawer } from './GameFormDrawer';
 import { PhotoViewer } from '../../kit/PhotoViewer';
 import { GameBackdrop } from '../../kit/GameBackdrop';
 
-import { useAppContext } from '../../AppContext';
+import { useCollectionState, usePlatform } from '../../state/collectionState';
+import { useMisterState, useIsGamePlaying } from '../../state/misterState';
 import { useRomPicker } from '../../hooks/useRomPicker';
 import { useSaveSlots } from '../../hooks/useSaveSlots';
 import type { LaunchBoxGame } from '../../types';
@@ -50,7 +51,7 @@ function readGameTab(): GameTab {
 
 export function OwnedGamePage(props: { selectedGame: LaunchBoxGame; onClose: () => void }) {
     const [revision, setRevision] = useState(0);
-    const { activeConsole } = useAppContext();
+    const activeConsole = useCollectionState(state => state.activeConsole);
     return <OwnedGameContent key={activeConsole + props.selectedGame.id + '_' + revision} {...props}
         onVersionChange={() => setRevision(value => value + 1)} />;
 }
@@ -65,8 +66,16 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
     const [editMode, setEditMode] = useState(false);
     const [flippingDisk, setFlippingDisk] = useState(false);
     const [flipError, setFlipError] = useState<string>();
-    const { activeConsole, platform, api, connected, isGamePlaying, beatenIds, favoriteIds, toggleFavorite, removeFromCollection, unmarkAsBeaten } = useAppContext();
-    const playing = isGamePlaying(selectedGame.id, activeConsole);
+    const activeConsole = useCollectionState(state => state.activeConsole);
+    const platform = usePlatform();
+    const api = useMisterState(state => state.api);
+    const connected = useMisterState(state => state.connected);
+    const beatenIds = useCollectionState(state => state.beatenIds);
+    const favoriteIds = useCollectionState(state => state.favoriteIds);
+    const toggleFavorite = useCollectionState(state => state.toggleFavorite);
+    const removeFromCollection = useCollectionState(state => state.removeFromCollection);
+    const unmarkAsBeaten = useCollectionState(state => state.unmarkAsBeaten);
+    const playing = useIsGamePlaying(selectedGame.id, activeConsole);
     const hasFlipDisk = platform.controls?.some(control => control.id === 'flip_disk');
     const romPicker = useRomPicker(api, platform, selectedGame, activeConsole);
     const saves = useSaveSlots(api, selectedGame, activeConsole);
@@ -268,7 +277,7 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
                         </div>
                     </Tabs.Content>
                     <Tabs.Content value="controls" className="owned-panel">
-                        <OwnedGameSaves gameId={selectedGame.id} saves={saves} previewScreenshot={previewScreenshot || undefined} />
+                        <OwnedGameSaves gameId={selectedGame.id} title={selectedGame.title} saves={saves} previewScreenshot={previewScreenshot || undefined} />
                     </Tabs.Content>
                 </Tabs.Root>
             </main>

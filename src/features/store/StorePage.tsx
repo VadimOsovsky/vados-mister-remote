@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
-import { useAppContext } from '../../AppContext';
+import { useCollectionState, usePlatform } from '../../state/collectionState';
 import { useStore } from '../../hooks/useStore';
 import { PlayroomConsoleHeader } from '../../kit/PlayroomConsoleHeader';
 import { SearchBar } from '../collection/SearchBar';
@@ -17,7 +17,11 @@ const sorts: { mode: SortMode; label: string }[] = [
 ];
 
 export function StorePage() {
-    const { activeConsole, setActiveConsole, platform, balance, economyDisabled } = useAppContext();
+    const activeConsole = useCollectionState(state => state.activeConsole);
+    const setActiveConsole = useCollectionState(state => state.setActiveConsole);
+    const platform = usePlatform();
+    const balance = useCollectionState(state => state.balance);
+    const economyDisabled = useCollectionState(state => state.economyDisabled);
     const [params] = useSearchParams();
     const preview = import.meta.env.DEV && params.get('preview') === '1';
     const { loading, error, search, setSearch, sort, setSort, filteredGames } = useStore(activeConsole, preview);

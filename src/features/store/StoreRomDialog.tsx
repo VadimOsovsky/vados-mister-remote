@@ -5,7 +5,7 @@ import { BottomSheet } from '../../kit/BottomSheet';
 import type { useRomPicker } from '../../hooks/useRomPicker';
 import type { WizzoGameSearchResult } from '../../services/wizzoApi';
 import { FileIcon, SearchIcon, StoreIcon } from '../../lib/icons';
-import { useAppContext } from '../../AppContext';
+import { useCollectionState, usePlatform } from '../../state/collectionState';
 import { formatGamePrice } from '../../lib/pricing';
 
 type Picker = ReturnType<typeof useRomPicker>;
@@ -40,7 +40,8 @@ function StoreRomForm({ picker, title, consoleName, price, preview, canPurchase 
     preview: boolean;
     canPurchase: boolean;
 }) {
-    const { economyDisabled, platform } = useAppContext();
+    const economyDisabled = useCollectionState(state => state.economyDisabled);
+    const platform = usePlatform();
     const searchRef = useRef<HTMLInputElement>(null);
     const [selected, setSelected] = useState<string>();
     const extension = platform.lbPlatform === 'fds' ? 'fds' : 'nes';

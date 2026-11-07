@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
-import { useAppContext } from '../AppContext';
+import { useCollectionState } from '../state/collectionState';
+import { useMisterState } from '../state/misterState';
 import { ConsoleBadge, ConsoleSheet } from './ConsoleCarousel/ConsoleSheet';
 import { PlayroomHeader } from './PlayroomHeader';
 import type { ConsoleKey } from '../types';
@@ -10,7 +11,8 @@ export function PlayroomConsoleHeader({ onSwitch, alternate, showAlternate = fal
     alternate?: ReactNode;
     showAlternate?: boolean;
 }) {
-    const { connected, setActiveConsole } = useAppContext();
+    const connected = useMisterState(state => state.connected);
+    const setActiveConsole = useCollectionState(state => state.setActiveConsole);
     const [open, setOpen] = useState(false);
 
     const connectionLabel = connected ? 'Connected to MiSTer' : 'Disconnected from MiSTer';

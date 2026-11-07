@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { GameFormDrawer } from '../game-sheet/GameFormDrawer';
-import { useAppContext } from '../../AppContext';
+import { useCollectionState, usePlatform } from '../../state/collectionState';
 import { EditGameForm } from '../game-sheet/EditGameForm';
 import { addCustomGame, getGameOverrides } from '../../lib/storage';
 import type { LaunchBoxGame } from '../../types';
@@ -25,7 +25,9 @@ export function AddGameSheet({ open, onOpenChange }: {
     open: boolean;
     onOpenChange: (open: boolean) => void;
 }) {
-    const { activeConsole, platform, addToCollection } = useAppContext();
+    const activeConsole = useCollectionState(state => state.activeConsole);
+    const platform = usePlatform();
+    const addToCollection = useCollectionState(state => state.addToCollection);
     const [stub, setStub] = useState(createGameStub);
 
     useEffect(() => {

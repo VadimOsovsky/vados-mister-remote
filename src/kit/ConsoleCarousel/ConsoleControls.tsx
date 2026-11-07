@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { PLATFORMS } from '../../constants';
-import { useAppContext } from '../../AppContext';
+import { useMisterState } from '../../state/misterState';
 import { ResetIcon, FlipDiskIcon, PowerIcon } from '../../lib/icons';
 import type { ConsoleKey, ConsoleControl } from '../../types';
 import './ConsoleControls.css';
@@ -12,7 +12,7 @@ const CONTROL_ICONS: Record<string, ReactNode> = {
 };
 
 export function ConsoleControls({ activeConsole }: { activeConsole: ConsoleKey }) {
-    const { api } = useAppContext();
+    const api = useMisterState(state => state.api);
     const platform = PLATFORMS[activeConsole];
     const controls = platform.controls;
 

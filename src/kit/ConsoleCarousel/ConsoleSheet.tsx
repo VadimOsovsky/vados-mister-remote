@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Drawer } from 'vaul';
 import { BottomSheet } from '../BottomSheet';
-import { useAppContext } from '../../AppContext';
+import { useCollectionState, usePlatform } from '../../state/collectionState';
 import { PLATFORMS } from '../../constants';
 import { ChevronDownIcon, SearchIcon } from '../../lib/icons';
 import { ConsoleControls } from './ConsoleControls';
@@ -25,7 +25,8 @@ const consolePhotos: Partial<Record<ConsoleKey, string>> = {
 };
 
 export function ConsoleBadge({ onClick, expanded }: { onClick: () => void; expanded: boolean }) {
-    const { platform, activeConsole } = useAppContext();
+    const platform = usePlatform();
+    const activeConsole = useCollectionState(state => state.activeConsole);
     const photo = consolePhotos[activeConsole];
 
     return (
@@ -42,7 +43,7 @@ export function ConsoleSheet({ open, onOpenChange, onSwitch }: {
     onOpenChange: (open: boolean) => void;
     onSwitch: (key: ConsoleKey) => void;
 }) {
-    const { activeConsole } = useAppContext();
+    const activeConsole = useCollectionState(state => state.activeConsole);
     const platform = PLATFORMS[activeConsole];
     const [search, setSearch] = useState('');
     const options = (Object.keys(PLATFORMS) as ConsoleKey[]).filter(key =>

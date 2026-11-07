@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Drawer } from 'vaul';
 import type { LaunchBoxGame } from '../../types';
-import { useAppContext } from '../../AppContext';
+import { useCollectionState, usePlatform } from '../../state/collectionState';
+import { useMisterState } from '../../state/misterState';
 import { useRomPicker } from '../../hooks/useRomPicker';
 import { addRomTranslation, getOriginalRomMapping, getRomVersions, selectRomVersion, setRomMapping } from '../../lib/storage';
 import { BottomSheet } from '../../kit/BottomSheet';
@@ -12,7 +13,10 @@ import { GAME_LANGUAGES } from '../../lib/gameLanguages';
 const LanguageIcon = <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 5h12M9 3v2M5 5c0 6 5 10 8 11M13 5c0 6-5 10-9 12M14 21l4-10 4 10M15.5 17h5" /></svg>;
 
 export function GameLanguages({ game, disabled, onChange }: { game: LaunchBoxGame; disabled: boolean; onChange: () => void }) {
-    const { api, platform, activeConsole, connected } = useAppContext();
+    const api = useMisterState(state => state.api);
+    const platform = usePlatform();
+    const activeConsole = useCollectionState(state => state.activeConsole);
+    const connected = useMisterState(state => state.connected);
     const versions = getRomVersions(game.id, activeConsole);
     const originalPath = getOriginalRomMapping(game.id, activeConsole);
     const selectedLanguage = versions.translations.find(v => v.path === versions.selected)?.language ?? 'Original';

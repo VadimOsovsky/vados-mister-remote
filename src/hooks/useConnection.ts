@@ -1,9 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
-import { WizzoApi } from '../services/wizzoApi';
+import { useEffect, useState } from 'react';
+import type { WizzoApi } from '../services/wizzoApi';
 
-export function useConnection(host: string) {
-    const [connected, setConnected] = useState(false);
-    const api = useMemo(() => new WizzoApi(host), [host]);
+export function useConnection(api: WizzoApi) {
+    const [connectedApi, setConnectedApi] = useState<WizzoApi>();
 
     useEffect(() => {
         let alive = true;
@@ -11,9 +10,9 @@ export function useConnection(host: string) {
         async function poll() {
             try {
                 await api.getSysInfo();
-                if (alive) setConnected(true);
+                if (alive) setConnectedApi(api);
             } catch {
-                if (alive) setConnected(false);
+                if (alive) setConnectedApi(undefined);
             }
         }
 
@@ -26,5 +25,5 @@ export function useConnection(host: string) {
         };
     }, [api]);
 
-    return { connected, api };
+    return connectedApi === api;
 }

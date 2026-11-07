@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { useAppContext } from '../../AppContext';
+import { useCollectionState } from '../../state/collectionState';
+import { useMisterState, useIsGamePlaying } from '../../state/misterState';
 import type { LaunchBoxGame } from '../../types';
 import type { useSaveSlots } from '../../hooks/useSaveSlots';
 import { LockIcon, UnlockIcon, SaveIcon, TrashIcon } from '../../lib/icons';
@@ -30,9 +31,13 @@ export function OwnedGameAbout({ game, screenshots }: { game: LaunchBoxGame; scr
     </>;
 }
 
-export function OwnedGameSaves({ gameId, saves, previewScreenshot }: { gameId: string; saves: ReturnType<typeof useSaveSlots>; previewScreenshot?: string }) {
-    const { api, connected, activeConsole, isGamePlaying, markAsBeaten, unmarkAsBeaten } = useAppContext();
-    const playing = isGamePlaying(gameId, activeConsole);
+export function OwnedGameSaves({ gameId, title, saves, previewScreenshot }: { gameId: string; title: string; saves: ReturnType<typeof useSaveSlots>; previewScreenshot?: string }) {
+    const api = useMisterState(state => state.api);
+    const connected = useMisterState(state => state.connected);
+    const activeConsole = useCollectionState(state => state.activeConsole);
+    const markAsBeaten = useCollectionState(state => state.markAsBeaten);
+    const unmarkAsBeaten = useCollectionState(state => state.unmarkAsBeaten);
+    const playing = useIsGamePlaying(gameId, activeConsole);
     const [confirmDelete, setConfirmDelete] = useState(false);
     const { selectedSlot: index, setSelectedSlot, saveSlots } = saves;
     const current = saveSlots[index];
@@ -61,7 +66,7 @@ export function OwnedGameSaves({ gameId, saves, previewScreenshot }: { gameId: s
             <div className="owned-save-actions">
                 {current ? <>
                     <button className="owned-button playroom-press" aria-pressed={!!current.beaten} onClick={() => {
-                        if (saves.handleToggleBeaten()) markAsBeaten(gameId);
+                        if (saves.handleToggleBeaten()) markAsBeaten(gameId, title);
                         else unmarkAsBeaten(gameId);
                     }}>✓ {current.beaten ? 'Completed' : 'Mark completed'}</button>
                     <button className="owned-button owned-icon playroom-press" aria-label={current.locked ? 'Unprotect save' : 'Protect save'}

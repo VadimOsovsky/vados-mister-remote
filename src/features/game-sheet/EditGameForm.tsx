@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ConsoleKey, GameArtwork, GameOverrides, LaunchBoxGame } from '../../types';
 import type { WizzoGameSearchResult } from '../../services/wizzoApi';
-import { useAppContext } from '../../AppContext';
+import { usePlatform } from '../../state/collectionState';
+import { useMisterState } from '../../state/misterState';
 import { SearchIcon, TrashIcon } from '../../lib/icons';
 import { getGameArtworkLanguage, getGameOverrides, setGameOverrides, getOriginalRomMapping, setRomMapping } from '../../lib/storage';
 import { getImageUrl, resolveImages, resolveTitle } from '../../services/launchbox';
@@ -38,7 +39,8 @@ export function EditGameForm({ game, regions, activeConsole, onSave, onCancel, o
     const [confirmDelete, setConfirmDelete] = useState(false);
 
     // ── ROM autocomplete state ──
-    const { api, platform } = useAppContext();
+    const api = useMisterState(state => state.api);
+    const platform = usePlatform();
     const [romResults, setRomResults] = useState<WizzoGameSearchResult[]>([]);
     const [romLoading, setRomLoading] = useState(false);
     const [romDropdownOpen, setRomDropdownOpen] = useState(false);

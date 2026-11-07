@@ -5,7 +5,7 @@ import { storePrice } from './storePreview';
 import { getImageUrl, resolveImages, resolveTitle } from '../../services/launchbox';
 import { getPreviewCover } from '../collection/previewCovers';
 import { LazyImage } from '../../kit/LazyImage';
-import { useAppContext } from '../../AppContext';
+import { useCollectionState } from '../../state/collectionState';
 import { formatGamePrice } from '../../lib/pricing';
 
 export function StoreCard({ game, consoleKey, preview, onSelect }: {
@@ -17,7 +17,7 @@ export function StoreCard({ game, consoleKey, preview, onSelect }: {
     const platform = PLATFORMS[consoleKey];
     const cover = resolveImages(game, platform.imageRegions).front;
     const title = resolveTitle(game, platform.nameRegions);
-    const { economyDisabled } = useAppContext();
+    const economyDisabled = useCollectionState(state => state.economyDisabled);
     const price = formatGamePrice(storePrice(game, consoleKey, preview, economyDisabled));
     return (
         <button type="button" className="shop-card" onClick={() => onSelect(game)}>

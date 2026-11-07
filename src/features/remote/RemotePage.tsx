@@ -1,4 +1,4 @@
-import { useAppContext } from '../../AppContext';
+import { useMisterState } from '../../state/misterState';
 import { ChevronDownIcon, OsdIcon, ResetIcon } from '../../lib/icons';
 import { PlayroomConsoleHeader } from '../../kit/PlayroomConsoleHeader';
 import { KEYBOARD_KEYS } from '../../services/wizzoApi';
@@ -7,7 +7,9 @@ import './RemotePage.css';
 const directions = ['up', 'left', 'right', 'down'] as const;
 
 export function RemotePage() {
-    const { api, connected, nowPlaying } = useAppContext();
+    const api = useMisterState(state => state.api);
+    const connected = useMisterState(state => state.connected);
+    const nowPlaying = useMisterState(state => state.nowPlaying);
 
     function press(key: keyof typeof KEYBOARD_KEYS) {
         navigator.vibrate?.(10);
@@ -22,8 +24,6 @@ export function RemotePage() {
                     <div className="remote-intro">
                         <p className="playroom-kicker">Your MiSTer, within reach</p>
                         <h1>Remote control<span>.</span></h1>
-                        <p role="status">{!connected ? 'MiSTer is offline' : nowPlaying?.gameName
-                            ? `Now playing · ${nowPlaying.gameName}` : 'No game running'}</p>
                     </div>
                     <section className="remote-deck" aria-label="MiSTer remote">
                         <p className="playroom-kicker remote-deck-top">MiSTer remote</p>

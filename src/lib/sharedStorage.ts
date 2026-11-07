@@ -9,6 +9,41 @@ let confirmed: Snapshot | undefined;
 let values: Values = {};
 let status: SyncStatus = 'saved';
 let syncing = false;
+const valueListeners = new Set<() => void>();
+let batchDepth = 0;
+let changed = false;
+
+export function subscribeToValues(listener: () => void) {
+    valueListeners.add(listener);
+    return () => { valueListeners.delete(listener); };
+}
+
+function publishValues() {
+    valueListeners.forEach(listener => listener());
+}
+
+function flushChanges() {
+    if (batchDepth || !changed) return;
+    changed = false;
+    publishValues();
+    void syncSharedStorage();
+}
+
+export function batchStorageWrites<T>(write: () => T): T {
+    batchDepth++;
+    try {
+        return write();
+    } finally {
+        batchDepth--;
+        flushChanges();
+    }
+}
+
+function valuesChanged() {
+    changed = true;
+    flushChanges();
+}
+
 const listeners = new Set<() => void>();
 
 export function subscribeToSync(listener: () => void) {
@@ -38,7 +73,7 @@ function writeState(snapshot: Snapshot) {
 }
 
 export async function initializeSharedStorage() {
-    if (import.meta.env.DEV) return;
+    if (import.meta.env?.DEV) return;
 
     let snapshot = await fetchState();
     if (snapshot.revision === 0) {
@@ -82,6 +117,7 @@ export async function syncSharedStorage() {
                 }
                 confirmed = latest;
                 values = merged;
+                publishValues();
                 continue;
             }
             if (!response.ok) throw new Error('Could not save shared data');
@@ -102,21 +138,25 @@ export const appStorage = {
     },
     setItem(key: string, value: string) {
         if (!confirmed) {
+            if (localStorage.getItem(key) === value) return;
             localStorage.setItem(key, value);
+            valuesChanged();
             return;
         }
         if (values[key] === value) return;
         values = { ...values, [key]: value };
-        void syncSharedStorage();
+        valuesChanged();
     },
     removeItem(key: string) {
         if (!confirmed) {
+            if (localStorage.getItem(key) === null) return;
             localStorage.removeItem(key);
+            valuesChanged();
             return;
         }
         if (!Object.hasOwn(values, key)) return;
         values = { ...values };
         delete values[key];
-        void syncSharedStorage();
+        valuesChanged();
     },
 };

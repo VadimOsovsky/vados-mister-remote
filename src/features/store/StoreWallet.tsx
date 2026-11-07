@@ -1,4 +1,4 @@
-import { useAppContext } from '../../AppContext';
+import { useCollectionState } from '../../state/collectionState';
 import { useState } from 'react';
 import { Drawer } from 'vaul';
 import { BottomSheet } from '../../kit/BottomSheet';
@@ -8,7 +8,7 @@ import { formatPrice } from '../../lib/pricing';
 
 export function StoreWallet({ balance, compact }: { balance: number; compact?: boolean }) {
     const [open, setOpen] = useState(false);
-    const { economyDisabled } = useAppContext();
+    const economyDisabled = useCollectionState(state => state.economyDisabled);
     if (economyDisabled) return null;
     return <>
         <button type="button" className={compact ? 'store-wallet compact' : 'store-wallet'} aria-label={'Your balance: ' + formatPrice(balance) + '. View wallet rules'} onClick={() => setOpen(true)}>

@@ -2,23 +2,19 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import type { ConsoleKey, LaunchBoxGame } from '../types';
 import { loadCollectionGames, searchGames } from '../services/launchbox';
-import { useAppContext } from '../AppContext';
+import { useCollectionState } from '../state/collectionState';
 import { getRecentGames } from '../lib/recentGames';
 import { PLATFORMS } from '../constants';
 
-// Temporary local preview using real LaunchBox IDs, without writing ownership.
-const PREVIEW_IDS = {
-    nes: ['135', '121', '361', '123', '112', '113'],
-    fds: ['90335', '90377', '91920'],
-};
+import { getCollectionPreviewIds } from '../features/collection/collectionPreview';
 
 export function useCollection(activeConsole: ConsoleKey) {
-    const { collectionIds } = useAppContext();
+    const collectionIds = useCollectionState(state => state.collectionIds);
     const [params] = useSearchParams();
     const preview = import.meta.env.DEV && params.get('preview') === '1';
     const displayedIds = useMemo(() => {
         if (!preview) return collectionIds;
-        return [...new Set([...collectionIds, ...PREVIEW_IDS[PLATFORMS[activeConsole].lbPlatform === 'fds' ? 'fds' : 'nes']])];
+        return [...new Set([...collectionIds, ...getCollectionPreviewIds(activeConsole)])];
     }, [activeConsole, collectionIds, preview]);
     const [games, setGames] = useState<LaunchBoxGame[]>([]);
     const [loading, setLoading] = useState(false);

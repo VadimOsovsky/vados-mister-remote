@@ -320,9 +320,9 @@
 
 .owned-dock {
   height: var(--footer-height);
-  position: fixed;
+  position: absolute;
   z-index: 5;
-  bottom: calc(var(--app-viewport-bottom, 0px) + var(--game-footer-bottom));
+  bottom: var(--page-footer-bottom);
   left: 50%;
   translate: -50% 0;
   width: min(calc(100% - 24px), 560px);

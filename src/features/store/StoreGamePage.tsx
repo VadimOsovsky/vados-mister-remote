@@ -3,7 +3,8 @@ import { Link, useParams, useSearchParams } from 'react-router';
 import { PhotoViewer } from '../../kit/PhotoViewer';
 import { GameScreenshots } from '../../kit/GameScreenshots';
 import { GameBackdrop } from '../../kit/GameBackdrop';
-import { useAppContext } from '../../AppContext';
+import { useCollectionState, usePlatform } from '../../state/collectionState';
+import { useMisterState } from '../../state/misterState';
 import { useRomPicker } from '../../hooks/useRomPicker';
 import { PlayroomHeader } from '../../kit/PlayroomHeader';
 import { ExpandableDescription } from '../../kit/ExpandableDescription';
@@ -21,7 +22,8 @@ import './StoreGamePage.css';
 
 export function StoreGamePage() {
     const { gameId } = useParams();
-    const { activeConsole, balance } = useAppContext();
+    const activeConsole = useCollectionState(state => state.activeConsole);
+    const balance = useCollectionState(state => state.balance);
     const [params] = useSearchParams();
     const preview = import.meta.env.DEV && params.get('preview') === '1';
     const backUrl = preview ? '/store?preview=1' : '/store';
@@ -62,7 +64,13 @@ function StoreDetailHeader({ backUrl, balance }: { backUrl: string; balance: num
 }
 
 function StoreProduct({ game, preview, backUrl }: { game: LaunchBoxGame; preview: boolean; backUrl: string }) {
-    const { api, activeConsole, platform, balance, collectionIds, purchaseGame, economyDisabled } = useAppContext();
+    const api = useMisterState(state => state.api);
+    const activeConsole = useCollectionState(state => state.activeConsole);
+    const platform = usePlatform();
+    const balance = useCollectionState(state => state.balance);
+    const collectionIds = useCollectionState(state => state.collectionIds);
+    const purchaseGame = useCollectionState(state => state.purchaseGame);
+    const economyDisabled = useCollectionState(state => state.economyDisabled);
     const [back, setBack] = useState(false);
     const [purchased, setPurchased] = useState(false);
     const [galleryIndex, setGalleryIndex] = useState<number>();

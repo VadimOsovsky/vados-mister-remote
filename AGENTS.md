@@ -1,6 +1,4 @@
-# CLAUDE.md
-
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+# Repository Guide
 
 ## Project Overview
 
@@ -11,20 +9,22 @@ MiSTer Remote — a React 19 + TypeScript PWA for remotely controlling a MiSTer 
 ```bash
 npm run dev          # Start Vite dev server with HMR
 npm run build        # TypeScript check + Vite production build (tsc -b && vite build)
+npm test             # Run the TypeScript tests with Node 22.15+ and tsx
+npm run test:manuals  # Run the manual publishing tests
 npm run lint         # ESLint (flat config with TS + React Hooks plugins)
 npm run preview      # Preview production build locally
 npm run build-library  # Download LaunchBox metadata and generate public/launchbox/*.json
 ```
 
-No test framework is configured yet.
-
 ## Architecture
 
-**Single-page React app** with no router or state management library — all state lives in React hooks inside `App.tsx`.
+React Router handles the app routes. The collection game route resolves its game ID against the active console. Zustand exposes shared state through selectors. Search, forms and other screen-local state live in React components.
 
 ### Key modules
 
-- **`src/App.tsx`** — Main (and only) component. Handles game browsing, filtering, favorites, settings, and remote control UI. This is the bulk of the app.
+- **`src/App.tsx`** — App shell, routes and app-wide effects. Feature screens live in `src/features`.
+- **`src/state`** — Separate Zustand stores for collection and wallet state and for the MiSTer connection. One app-level component runs connection polling and the now-playing subscription.
+- **`src/lib/sharedStorage.ts`** — Source of persisted collection and wallet data. Initializes before the collection store, publishes value changes and groups related writes into one revisioned snapshot. Development uses localStorage. Zustand has no separate persistence layer.
 - **`src/services/wizzoApi.ts`** — HTTP client for the MiSTer Remote API (mrext/wizzo). Covers system management, game search, play commands, screenshots, and keyboard input.
 - **`src/services/launchbox.ts`** — Game metadata service. Loads game data from static JSON files (`public/launchbox/*.json`), caches in IndexedDB (v2) with a memory cache layer on top. Resolves box art images from the LaunchBox CDN by region.
 - **`src/types.ts`** — Shared TypeScript interfaces.

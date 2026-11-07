@@ -3,12 +3,12 @@ import { PLATFORMS } from '../constants';
 import type { ConsoleKey, LaunchBoxGame, SortMode } from '../types';
 import { hasImageInRegions, loadPlatformGames, searchGames } from '../services/launchbox';
 import { SORT_FNS } from '../services/sorting';
-import { useAppContext } from '../AppContext';
+import { useCollectionState } from '../state/collectionState';
 import { readStoreSort, writeStoreSort } from '../lib/storage';
 import { getStorePreviewIds } from '../features/store/storePreview';
 
 export function useStore(activeConsole: ConsoleKey, preview = false) {
-    const { collectionIds } = useAppContext();
+    const collectionIds = useCollectionState(state => state.collectionIds);
     const [catalog, setCatalog] = useState<{ consoleKey: ConsoleKey; games: LaunchBoxGame[]; error?: boolean }>();
     const loading = catalog?.consoleKey !== activeConsole;
     const [search, setSearch] = useState('');

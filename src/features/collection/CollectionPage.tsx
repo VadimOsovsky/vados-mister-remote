@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useAppContext } from '../../AppContext';
+import { useCollectionState, usePlatform } from '../../state/collectionState';
 import { useCollection } from '../../hooks/useCollection';
 import { useNavigate } from 'react-router';
 import { PlusIcon } from '../../lib/icons';
@@ -16,7 +16,11 @@ import './CollectionPage.css';
 export function CollectionPage({ onSelectGame }: { onSelectGame: (game: LaunchBoxGame) => void }) {
     const navigate = useNavigate();
     const [filter, setFilter] = useState<'all' | 'favorites' | 'completed'>('all');
-    const { activeConsole, setActiveConsole, platform, beatenIds, favoriteIds } = useAppContext();
+    const activeConsole = useCollectionState(state => state.activeConsole);
+    const setActiveConsole = useCollectionState(state => state.setActiveConsole);
+    const platform = usePlatform();
+    const beatenIds = useCollectionState(state => state.beatenIds);
+    const favoriteIds = useCollectionState(state => state.favoriteIds);
     const { recentGames, mockRecent, loading, loadError, preview, search, setSearch, filteredGames } = useCollection(activeConsole);
     const completedGames = filteredGames.filter(game => beatenIds.includes(game.id));
     const favoriteGames = filteredGames.filter(game => favoriteIds.includes(game.id));

@@ -1,7 +1,8 @@
 import { type ReactNode, type RefObject, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { ConsoleKey, LaunchBoxGame } from '../../types';
-import { useAppContext } from '../../AppContext';
+import { useCollectionState } from '../../state/collectionState';
+import { useIsGamePlaying } from '../../state/misterState';
 import { FavoriteBookmark } from './FavoriteBookmark';
 import { LazyImage } from '../../kit/LazyImage';
 import { getImageUrl, resolveImages, resolveTitle } from '../../services/launchbox';
@@ -32,8 +33,9 @@ export function GameCard({ game, regions, activeConsole, onSelect, preview, rece
     recent?: { selected: boolean; time: ReactNode; mockSaves?: number };
     preview?: boolean;
 }) {
-    const { beatenIds, favoriteIds, isGamePlaying } = useAppContext();
-    const playing = isGamePlaying(game.id, activeConsole);
+    const beatenIds = useCollectionState(state => state.beatenIds);
+    const favoriteIds = useCollectionState(state => state.favoriteIds);
+    const playing = useIsGamePlaying(game.id, activeConsole);
     const overrides = getDisplayGameOverrides(game.id, activeConsole);
     const images = resolveImages(game, regions);
     const displayTitle = overrides.title || resolveTitle(game, PLATFORMS[activeConsole].nameRegions);
