@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import type { ConsoleKey, LaunchBoxGame, SaveSlot } from '../types';
 import type { WizzoApi } from '../services/wizzoApi';
-import { getRomVersions, getGameSaveKey, getSaveSlots, putSaveSlot, deleteSaveSlot, getRomMapping } from '../lib/storage';
+import { getRomVersions, getGameSaveKey, getOriginalGameSaveKey, getSaveSlots, putSaveSlot, deleteSaveSlot, getRomMapping } from '../lib/storage';
 import { loadCollectionSave } from '../services/collectionLauncher';
 import { isRomPlaying } from '../services/nowPlaying';
 
@@ -22,7 +22,7 @@ export function useSaveSlots(api: WizzoApi, game: LaunchBoxGame, activeConsole: 
 
     const hasCompletedVersion = useCallback(() => {
         const paths = getRomVersions(game.id, activeConsole).translations.map(v => v.path);
-        return [game.id, ...paths.map(path => game.id + '_translation_' + activeConsole + '_' + encodeURIComponent(path))]
+        return [getOriginalGameSaveKey(game.id, activeConsole), ...paths.map(path => game.id + '_translation_' + activeConsole + '_' + encodeURIComponent(path))]
             .some(key => getSaveSlots(key).some(slot => slot?.beaten));
     }, [game.id, activeConsole]);
 

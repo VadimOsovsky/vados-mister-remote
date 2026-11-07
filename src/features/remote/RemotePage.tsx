@@ -8,8 +8,6 @@ const directions = ['up', 'left', 'right', 'down'] as const;
 
 export function RemotePage() {
     const api = useMisterState(state => state.api);
-    const connected = useMisterState(state => state.connected);
-    const nowPlaying = useMisterState(state => state.nowPlaying);
 
     function press(key: keyof typeof KEYBOARD_KEYS) {
         navigator.vibrate?.(10);

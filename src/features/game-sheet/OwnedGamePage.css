@@ -96,7 +96,6 @@
 }
 .owned-cover:has(.card-art-placeholder) { width: 180px; height: 220px; display: grid; place-items: center; background: #ffffff0a; }
 .owned-cover .card-art-placeholder { font-size: 40px; }
-.owned-cover .favorite-bookmark { left: 12px; }
 .owned-hero-copy { min-width: 0; padding-top: 44px; }
 .owned-hero-status { display: flex; align-items: center; gap: 7px; margin: 0 0 12px; font: var(--font-label-nav); text-transform: uppercase; letter-spacing: .12em; opacity: .8; }
 .owned-hero-status[data-playing] { opacity: 1; }

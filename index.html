@@ -4,13 +4,30 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content" />
-    <meta name="theme-color" content="#e7e8e4" />
+    <meta name="theme-color" content="red" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <style>
+      .ios-status-bar-filler { display: none; }
+
+      @media (display-mode: standalone) {
+        .ios-status-bar-filler {
+          display: block;
+          position: fixed;
+          inset: 0 0 auto;
+          height: max(6px, env(safe-area-inset-top));
+          background-color: var(--bg-primary, #e7e8e4);
+          /* Keep the band above the app shell and below modal overlays. */
+          z-index: 2;
+          pointer-events: none;
+        }
+      }
+    </style>
     <title>Mister Playroom</title>
   </head>
   <body>
+    <div class="ios-status-bar-filler" aria-hidden="true"></div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

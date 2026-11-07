@@ -310,10 +310,14 @@ export function addRomTranslation(gameId: string, consoleKey: ConsoleKey, langua
 export function getRomMapping(gameId: string, consoleKey: ConsoleKey): string | null {
     return getRomVersions(gameId, consoleKey).selected ?? getOriginalRomMapping(gameId, consoleKey);
 }
-// Keep original saves intact; translated ROMs have separate slots.
+export function getOriginalGameSaveKey(gameId: string, consoleKey: ConsoleKey): string {
+    const path = getOriginalRomMapping(gameId, consoleKey);
+    return gameId + '_original_' + consoleKey + '_' + encodeURIComponent(path ?? '');
+}
+
 export function getGameSaveKey(gameId: string, consoleKey: ConsoleKey): string {
     const path = getRomVersions(gameId, consoleKey).selected;
-    return path ? gameId + '_translation_' + consoleKey + '_' + encodeURIComponent(path) : gameId;
+    return path ? gameId + '_translation_' + consoleKey + '_' + encodeURIComponent(path) : getOriginalGameSaveKey(gameId, consoleKey);
 }
 
 export function getGameArtworkLanguage(gameId: string, consoleKey: ConsoleKey): string {

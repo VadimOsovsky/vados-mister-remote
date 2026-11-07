@@ -1,5 +1,5 @@
 import { appStorage } from '../../lib/sharedStorage';
-import { FavoriteBookmark, FavoriteStar } from '../collection/FavoriteBookmark';
+import { FavoriteStar } from '../collection/FavoriteBookmark';
 import { useRef, useState } from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
 import * as Dialog from '@radix-ui/react-dialog';
@@ -199,7 +199,6 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
                     <div className="owned-hero-inner">
                         <button type="button" className="owned-cover" aria-label="View front cover" disabled={!front} onClick={() => setGalleryIndex(-1)}>
                             <LazyImage src={front || undefined} alt="" />
-                            {favorite && <FavoriteBookmark />}
                             {completed && <span className="owned-medal" aria-label="Completed" role="img">✓</span>}
                         </button>
                         <div className="owned-hero-copy">

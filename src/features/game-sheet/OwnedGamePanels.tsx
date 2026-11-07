@@ -79,7 +79,6 @@ export function OwnedGameSaves({ gameId, title, saves, previewScreenshot }: { ga
                 onClick={() => saves.handleSave()}>{SaveIcon}{saves.savingSlot ? 'Saving…' : 'Save to this slot'}</button>
             <button className="owned-button playroom-press" disabled={!current || current.locked} onClick={() => setConfirmDelete(true)}>{TrashIcon} Delete save</button>
         </div>
-        {connected && !playing && <p className="owned-save-hint">Launch this game on MiSTer to create a save.</p>}
         {saves.saveError && <p role="alert">{saves.saveError}</p>}
         <Dialog.Root open={confirmDelete} onOpenChange={setConfirmDelete}>
             <Dialog.Portal>
