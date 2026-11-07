@@ -10,4 +10,4 @@ This directory is an independent content project, published to GitHub Pages; it 
 - Do not hardcode generated content hashes or add a service worker. The builder owns revision filenames and latest-version resolution.
 - Run `node --test tests/manuals.test.mjs` and `node scripts/build-manuals.mjs` from the repository root. Visually inspect the manual and test all language buttons before delivery.
 
-A reusable link-to-manual skill may use this contract later. This file does not itself implement that skill.
+For the source-to-HTML workflow, see [html-game-manual](../skills/html-game-manual/SKILL.md).

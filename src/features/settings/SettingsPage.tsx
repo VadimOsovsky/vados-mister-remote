@@ -5,6 +5,7 @@ import { isHostedOnMister } from '../../lib/storage';
 import { PlayroomConsoleHeader } from '../../kit/PlayroomConsoleHeader';
 import { OsdIcon, ResetIcon, SearchIcon, StoreIcon } from '../../lib/icons';
 import './SettingsPage.css';
+import { version } from '../../../package.json';
 
 type IndexStatus = { label: string; percent?: number; busy: boolean };
 
@@ -110,6 +111,7 @@ export function SettingsPage() {
                         </svg>
                         Settings are saved on this device only.
                     </p>
+                    <p className="settings-version">App version {version}</p>
                 </div>
             </main>
         </div>
