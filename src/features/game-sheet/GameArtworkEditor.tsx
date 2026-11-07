@@ -46,23 +46,43 @@ export function GameArtworkEditor({ draft, mediaLabel, initialLanguage = 'origin
                 </Tabs.Trigger>)}
             </Tabs.List>
             {assets.map(item => <Tabs.Content key={item.key} value={item.key} className="artwork-field-panel">
-                <label className="edit-game-field"><span className="edit-game-label">{item.label} image URL</span>
-                    <div className="artwork-url-row"><input className="edit-game-input" type="url" aria-label={`${item.label} image URL`} placeholder={original ? 'https://…' : 'Leave empty to use original'} value={own[item.key] ?? ''} onChange={e => onChange(language, item.key, e.target.value)} />
-                        <button type="button" className="artwork-clear" aria-label={`Clear ${item.label} image`} disabled={!own[item.key]} onClick={() => onChange(language, item.key, '')}>×</button>
-                    </div>
-                </label>
-                {item.key === 'manualPhotoUrl' && <label className="edit-game-field artwork-manual-link"><span className="edit-game-label">Manual document URL</span>
-                    <div className="artwork-url-row"><input className="edit-game-input" type="url" aria-label="Manual document URL" placeholder="PDF or website (optional)" value={own.manualUrl ?? ''} onChange={e => onChange(language, 'manualUrl', e.target.value)} />
-                        <button type="button" className="artwork-clear" aria-label="Clear manual document" disabled={!own.manualUrl} onClick={() => onChange(language, 'manualUrl', '')}>×</button>
-                    </div>
-                </label>}
-                {item.key === 'manualPhotoUrl' && <label className="edit-game-field artwork-manual-link"><span className="edit-game-label">Web manual URL</span>
-                    <div className="artwork-url-row"><input className="edit-game-input" type="url" aria-label="Web manual URL" placeholder="https://…/nes/super-mario-bros/" value={draft.webManualUrl ?? ''} onChange={e => onWebManualChange(e.target.value)} />
-                        <button type="button" className="artwork-clear" aria-label="Clear web manual" disabled={!draft.webManualUrl} onClick={() => onWebManualChange('')}>×</button>
-                    </div>
-                    <small className="artwork-editor-hint">One link for all languages. Use the manual’s permanent page URL.</small>
-                </label>}
+                <ArtworkUrlField label={item.label + ' image URL'} clearLabel={'Clear ' + item.label + ' image'}
+                    placeholder={original ? 'https://…' : 'Leave empty to use original'}
+                    value={own[item.key] ?? ''} onChange={value => onChange(language, item.key, value)} />
+                {item.key === 'manualPhotoUrl' && <>
+                    <ArtworkUrlField label="Manual document URL" clearLabel="Clear manual document"
+                        placeholder="PDF or website (optional)" value={own.manualUrl ?? ''}
+                        onChange={value => onChange(language, 'manualUrl', value)} manual />
+                    <ArtworkUrlField label="Web manual URL" clearLabel="Clear web manual"
+                        placeholder="https://…/nes/super-mario-bros/" value={draft.webManualUrl ?? ''}
+                        onChange={onWebManualChange} manual
+                        hint="One link for all languages. Use the manual’s permanent page URL." />
+                </>}
             </Tabs.Content>)}
         </Tabs.Root>
     </section>;
+}
+
+function ArtworkUrlField({ label, clearLabel, placeholder, value, onChange, manual, hint }: {
+    label: string;
+    clearLabel: string;
+    placeholder: string;
+    value: string;
+    onChange: (value: string) => void;
+    manual?: boolean;
+    hint?: string;
+}) {
+    const id = useId();
+
+    return <div className={manual ? 'edit-game-field artwork-manual-link' : 'edit-game-field'}>
+        <label className="edit-game-label" htmlFor={id}>{label}</label>
+        <div className="artwork-url-row">
+            <input id={id} className="edit-game-input" type="url" placeholder={placeholder}
+                aria-describedby={hint ? id + '-hint' : undefined}
+                value={value} onChange={event => onChange(event.target.value)} />
+            <button type="button" className="artwork-clear" aria-label={clearLabel}
+                disabled={!value} onClick={() => onChange('')}>×</button>
+        </div>
+        {hint && <small id={id + '-hint'} className="artwork-editor-hint">{hint}</small>}
+    </div>;
 }

@@ -1,4 +1,5 @@
 import type { ConsoleKey, PlatformDef, SortMode } from './types';
+import avFamicomFdsPhoto from './assets/consoles/av-famicom-fds.webp';
 
 // ── CONTROLS ──
 const LAUNCH_CORE = { id: 'launch_core', label: 'Launch', action: '', type: 'launch' } as const;
@@ -84,7 +85,7 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     mediaLabel: 'Disk',
     coverScale: 0.85,
     logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c7/Family_Computer_Disk_System_logo.png',
-    imageUrl: '/playroom/av-famicom-fds.webp',
+    imageUrl: avFamicomFdsPhoto,
     theme: 'theme-av-famicom',
     branding: 'AV Famicom Disk System',
     colors: ['#2d2d2d', '#3a3a3a', '#c0392b', '#e8c840'],

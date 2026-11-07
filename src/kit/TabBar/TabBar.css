@@ -20,14 +20,6 @@
   gap: 4px;
 }
 
-/* Installed WebKit apps can place absolute children above the physical bottom. */
-@media (display-mode: standalone) {
-  .tab-bar {
-    position: fixed;
-    bottom: calc(var(--app-viewport-bottom, 0px) + var(--navigation-footer-bottom));
-  }
-}
-
 .tab-item {
   display: flex;
   flex-direction: column;

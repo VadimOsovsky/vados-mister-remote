@@ -6,16 +6,22 @@ import { PLATFORMS } from '../../constants';
 import { ChevronDownIcon, SearchIcon } from '../../lib/icons';
 import { ConsoleControls } from './ConsoleControls';
 import type { ConsoleKey } from '../../types';
+import nesPhoto from '../../assets/consoles/nes.webp';
+import famicomPhoto from '../../assets/consoles/famicom.webp';
+import fdsPhoto from '../../assets/consoles/fds.webp';
+import dendyPhoto from '../../assets/consoles/dendy.webp';
+import avFamicomPhoto from '../../assets/consoles/av-famicom.webp';
+import avFamicomFdsPhoto from '../../assets/consoles/av-famicom-fds.webp';
 import './ConsoleSheet.css';
 
 const consolePhotos: Partial<Record<ConsoleKey, string>> = {
-    nes_ntsc: '/playroom/nes.webp',
-    nes_pal: '/playroom/nes.webp',
-    famicom: '/playroom/famicom.webp',
-    fds: '/playroom/fds.webp',
-    dendy: '/playroom/dendy.webp',
-    av_famicom: '/playroom/av-famicom.webp',
-    av_famicom_fds: '/playroom/av-famicom-fds.webp',
+    nes_ntsc: nesPhoto,
+    nes_pal: nesPhoto,
+    famicom: famicomPhoto,
+    fds: fdsPhoto,
+    dendy: dendyPhoto,
+    av_famicom: avFamicomPhoto,
+    av_famicom_fds: avFamicomFdsPhoto,
 };
 
 export function ConsoleBadge({ onClick, expanded }: { onClick: () => void; expanded: boolean }) {

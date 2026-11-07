@@ -86,7 +86,7 @@
 .console-sheet-divider {
   height: 1px;
   background: var(--border-main);
-  margin: 4px 24px 12px;
+  margin: 0 20px 12px;
   opacity: 0.6;
 }
 

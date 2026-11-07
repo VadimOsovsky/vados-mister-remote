@@ -38,6 +38,9 @@ if [ -z "$PYTHON_BIN" ]; then
   exit 1
 fi
 
+echo "==> Bumping minor version..."
+npm version minor --no-git-tag-version
+
 echo "==> Building..."
 yarn build
 
