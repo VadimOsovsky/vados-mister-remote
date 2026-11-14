@@ -223,6 +223,27 @@
 .picker-disclosure[data-expanded=true] { grid-template-rows: 1fr; opacity: 1; }
 .picker-disclosure-inner { min-height: 0; overflow: hidden; }
 .picker-section { padding: 14px 2px 2px; }
+.picker-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-bottom: 8px;
+}
+.picker-section .picker-section-header h3 { margin: 0; }
+.picker-balance {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 0;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: var(--console-wash);
+  color: var(--ink);
+  font: var(--font-label-small);
+}
+.picker-balance strong { font: var(--font-label); font-variant-numeric: tabular-nums; }
 .picker-section h3, .console-sheet-actions-title {
   margin: 0 0 8px;
   color: var(--text-secondary);

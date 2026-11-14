@@ -84,6 +84,7 @@
 }
 .owned-cover:disabled { opacity: 1; }
 .owned-library-art img { max-width: 100%; max-height: 100%; min-height: 0; object-fit: contain; border-radius: 3px; box-shadow: 0 2px 4px #0003; }
+.owned-library-art[data-kind="cartridge"] img { box-shadow: none; }
 .owned-cover img {
   display: block;
   width: auto;

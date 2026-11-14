@@ -299,7 +299,7 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
                             {library.map(({ title, caption, src, kind }, index) => {
                                 const content = <>
                                     <span className="owned-library-top"><span>0{index + 1}</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10" /></svg></span>
-                                    <span className="owned-library-art">
+                                    <span className="owned-library-art" data-kind={kind}>
                                         {src ? <LazyImage src={src} alt="" /> : <span className={`owned-placeholder owned-placeholder-${kind}`} aria-hidden="true">+</span>}
                                     </span>
                                     <strong>{title}</strong>

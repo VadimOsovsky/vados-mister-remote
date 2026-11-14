@@ -151,7 +151,10 @@ export function ConsoleSheet({ open, onOpenChange, onSwitch }: {
                                             </div>
                                         </section>}
                                         {forSale.length > 0 && <section className="picker-section">
-                                            <h3>Available to buy</h3>
+                                            <div className="picker-section-header">
+                                                <h3>Available to buy</h3>
+                                                {!free && <p className="picker-balance">Your balance <strong>{formatPrice(balance)}</strong></p>}
+                                            </div>
                                             <div className="picker-options">
                                                 {forSale.map(key => <button type="button" key={key} className="picker-option playroom-press"
                                                     data-console={key} onClick={() => {

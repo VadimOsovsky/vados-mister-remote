@@ -1,7 +1,7 @@
 {
   "name": "mister_remote",
   "private": true,
-  "version": "0.21.0",
+  "version": "0.22.0",
   "type": "module",
   "scripts": {
     "build:manuals": "node scripts/build-manuals.mjs",
