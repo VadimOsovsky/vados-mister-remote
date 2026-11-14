@@ -105,7 +105,7 @@ export function SettingsPage() {
                             <span className="settings-symbol">{StoreIcon}</span>
                             <div><p className="playroom-kicker">03 · Your collection</p><h2 id="store-title">Game store</h2></div>
                         </div>
-                        <p id="economy-description">Pause money and rewards, and add any game from the store. Your balance and past rewards are kept for when you turn the economy back on.</p>
+                        <p id="economy-description">Pause money and rewards, and add games and consoles for free. Your balance and past rewards are kept for when you turn the economy back on.</p>
                         <button type="button" role="switch" aria-checked={economyDisabled} aria-describedby="economy-description"
                             className="playroom-button playroom-press settings-switch" onClick={() => setEconomyDisabled(!economyDisabled)}>
                             Disable economy <span className="settings-switch-track" aria-hidden="true" />

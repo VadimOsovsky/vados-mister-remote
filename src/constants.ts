@@ -1,5 +1,7 @@
 import type { ConsoleKey, PlatformDef, SortMode } from './types';
 import avFamicomFdsPhoto from './assets/consoles/av-famicom-fds.webp';
+import playStationPhoto from './assets/consoles/playstation.png';
+import psOnePhoto from './assets/consoles/psone.png';
 
 // ── CONTROLS ──
 const LAUNCH_CORE = { id: 'launch_core', label: 'Launch', action: '', type: 'launch' } as const;
@@ -124,8 +126,22 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
 export const CONSOLE_KEYS = Object.keys(PLATFORMS) as ConsoleKey[];
 
 // Hardware families are independent of the groups used to share game collections.
-export const CONSOLE_GROUPS: { id: string; name: string; consoles: readonly ConsoleKey[] }[] = [
+export const CONSOLE_GROUPS: {
+  id: string;
+  name: string;
+  consoles: readonly ConsoleKey[];
+  unavailable?: readonly { id: string; name: string; photo?: string }[];
+}[] = [
   { id: 'nes', name: 'NES', consoles: ['nes_ntsc', 'nes_pal', 'famicom', 'fds', 'av_famicom', 'av_famicom_fds', 'dendy'] },
+  {
+    id: 'playstation',
+    name: 'PlayStation',
+    consoles: [],
+    unavailable: [
+      { id: 'ps1-fat', name: 'PlayStation (Fat)', photo: playStationPhoto },
+      { id: 'ps-one', name: 'PS one', photo: psOnePhoto },
+    ],
+  },
 ];
 export const STARTER_CONSOLE: ConsoleKey = 'nes_ntsc';
 

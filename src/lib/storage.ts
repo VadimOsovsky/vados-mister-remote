@@ -1,7 +1,7 @@
 import { appStorage } from './sharedStorage';
 import { resolveGameArtwork } from './gameArtwork';
 import type { ConsoleKey, GameOverrides, LaunchBoxGame, SaveSlot, SortMode } from '../types';
-import { CONSOLE_KEYS, STARTER_CONSOLE } from '../constants';
+import { CONSOLE_KEYS, PLATFORMS, STARTER_CONSOLE } from '../constants';
 
 const HOST_KEY = 'mister_host';
 const ROM_MAPPINGS_KEY = 'rom_mappings';
@@ -11,7 +11,8 @@ const COLLECTION_PREFIX = 'collection';
 const BEATEN_PREFIX = 'beaten';
 const ACTIVE_CONSOLE_KEY = 'active_console';
 const OWNED_CONSOLES_KEY = 'owned_consoles';
-const LEGACY_CONSOLES: ConsoleKey[] = ['nes_ntsc', 'nes_pal', 'famicom', 'fds', 'av_famicom', 'av_famicom_fds', 'dendy'];
+const DEV_INVENTORY_MIGRATION_KEY = 'owned_consoles_dev_migrated';
+const LEGACY_GRANTED_CONSOLES: readonly ConsoleKey[] = ['nes_ntsc', 'nes_pal', 'famicom', 'fds', 'av_famicom', 'av_famicom_fds', 'dendy'];
 const CUSTOM_GAMES_PREFIX = 'custom_games';
 export function readEconomyDisabled(): boolean {
     return appStorage.getItem('store_free_games') === 'true';
@@ -228,13 +229,7 @@ export function writeActiveConsole(key: ConsoleKey): void {
 
 export function getOwnedConsoles(): ConsoleKey[] {
     const raw = appStorage.getItem(OWNED_CONSOLES_KEY);
-    if (raw === null) {
-        // Existing profiles could select every original model before ownership was introduced.
-        const existing = [ACTIVE_CONSOLE_KEY, WALLET_BALANCE_KEY, WALLET_LAST_TOPUP_KEY, 'store_free_games', ROM_MAPPINGS_KEY]
-            .some(key => appStorage.getItem(key) !== null)
-            || LEGACY_CONSOLES.some(key => getCollectionIds(key).length > 0);
-        return existing ? [...LEGACY_CONSOLES] : [STARTER_CONSOLE];
-    }
+    if (raw === null) return [STARTER_CONSOLE];
     try {
         const stored: unknown = JSON.parse(raw);
         if (Array.isArray(stored)) {
@@ -249,6 +244,15 @@ export function writeOwnedConsoles(keys: ConsoleKey[]): void {
 }
 
 export function initializeOwnedConsoles(): void {
+    if (import.meta.env?.DEV && !localStorage.getItem(DEV_INVENTORY_MIGRATION_KEY)) {
+        // The old localhost initializer granted the full NES lineup before any purchases.
+        const owned = getOwnedConsoles();
+        if (owned.length === LEGACY_GRANTED_CONSOLES.length && LEGACY_GRANTED_CONSOLES.every(key => owned.includes(key))) {
+            writeOwnedConsoles([STARTER_CONSOLE]);
+            writeActiveConsole(STARTER_CONSOLE);
+        }
+        localStorage.setItem(DEV_INVENTORY_MIGRATION_KEY, 'true');
+    }
     if (appStorage.getItem(OWNED_CONSOLES_KEY) === null) writeOwnedConsoles(getOwnedConsoles());
 }
 

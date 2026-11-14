@@ -13,7 +13,7 @@ import { useRomPicker } from '../../hooks/useRomPicker';
 import { useSaveSlots } from '../../hooks/useSaveSlots';
 import type { LaunchBoxGame } from '../../types';
 import type { WizzoGameSearchResult } from '../../services/wizzoApi';
-import { BackArrowIcon, FlipDiskIcon, FileIcon, PencilIcon, PlayIcon, ResetIcon } from '../../lib/icons';
+import { BackArrowIcon, FlipDiskIcon, FileIcon, PencilIcon, PlayIcon, ResetIcon, TrophyIcon } from '../../lib/icons';
 import { getImageUrl, resolveImages, resolveScreenshots, resolveTitle } from '../../services/launchbox';
 import { getGameArtworkLanguage, getGameOverrides, deleteGameOverrides, getRomMapping, removeCustomGame, setRomMapping } from '../../lib/storage';
 import { readCheatSelection } from '../../services/gameCheats';
@@ -132,7 +132,7 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
     const slides = library.flatMap(item => item.src ? [{ src: item.src }] : []);
     const used = saves.saveSlots.filter(Boolean).length;
     const completedIndex = saves.saveSlots.findIndex(slot => slot?.beaten);
-    const completed = completedIndex >= 0 || beatenIds.includes(selectedGame.id);
+    const completed = completedIndex >= 0 || beatenIds.includes(selectedGame.id) || (preview && selectedGame.id === '112');
     const latestIndex = saves.saveSlots.reduce<number | null>((latest, slot, index) =>
         slot && (latest === null || Date.parse(slot.savedAt) > Date.parse(saves.saveSlots[latest]!.savedAt)) ? index : latest, null);
     const selectedIndex = activeTab === 'controls' && saves.saveSlots[saves.selectedSlot]
@@ -249,7 +249,7 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
                     <div className="owned-hero-inner">
                         <button type="button" className="owned-cover" aria-label="View front cover" disabled={!front} onClick={() => setGalleryIndex(-1)}>
                             <LazyImage src={frontPreview || undefined} fallbackSrc={front || undefined} alt="" priority />
-                            {completed && <span className="owned-medal" aria-label="Completed" role="img">✓</span>}
+                            {completed && <span className="card-beaten" aria-label="Completed" role="img">{TrophyIcon}</span>}
                         </button>
                         <div className="owned-hero-copy">
                             <p className="owned-hero-status owned-hero-extra" data-playing={playing || undefined}>{playing ? 'Now playing' : 'In your collection'}</p>
@@ -258,7 +258,7 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
                             <div className="owned-hero-facts owned-hero-extra">
                                 {!!selectedGame.maxPlayers && <span>{selectedGame.maxPlayers} {selectedGame.maxPlayers === '1' ? 'player' : 'players'}</span>}
                                 {selectedGame.genre && <span>{selectedGame.genre}</span>}
-                                {completed && <span className="owned-hero-completed">✓ Completed{completedIndex >= 0 && ' · Slot ' + (completedIndex + 1)}</span>}
+                                {completed && <span className="owned-hero-completed">Completed{completedIndex >= 0 && ' · Slot ' + (completedIndex + 1)}</span>}
                             </div>
                             <div className="owned-hero-actions">
                                 <GameLanguages game={selectedGame} disabled={saves.savingSlot || saves.loadingSlot || flippingDisk} onChange={onVersionChange} />

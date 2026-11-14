@@ -5,11 +5,53 @@ import {
     getSyncStatus, initializeSharedStorage, subscribeToSync, subscribeToValues, syncSharedStorage,
 } from '../src/lib/sharedStorage';
 import { addCustomGame, getFavoriteIds, getRomMapping, setFavorite } from '../src/lib/storage';
+import { consolePrice } from '../src/lib/consolePricing';
 import { loadCollectionGames } from '../src/services/launchbox';
 import type { LaunchBoxGame } from '../src/types';
 
+test('console purchases debit the wallet and persist ownership in one shared update', async t => {
+    let server = { revision: 1, values: { wallet_balance: '79', owned_consoles: '["nes_ntsc"]' } as Record<string, string> };
+    const writes: typeof server[] = [];
+    t.mock.method(globalThis, 'fetch', async (_url: string, init?: RequestInit) => {
+        if (init?.method === 'PUT') {
+            const purchase = JSON.parse(String(init.body)) as typeof server;
+            writes.push(purchase);
+            server = { revision: server.revision + 1, values: purchase.values };
+        }
+        return Response.json(server);
+    });
+    assert.equal(consolePrice('famicom', []), 160);
+    await initializeSharedStorage();
+    const stop = initializeCollectionState();
+    t.after(stop);
+    const state = useCollectionState.getState;
+    assert.deepEqual(state().ownedConsoles, ['nes_ntsc']);
+    state().setActiveConsole('famicom');
+    assert.equal(state().activeConsole, 'nes_ntsc');
+    assert.equal(state().purchaseConsole('famicom'), false);
+    assert.equal(writes.length, 0);
+
+    server.values = { ...server.values, wallet_balance: '80' };
+    await initializeSharedStorage();
+    const saved = new Promise<void>(resolve => {
+        const unsubscribe = subscribeToSync(() => {
+            if (getSyncStatus() === 'saving') return;
+            unsubscribe();
+            resolve();
+        });
+    });
+    assert.equal(state().purchaseConsole('famicom'), true);
+    assert.equal(state().purchaseConsole('famicom'), false);
+    assert.equal(state().balance, 0);
+    assert.deepEqual(state().ownedConsoles, ['nes_ntsc', 'famicom']);
+    await saved;
+    assert.equal(writes.length, 1);
+    assert.equal(writes[0].values.wallet_balance, '0');
+    assert.equal(writes[0].values.owned_consoles, '["nes_ntsc","famicom"]');
+});
+
 test('collection actions publish grouped writes and pick up remote changes', async t => {
-    const base = { revision: 1, values: { wallet_balance: '100' } };
+    const base = { revision: 1, values: { wallet_balance: '100', owned_consoles: '["nes_ntsc"]' } };
     let server: { revision: number; values: Record<string, string> } = base;
     const writes: typeof server[] = [];
     t.mock.method(globalThis, 'fetch', async (_url: string, init?: RequestInit) => {
@@ -72,20 +114,20 @@ test('collection actions publish grouped writes and pick up remote changes', asy
     const completionSettled = settled();
     state().markAsBeaten('zelda', 'Zelda');
     const completionWrite = writes.at(-1)?.values;
-    assert.equal(completionWrite?.wallet_balance, '135');
+    assert.equal(completionWrite?.wallet_balance, '150');
     assert.equal(completionWrite?.wallet_beaten_rewarded, '{"zelda":true}');
     assert.ok(Object.entries(completionWrite ?? {}).some(([name, value]) =>
         name.startsWith('beaten_') && value === '["zelda"]'));
-    assert.deepEqual(state().completion, { title: 'Zelda', balance: 135 });
+    assert.deepEqual(state().completion, { title: 'Zelda', balance: 150 });
     state().unmarkAsBeaten('zelda');
     state().markAsBeaten('zelda', 'Zelda');
     assert.deepEqual(state().beatenIds, ['zelda']);
-    assert.equal(state().balance, 135);
+    assert.equal(state().balance, 150);
     await completionSettled;
     const freeSettled = settled();
     state().setEconomyDisabled(true);
     assert.equal(state().purchaseGame('mario', 999, '/mario.nes'), true);
-    assert.equal(state().balance, 135);
+    assert.equal(state().balance, 150);
     await freeSettled;
 
     server = { revision: server.revision + 1, values: { ...server.values, [favoriteKey]: '["conflicting"]' } };

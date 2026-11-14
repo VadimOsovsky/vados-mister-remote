@@ -249,7 +249,7 @@
   border-color: color-mix(in srgb, var(--gold) 60%, var(--ink));
 }
 
-.collection-page .card-beaten {
+.card-beaten {
   top: -10px;
   right: -10px;
   width: 44px;
@@ -264,7 +264,7 @@
   filter: none;
 }
 
-.collection-page .card-beaten svg {
+.card-beaten svg {
   width: 30px;
   height: 30px;
 }
