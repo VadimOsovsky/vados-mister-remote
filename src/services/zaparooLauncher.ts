@@ -7,10 +7,11 @@ function escapeXml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
 }
 
-function buildMglXml(setname: string, rbf: string, romPath: string): string {
+function buildMglXml({ setname, rbf, systemType }: NonNullable<PlatformDef['mglConfig']>, romPath: string): string {
+  const profile = setname ? `\n   <setname same_dir="1">${escapeXml(setname)}</setname>` : '';
   return `<mistergamedescription>
-   <rbf>${rbf}</rbf>
-   <setname same_dir="1">${setname}</setname>
+   <rbf>${escapeXml(rbf)}</rbf>${profile}
+   <option name="System Type" value="${systemType}"/>
    <file delay="2" type="f" index="1" path="${escapeXml(romPath)}"/>
 </mistergamedescription>
 `
@@ -35,16 +36,17 @@ async function zaparooLaunchMgl(host: string, mglXml: string): Promise<void> {
     };
 
     ws.onmessage = (event) => {
-      clearTimeout(timeout);
       try {
         const json = JSON.parse(event.data as string);
+        if (json?.id !== 1) return;
+        clearTimeout(timeout);
         if (json.error) {
           reject(new Error(json.error.message ?? 'Zaparoo RPC error'));
         } else {
           resolve();
         }
       } catch {
-        resolve();
+        return;
       }
       ws.close();
     };
@@ -63,13 +65,8 @@ export async function launchGameForPlatform(
   wizzoApi: WizzoApi,
 ): Promise<void> {
   if (platform.mglConfig) {
-    try {
-      const xml = buildMglXml(platform.mglConfig.setname, platform.mglConfig.rbf, romPath);
-      await zaparooLaunchMgl(host, xml);
-      return;
-    } catch (err) {
-      console.warn('Zaparoo MGL launch failed, falling back to Wizzo:', err);
-    }
+    await zaparooLaunchMgl(host, buildMglXml(platform.mglConfig, romPath));
+    return;
   }
   await wizzoApi.launchGame(romPath);
 }

@@ -106,3 +106,4 @@
 .owned-cheats-message button + button { margin-inline-start: 8px; }
 .owned-cheats-notice { margin: 0 0 12px; }
 .owned-cheats-notice, .owned-cheats-footnote { font: var(--font-caption); color: var(--muted); }
+.owned-cheats-footnote { margin-top: 12px; }

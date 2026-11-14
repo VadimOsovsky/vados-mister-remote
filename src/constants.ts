@@ -7,6 +7,8 @@ const RESET = { id: 'reset', label: 'Reset console', action: 'user' } as const;
 const FLIP_DISK = { id: 'flip_disk', label: 'Flip Disk', action: 'user' } as const;
 
 // ── PLATFORMS ──
+const NES_NTSC_MGL = { rbf: '_Console/NES', systemType: 'NTSC' } as const;
+
 export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
   nes_ntsc: {
     name: 'NES',
@@ -20,6 +22,7 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     wizzoSystemId: 'NES',
     imageRegions: ['North America', 'United States', 'Canada', 'World'],
     controls: [LAUNCH_CORE, RESET],
+    mglConfig: NES_NTSC_MGL,
   },
   nes_pal: {
     name: 'NES (PAL)',
@@ -33,7 +36,7 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     wizzoSystemId: 'NES',
     imageRegions: ['Europe', 'United Kingdom', 'Germany', 'France', 'Spain', 'Italy', 'Australia'],
     controls: [LAUNCH_CORE, RESET],
-    mglConfig: { setname: 'NES_PAL', rbf: '_Console/NES' },
+    mglConfig: { setname: 'NES_PAL', rbf: '_Console/NES', systemType: 'PAL' },
   },
   famicom: {
     name: 'Famicom',
@@ -48,6 +51,7 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     imageRegions: ['Japan', 'Asia', 'World'],
     nameRegions: ['Japan'],
     controls: [LAUNCH_CORE, RESET],
+    mglConfig: NES_NTSC_MGL,
   },
   fds: {
     name: 'FDS',
@@ -64,6 +68,7 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     nameRegions: ['Japan'],
     controls: [LAUNCH_CORE, RESET, FLIP_DISK],
     launchPath: '/media/fat/games/NES/_fds_boot.fds',
+    mglConfig: NES_NTSC_MGL,
   },
   av_famicom: {
     name: 'AV Famicom',
@@ -79,6 +84,7 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     nameRegions: ['Japan'],
     collectionGroup: 'famicom',
     controls: [LAUNCH_CORE, RESET],
+    mglConfig: NES_NTSC_MGL,
   },
   av_famicom_fds: {
     name: 'AV Famicom FDS',
@@ -96,6 +102,7 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     collectionGroup: 'fds',
     controls: [LAUNCH_CORE, RESET, FLIP_DISK],
     launchPath: '/media/fat/games/NES/_fds_boot.fds',
+    mglConfig: NES_NTSC_MGL,
   },
   dendy: {
     name: 'Dendy',
@@ -109,7 +116,7 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     wizzoSystemId: 'NES',
     imageRegions: [],
     controls: [LAUNCH_CORE, RESET],
-    mglConfig: { setname: 'NES_Dendy', rbf: '_Console/NES' },
+    mglConfig: { setname: 'NES_Dendy', rbf: '_Console/NES', systemType: 'Dendy' },
   },
 };
 

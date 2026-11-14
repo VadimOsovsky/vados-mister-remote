@@ -96,7 +96,7 @@ function StoreRomForm({ picker, title, consoleName, price, preview, canPurchase 
                     {!loading && !results.length && <p role="status">{error || 'No matching files.'}</p>}
                     {results.map(result => (
                         <label className="store-rom-file" key={result.path}>
-                            <span className="store-rom-file-icon" aria-hidden="true">{FileIcon}<small>{result.name.split('.').at(-1)}</small></span>
+                            <span className="store-rom-file-icon" aria-hidden="true">{FileIcon}</span>
                             <span><strong>{result.name}</strong><small>{result.path.slice(0, result.path.lastIndexOf('/') + 1)}</small></span>
                             <input type="radio" name="store-rom" checked={file?.path === result.path}
                                 onChange={() => setSelected(result.path)} />

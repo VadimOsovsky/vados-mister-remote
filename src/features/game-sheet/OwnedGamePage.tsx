@@ -17,6 +17,7 @@ import { BackArrowIcon, FlipDiskIcon, FileIcon, PencilIcon, PlayIcon, ResetIcon 
 import { getImageUrl, resolveImages, resolveScreenshots, resolveTitle } from '../../services/launchbox';
 import { getGameArtworkLanguage, getGameOverrides, deleteGameOverrides, getRomMapping, removeCustomGame, setRomMapping } from '../../lib/storage';
 import { readCheatSelection } from '../../services/gameCheats';
+import { launchCollectionGame } from '../../services/collectionLauncher';
 import { isRomPlaying } from '../../services/nowPlaying';
 import { resolveGameArtwork } from '../../lib/gameArtwork';
 import { EditGameForm } from './EditGameForm';
@@ -73,9 +74,11 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
     const [editMode, setEditMode] = useState(false);
     const [flippingDisk, setFlippingDisk] = useState(false);
     const [flipError, setFlipError] = useState<string>();
-    const [exitOpen, setExitOpen] = useState(false);
-    const [exiting, setExiting] = useState(false);
-    const [exitError, setExitError] = useState<string>();
+    const [gameAction, setGameAction] = useState<'exit' | 'restart' | null>(null);
+    const actionTrigger = useRef<HTMLButtonElement | null>(null);
+    const restarting = gameAction === 'restart';
+    const [actionPending, setActionPending] = useState(false);
+    const [actionError, setActionError] = useState<string>();
     const activeConsole = useCollectionState(state => state.activeConsole);
     const platform = usePlatform();
     const hasSelectedCheats = useSyncExternalStore(subscribeToValues, () => {
@@ -138,23 +141,26 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
     const actionsBusy = !connected || saves.savingSlot || saves.loadingSlot || flippingDisk;
     const showExit = playing && selectedIndex === null;
 
-    async function exitGame() {
-        if (actionsBusy || exiting) return;
-        setExiting(true);
-        setExitError(undefined);
+    async function runGameAction() {
+        if (actionsBusy || actionPending || !gameAction) return;
+        setActionPending(true);
+        setActionError(undefined);
         try {
             const rom = getRomMapping(selectedGame.id, activeConsole);
             const current = await api.getPlaying(AbortSignal.timeout(5000));
-            if (useMisterState.getState().api !== api || !isRomPlaying(current, rom, activeConsole)) {
-                setExitError('This game is no longer running on the connected MiSTer.');
+            if (useMisterState.getState().api !== api || !rom || !isRomPlaying(current, rom, activeConsole)) {
+                setActionError('This game is no longer running on the connected MiSTer.');
                 return;
             }
-            await api.launchMenu();
-            setExitOpen(false);
-        } catch {
-            setExitError('Could not return to the MiSTer menu. Try again.');
+            if (restarting) await launchCollectionGame(api, activeConsole, selectedGame.id, rom);
+            else await api.launchMenu();
+            setGameAction(null);
+        } catch (error) {
+            setActionError(restarting
+                ? (error instanceof Error ? error.message : 'Could not restart the game. Try again.')
+                : 'Could not return to the MiSTer menu. Try again.');
         } finally {
-            setExiting(false);
+            setActionPending(false);
         }
     }
 
@@ -332,33 +338,44 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
             <aside className="owned-dock" aria-label="Game actions" data-has-flip={hasFlipDisk || undefined}>
                 {!romPickerOpen && romSearchError && <p className="owned-flip-error" role="alert">{romSearchError}</p>}
                 {flipError && <p className="owned-flip-error" role="alert">{flipError}</p>}
-                {loadIndex !== null && <button className="owned-button owned-new-game playroom-press" aria-label={hasSelectedCheats ? 'Start new game with selected cheats' : 'Start new game'} title="Start new game" disabled={!connected || saves.savingSlot || saves.loadingSlot || flippingDisk} onClick={startNewGame}>{ResetIcon}<span>Start new game</span>
+                {!showExit && loadIndex !== null && <button className="owned-button owned-new-game playroom-press" aria-label={hasSelectedCheats ? 'Start new game with selected cheats' : 'Start new game'} title="Start new game" disabled={!connected || saves.savingSlot || saves.loadingSlot || flippingDisk} onClick={startNewGame}>{ResetIcon}<span>Start new game</span>
                     {hasSelectedCheats && <span className="owned-cheat-badge" aria-hidden="true">✦</span>}
                 </button>}
-                <Dialog.Root open={exitOpen} onOpenChange={open => {
-                    if (exiting) return;
-                    setExitError(undefined);
-                    setExitOpen(open);
+                <Dialog.Root open={gameAction !== null} onOpenChange={open => {
+                    if (actionPending) return;
+                    setActionError(undefined);
+                    if (!open) setGameAction(null);
                 }}>
-                    {showExit && <Dialog.Trigger asChild>
-                        <button className="owned-button owned-primary owned-exit-button playroom-press" disabled={!!actionsBusy}>
+                    {showExit && <>
+                        <button className="owned-button owned-new-game playroom-press"
+                            aria-label="Restart game" title="Restart game" disabled={actionsBusy || actionPending}
+                            onClick={event => { actionTrigger.current = event.currentTarget; setGameAction('restart'); }}>
+                            {ResetIcon}<span>Restart</span>
+                        </button>
+                        <button className="owned-button owned-primary owned-exit-button playroom-press"
+                            disabled={actionsBusy || actionPending} onClick={event => { actionTrigger.current = event.currentTarget; setGameAction('exit'); }}>
                             {stopIcon}<span>Exit game</span>
                         </button>
-                    </Dialog.Trigger>}
+                    </>}
                     <Dialog.Portal>
                         <Dialog.Overlay className="owned-dialog-overlay" />
-                        <Dialog.Content className="owned-dialog owned-confirm owned-exit-dialog">
-                            <span className="owned-exit-icon">{stopIcon}</span>
-                            <Dialog.Title>Exit game?</Dialog.Title>
+                        <Dialog.Content className="owned-dialog owned-confirm owned-exit-dialog"
+                            onCloseAutoFocus={event => {
+                                if (!actionTrigger.current?.isConnected) return;
+                                event.preventDefault();
+                                actionTrigger.current.focus();
+                            }}>
+                            <span className="owned-exit-icon">{restarting ? ResetIcon : stopIcon}</span>
+                            <Dialog.Title>{restarting ? 'Restart game?' : 'Exit game?'}</Dialog.Title>
                             <Dialog.Description>
-                                <strong>{displayTitle}</strong> will close and MiSTer will return to its main menu. Unsaved progress will be lost.
+                                <strong>{displayTitle}</strong> {restarting ? 'will restart from the beginning.' : 'will close and MiSTer will return to its main menu.'} Unsaved progress will be lost.
                             </Dialog.Description>
-                            {exitError && <p role="alert" className="owned-exit-error">{exitError}</p>}
+                            {actionError && <p role="alert" className="owned-exit-error">{actionError}</p>}
                             <div className="owned-exit-actions">
-                                <Dialog.Close className="owned-button playroom-press" disabled={exiting}>Cancel</Dialog.Close>
+                                <Dialog.Close className="owned-button playroom-press" disabled={actionPending}>Cancel</Dialog.Close>
                                 <button className="owned-button owned-exit-button playroom-press"
-                                    disabled={!!actionsBusy || exiting} onClick={exitGame}>
-                                    {exiting ? 'Exiting…' : 'Exit game'}
+                                    disabled={!!actionsBusy || actionPending} onClick={runGameAction}>
+                                    {restarting ? (actionPending ? 'Restarting…' : 'Restart game') : (actionPending ? 'Exiting…' : 'Exit game')}
                                 </button>
                             </div>
                         </Dialog.Content>

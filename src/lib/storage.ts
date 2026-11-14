@@ -307,6 +307,16 @@ export function addRomTranslation(gameId: string, consoleKey: ConsoleKey, langua
     }
     writeRomVersions(gameId, consoleKey, { ...versions, translations: [...versions.translations, { language: language.trim(), path }] });
 }
+export function removeRomTranslation(gameId: string, consoleKey: ConsoleKey, path: string) {
+    const versions = getRomVersions(gameId, consoleKey);
+    const translations = versions.translations.filter(version => version.path !== path);
+    if (translations.length === versions.translations.length) return;
+    writeRomVersions(gameId, consoleKey, {
+        translations,
+        selected: versions.selected === path ? null : versions.selected,
+    });
+}
+
 export function getRomMapping(gameId: string, consoleKey: ConsoleKey): string | null {
     return getRomVersions(gameId, consoleKey).selected ?? getOriginalRomMapping(gameId, consoleKey);
 }

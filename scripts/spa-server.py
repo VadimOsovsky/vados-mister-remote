@@ -4,12 +4,16 @@ Serves static files normally. For paths that don't match a file,
 serves index.html so the client-side router can handle them.
 """
 
+import errno
 import http.server
+import fcntl
 import json
 import os
 import re
 import sys
+import termios
 import threading
+import time
 import zipfile
 import zlib
 from pathlib import Path
@@ -75,6 +79,10 @@ def cheat_entries(rom):
         except (FileNotFoundError, KeyError):
             return {}
         matches = sorted(p for p in folder.iterdir() if p.name.upper().endswith(f"[{crc}].ZIP"))
+        if len(matches) > 1:
+            # Some archive names share a CRC. Prefer the archive named for this ROM.
+            expected_name = f"{rom.stem} [{crc}].zip".casefold()
+            matches = [p for p in matches if p.name.casefold() == expected_name]
         if len(matches) != 1:
             return {}
         path = matches[0]
@@ -151,17 +159,33 @@ class SPAHandler(http.server.SimpleHTTPRequestHandler):
                     raise ValueError("The NES core supports up to 32 codes.")
                 if not supports_cheats():
                     return self.send_json(409, {"error": "Start MiSTer with Zaparoo Main to apply cheats."})
-                if active_game_revision() != revision:
-                    return self.send_json(409, {"error": "The active ROM changed before cheats could be applied."})
-                fd = os.open("/dev/MiSTer_cmd", os.O_WRONLY | os.O_NONBLOCK)
+                try:
+                    fd = os.open("/dev/MiSTer_cmd", os.O_WRONLY | os.O_NONBLOCK)
+                except OSError as error:
+                    if error.errno in {errno.ENOENT, errno.ENXIO}:
+                        return self.send_json(425, {"error": "MiSTer is still opening its command interface."})
+                    raise
                 try:
                     for name in names:
+                        # MiSTer can read adjacent FIFO writes as one command.
+                        pending = bytearray(4)
+                        deadline = time.monotonic() + 1
+                        while True:
+                            fcntl.ioctl(fd, termios.FIONREAD, pending)
+                            if int.from_bytes(pending, sys.byteorder) == 0:
+                                break
+                            if time.monotonic() >= deadline:
+                                raise TimeoutError("MiSTer command queue did not drain")
+                            time.sleep(0.01)
+                        if active_game_revision() != revision:
+                            return self.send_json(409, {"error": "The active ROM changed before cheats could be applied."})
                         os.write(fd, f"zaparoo_cheat on {name}\n".encode())
                 finally:
                     os.close(fd)
         except (ValueError, KeyError, TypeError) as error:
             return self.send_json(400, {"error": str(error)})
-        except (OSError, zipfile.BadZipFile):
+        except (OSError, zipfile.BadZipFile) as error:
+            self.log_error("Could not send cheats: %s", error)
             return self.send_json(503, {"error": "MiSTer could not receive the selected cheats."})
         return self.send_json(200, {"queued": True})
 
