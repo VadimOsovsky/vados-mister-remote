@@ -45,9 +45,9 @@ export function GameCard({ game, regions, activeConsole, onSelect, preview, rece
     const coverScale = PLATFORMS[activeConsole].coverScale;
     const slots = getSaveSlots(getGameSaveKey(game.id, activeConsole));
     const playerCount = game.maxPlayers.trim();
-    const isBeaten = beatenIds.includes(game.id);
+    const isBeaten = beatenIds.includes(game.id) || (preview && game.id === '112');
     return (
-        <button type="button" aria-label={`${recent ? `Open ${displayTitle}` : displayTitle}${playing ? ' · Now playing' : ''}`} aria-pressed={recent?.selected}
+        <button type="button" aria-label={`${recent ? `Open ${displayTitle}` : displayTitle}${isBeaten ? ' · Completed' : ''}${playing ? ' · Now playing' : ''}`} aria-pressed={recent?.selected}
             className={`game-card${isBeaten ? ' beaten' : ''}`}
             onClick={() => onSelect(game)}
         >
@@ -56,9 +56,10 @@ export function GameCard({ game, regions, activeConsole, onSelect, preview, rece
                     <LazyImage src={frontSrc} fallbackSrc={directCover} alt="" className="card-art"
                         style={coverScale === undefined ? undefined : { scale: coverScale }} />
                     {favoriteIds.includes(game.id) && <FavoriteBookmark />}
-                    {isBeaten && <span className="card-beaten">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 4 4 10-10" /></svg>
+                    {isBeaten && <span className="card-beaten" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path fillRule="evenodd" d="M6 3h12v2h3a1 1 0 0 1 1 1v2a6 6 0 0 1-5.3 6A6 6 0 0 1 13 16v3h3a2 2 0 0 1 2 2H6a2 2 0 0 1 2-2h3v-3a6 6 0 0 1-3.7-2A6 6 0 0 1 2 8V6a1 1 0 0 1 1-1h3V3Zm0 4H4v1a4 4 0 0 0 2.4 3.7A6 6 0 0 1 6 10V7Zm12 0v3a6 6 0 0 1-.4 1.7A4 4 0 0 0 20 8V7h-2Zm-6-1-1 2.1-2.3.3 1.7 1.7-.4 2.3 2-1.1 2 1.1-.4-2.3 1.7-1.7-2.3-.3L12 6Z" />
+                        </svg>
                     </span>}
                 </span>
                 <span className="card-status">

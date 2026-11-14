@@ -1,9 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ConsoleKey, LaunchBoxGame, PlatformDef } from '../types';
 import type { WizzoApi, WizzoGameSearchResult } from '../services/wizzoApi';
-import { getRomMapping, getRomVersions, setRomMapping } from '../lib/storage';
+import { getRomMapping, setRomMapping } from '../lib/storage';
 import { CheatLaunchError } from '../services/gameCheats';
 import { launchCollectionGame } from '../services/collectionLauncher';
+
+function launchErrorMessage(error: unknown): string {
+    if (error instanceof CheatLaunchError) return error.message;
+    if (error instanceof Error && error.message) return `Could not launch the game. ${error.message}`;
+    return 'Could not launch the game. Try again.';
+}
 
 export function useRomPicker(api: WizzoApi, platform: PlatformDef, selectedGame: LaunchBoxGame | null, activeConsole: ConsoleKey, onSelect?: (romPath: string) => void, searchEnabled = true) {
     const [romPickerOpen, setRomPickerOpen] = useState(false);
@@ -104,37 +110,28 @@ export function useRomPicker(api: WizzoApi, platform: PlatformDef, selectedGame:
         if (onSelect) {
             onSelect(result.path);
         } else {
-            setRomMapping(selectedGame.id, activeConsole, result.path);
             try {
+                setRomMapping(selectedGame.id, activeConsole, result.path);
                 await launchCollectionGame(api, activeConsole, selectedGame.id, result.path);
             } catch (error) {
-                if (error instanceof CheatLaunchError) setRomSearchError(error.message);
-                else openRomPicker(selectedGame.title);
+                setRomSearchError(launchErrorMessage(error));
             }
         }
-    }, [selectedGame, activeConsole, api, openRomPicker, closeRomPicker, onSelect]);
+    }, [selectedGame, activeConsole, api, closeRomPicker, onSelect]);
 
     const handleLaunchGame = useCallback(async () => {
         if (!selectedGame) return;
         const cachedPath = getRomMapping(selectedGame.id, activeConsole);
-        if (cachedPath) {
-            try {
-                await launchCollectionGame(api, activeConsole, selectedGame.id, cachedPath);
-                return;
-            } catch (error) {
-                if (error instanceof CheatLaunchError) {
-                    setRomSearchError(error.message);
-                    return;
-                }
-                // Never replace the original mapping after a translated ROM fails.
-                if (getRomVersions(selectedGame.id, activeConsole).selected) {
-                    setRomSearchError('Could not launch this translation. Check the ROM on MiSTer or choose another language.');
-                    return;
-                }
-                // Cached original path failed — fall through to picker
-            }
+        if (!cachedPath) {
+            openRomPicker(selectedGame.title);
+            return;
         }
-        openRomPicker(selectedGame.title);
+        setRomSearchError(null);
+        try {
+            await launchCollectionGame(api, activeConsole, selectedGame.id, cachedPath);
+        } catch (error) {
+            setRomSearchError(launchErrorMessage(error));
+        }
     }, [selectedGame, activeConsole, api, openRomPicker]);
 
     return {

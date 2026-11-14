@@ -3,7 +3,7 @@ type Snapshot = { revision: number; values: Values };
 type SyncStatus = 'saved' | 'saving' | 'offline' | 'conflict';
 
 const endpoint = '/api/playroom/state';
-const sharedKey = /^(?:store_free_games|rom_mappings|active_console|store_sort|wallet_balance|wallet_last_topup|wallet_beaten_rewarded|owned_game_tab|(?:save_slots|game_rom_versions|game_overrides|game_cheats|collection|favorites|beaten|custom_games)_.+|playroom\.recent\..+)$/;
+const sharedKey = /^(?:store_free_games|rom_mappings|active_console|owned_consoles|store_sort|wallet_balance|wallet_last_topup|wallet_beaten_rewarded|owned_game_tab|(?:save_slots|game_rom_versions|game_overrides|game_cheats|collection|favorites|beaten|custom_games)_.+|playroom\.recent\..+)$/;
 
 let confirmed: Snapshot | undefined;
 let values: Values = {};

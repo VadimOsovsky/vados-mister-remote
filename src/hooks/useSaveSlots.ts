@@ -52,7 +52,10 @@ export function useSaveSlots(api: WizzoApi, game: LaunchBoxGame, activeConsole: 
             }
             const query = new URLSearchParams({
                 core: playing.core,
-                game: playing.gameName,
+                // The core names the save after the ROM inside the MGL.
+                game: playing.romPath
+                    ? playing.romPath.replace(/\\/g, '/').split('/').pop()!.replace(/\.[^.]+$/, '')
+                    : playing.gameName,
                 slot: String(selectedSlot + 1),
             });
             const verifyOnDisk = !import.meta.env.DEV && api.host === window.location.hostname;
@@ -82,7 +85,9 @@ export function useSaveSlots(api: WizzoApi, game: LaunchBoxGame, activeConsole: 
                 await api.takeScreenshot();
                 await wait(1000);
                 const screenshot = (await api.listScreenshots() ?? []).find(image =>
-                    image.core === playing.core && image.game === playing.gameName && !previous.has(image.path));
+                    image.core === playing.core
+                    && (image.game === playing.gameName || image.game === query.get('game'))
+                    && !previous.has(image.path));
                 slot.screenshotCore = screenshot?.core;
                 slot.screenshotFilename = screenshot?.filename;
             } catch (err) {

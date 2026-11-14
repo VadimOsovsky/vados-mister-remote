@@ -389,7 +389,6 @@
 }
 .owned-dialog h2 { margin: 0; padding: 8px 68px 16px 20px; font: var(--font-heading-dialog); }
 .owned-dialog > .owned-icon { position: absolute; top: 12px; right: 12px; }
-.owned-dialog > .rom-picker { margin: 0 20px; }
 .owned-dialog.owned-confirm { padding: 20px; }
 .owned-confirm h2 { padding: 0; }
 .owned-confirm p { margin: 8px 0 0; color: var(--muted); }

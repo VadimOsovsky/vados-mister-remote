@@ -17,21 +17,30 @@ function buildMglXml({ setname, rbf, systemType }: NonNullable<PlatformDef['mglC
 `
 }
 
-async function zaparooLaunchMgl(host: string, mglXml: string): Promise<void> {
+function zaparooRequest<T>(host: string, method: string, params?: object, signal?: AbortSignal): Promise<T> {
   const url = `ws://${host}:${ZAPAROO_PORT}/api`;
   return new Promise((resolve, reject) => {
     const ws = new WebSocket(url);
-    const timeout = setTimeout(() => {
+    function finish(error: Error | null, result?: T) {
+      clearTimeout(timeout);
+      signal?.removeEventListener('abort', abort);
       ws.close();
-      reject(new Error('Zaparoo WebSocket timeout'));
-    }, 10_000);
+      if (error) reject(error);
+      else resolve(result as T);
+    }
+    const abort = () => finish(new Error('Zaparoo request aborted'));
+    const timeout = setTimeout(() => {
+      finish(new Error('Zaparoo WebSocket timeout'));
+    }, method === 'media.active' ? 1500 : 10_000);
+    if (signal?.aborted) return abort();
+    signal?.addEventListener('abort', abort, { once: true });
 
     ws.onopen = () => {
       ws.send(JSON.stringify({
         jsonrpc: '2.0',
         id: 1,
-        method: 'launch',
-        params: { text: `**mister.mgl:${mglXml}` },
+        method,
+        params,
       }));
     };
 
@@ -39,23 +48,24 @@ async function zaparooLaunchMgl(host: string, mglXml: string): Promise<void> {
       try {
         const json = JSON.parse(event.data as string);
         if (json?.id !== 1) return;
-        clearTimeout(timeout);
         if (json.error) {
-          reject(new Error(json.error.message ?? 'Zaparoo RPC error'));
+          finish(new Error(json.error.message ?? 'Zaparoo RPC error'));
         } else {
-          resolve();
+          finish(null, json.result);
         }
       } catch {
         return;
       }
-      ws.close();
     };
 
-    ws.onerror = () => {
-      clearTimeout(timeout);
-      reject(new Error('Zaparoo WebSocket connection failed'));
-    };
+    ws.onerror = () => finish(new Error('Zaparoo WebSocket connection failed'));
+    ws.onclose = () => finish(new Error('Zaparoo WebSocket closed'));
   });
+}
+
+export async function getActiveRomPath(host: string, signal?: AbortSignal): Promise<string | undefined> {
+  const media = await zaparooRequest<{ mediaPath?: string } | null>(host, 'media.active', undefined, signal);
+  return media?.mediaPath;
 }
 
 export async function launchGameForPlatform(
@@ -65,7 +75,7 @@ export async function launchGameForPlatform(
   wizzoApi: WizzoApi,
 ): Promise<void> {
   if (platform.mglConfig) {
-    await zaparooLaunchMgl(host, buildMglXml(platform.mglConfig, romPath));
+    await zaparooRequest(host, 'launch', { text: `**mister.mgl:${buildMglXml(platform.mglConfig, romPath)}` });
     return;
   }
   await wizzoApi.launchGame(romPath);

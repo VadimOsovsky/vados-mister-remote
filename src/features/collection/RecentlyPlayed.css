@@ -115,13 +115,6 @@
   box-shadow: 0 1px 0 var(--ink);
 }
 
-.collection-page .recent-card .card-beaten {
-  width: 34px;
-  height: 34px;
-  right: -5px;
-  top: -5px;
-}
-
 .collection-page .recent-card .card-badge { padding-top: 17px; text-align: center; }
 .collection-page .recent-card .card-title { font: var(--font-label); color: var(--card) !important; }
 .collection-page .recent-card .card-year { margin: 8px 0 0; color: var(--card) !important; opacity: .7; }

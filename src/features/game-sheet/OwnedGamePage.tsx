@@ -21,7 +21,7 @@ import { launchCollectionGame } from '../../services/collectionLauncher';
 import { isRomPlaying } from '../../services/nowPlaying';
 import { resolveGameArtwork } from '../../lib/gameArtwork';
 import { EditGameForm } from './EditGameForm';
-import { RomPicker } from './RomPicker';
+import { StoreRomDialog } from '../store/StoreRomDialog';
 import { GameLanguages } from './GameLanguages';
 import { OwnedGameAbout, OwnedGameSaves } from './OwnedGamePanels';
 import { OwnedGameCheats } from './OwnedGameCheats';
@@ -403,18 +403,10 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
                 <EditGameForm game={selectedGame} regions={regions} activeConsole={activeConsole} initialField={editField}
                     onSave={closeEdit} onCancel={closeEdit} onDelete={deleteGame} />
             </GameFormDrawer>
-            <Dialog.Root open={romPicker.romPickerOpen && !editMode} onOpenChange={open => {
-                if (!open) closeGameRomPicker();
-            }}>
-                <Dialog.Portal>
-                    <Dialog.Overlay className="owned-dialog-overlay" />
-                    <Dialog.Content className="owned-dialog" aria-describedby={undefined}>
-                        <Dialog.Title>Choose a game file</Dialog.Title>
-                        <Dialog.Close className="owned-button owned-icon playroom-press" aria-label="Close">×</Dialog.Close>
-                        <RomPicker {...romPicker} selectRom={selectGameRom} closeRomPicker={closeGameRomPicker} />
-                    </Dialog.Content>
-                </Dialog.Portal>
-            </Dialog.Root>
+            <StoreRomDialog
+                picker={{ ...romPicker, romPickerOpen: romPickerOpen && !editMode, selectRom: selectGameRom, closeRomPicker: closeGameRomPicker }}
+                title={displayTitle} consoleName={platform.name} preview={false}
+                launchLabel={pendingLoadSlot.current === null ? 'Play' : 'Load save'} />
             {boxOpen && boxFront && <PreviewBox front={boxFront} back="/playroom/preview/mario3-back.jpg"
                 title={displayTitle} onClose={() => setBoxOpen(false)} />}
             <PhotoViewer index={galleryIndex === -1 ? 0 : galleryIndex} onClose={() => setGalleryIndex(null)} slides={galleryIndex === -1 ? [{ src: front || '' }] : slides} />

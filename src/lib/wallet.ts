@@ -1,8 +1,8 @@
 import { getWalletBalance, setWalletBalance, getLastTopupDate, setLastTopupDate, getBeatenRewardedMap, addBeatenRewardedId, readEconomyDisabled } from './storage';
 
 export const STARTING_BALANCE = 85;
-export const DAILY_ALLOWANCE = 3;
-export const BEATEN_REWARD = 60;
+export const DAILY_ALLOWANCE = 5;
+export const BEATEN_REWARD = 75;
 
 function dayKey(date: Date): string {
     return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');

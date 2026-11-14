@@ -1,15 +1,17 @@
 import { create } from 'zustand';
-import { PLATFORMS } from '../constants';
+import { PLATFORMS, STARTER_CONSOLE } from '../constants';
 import type { ConsoleKey } from '../types';
 import { batchStorageWrites, subscribeToValues } from '../lib/sharedStorage';
 import {
     readActiveConsole, writeActiveConsole, getCollectionIds, addCollectionId, removeCollectionId,
     getFavoriteIds, setFavorite, getBeatenIds, addBeatenId, removeBeatenId,
     getWalletBalance, readEconomyDisabled, writeEconomyDisabled, setRomMapping,
+    getOwnedConsoles, writeOwnedConsoles, initializeOwnedConsoles,
 } from '../lib/storage';
 import { rewardBeatenGame, spendWallet, visitWallet } from '../lib/wallet';
+import { consolePrice } from '../lib/consolePricing';
 
-const preserveIds = (next: string[], previous?: string[]) =>
+const preserveIds = <T,>(next: T[], previous?: T[]) =>
     previous && next.length === previous.length && next.every((id, index) => id === previous[index])
         ? previous : next;
 
@@ -20,13 +22,15 @@ function readCollection(previous?: ReturnType<typeof readCollectionSnapshot>) {
         collectionIds: preserveIds(next.collectionIds, previous?.collectionIds),
         favoriteIds: preserveIds(next.favoriteIds, previous?.favoriteIds),
         beatenIds: preserveIds(next.beatenIds, previous?.beatenIds),
+        ownedConsoles: preserveIds(next.ownedConsoles, previous?.ownedConsoles),
     };
 }
 
 function readCollectionSnapshot() {
-    const activeConsole = readActiveConsole() ?? 'nes_ntsc';
+    const activeConsole = readActiveConsole() ?? STARTER_CONSOLE;
     return {
         activeConsole,
+        ownedConsoles: getOwnedConsoles(),
         collectionIds: getCollectionIds(activeConsole),
         favoriteIds: getFavoriteIds(activeConsole),
         beatenIds: getBeatenIds(activeConsole),
@@ -50,12 +54,14 @@ type CollectionState = ReturnType<typeof readCollectionSnapshot> & Feedback & {
     toggleFavorite: (id: string) => void;
     removeFromCollection: (id: string) => void;
     purchaseGame: (id: string, price: number, romPath: string) => boolean;
+    purchaseConsole: (key: ConsoleKey) => boolean;
     markAsBeaten: (id: string, title: string) => void;
     unmarkAsBeaten: (id: string) => void;
 };
 
 export const useCollectionState = create<CollectionState>((set, get) => ({
-    activeConsole: 'nes_ntsc',
+    activeConsole: STARTER_CONSOLE,
+    ownedConsoles: [STARTER_CONSOLE],
     collectionIds: [],
     favoriteIds: [],
     beatenIds: [],
@@ -94,6 +100,19 @@ export const useCollectionState = create<CollectionState>((set, get) => ({
         if (purchased && !free && price > 0) set({ walletNotice: { amount: -price, id: Date.now() } });
         return purchased;
     },
+    purchaseConsole: key => {
+        const owned = getOwnedConsoles();
+        const price = consolePrice(key, owned);
+        if (price === null) return false;
+        const free = readEconomyDisabled();
+        const purchased = batchStorageWrites(() => {
+            if (spendWallet(price) === null) return false;
+            writeOwnedConsoles([...owned, key]);
+            return true;
+        });
+        if (purchased && !free) set({ walletNotice: { amount: -price, id: Date.now() } });
+        return purchased;
+    },
     markAsBeaten: (id: string, title: string) => {
         const result = batchStorageWrites(() => {
             addBeatenId(get().activeConsole, id);
@@ -109,6 +128,7 @@ export function usePlatform() {
 }
 
 export function initializeCollectionState() {
+    initializeOwnedConsoles();
     const refresh = () => useCollectionState.setState(previous => readCollection(previous));
     refresh();
     return subscribeToValues(refresh);

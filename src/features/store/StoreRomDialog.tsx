@@ -10,14 +10,15 @@ import { formatGamePrice } from '../../lib/pricing';
 
 type Picker = ReturnType<typeof useRomPicker>;
 
-export function StoreRomDialog({ picker, title, consoleName, price, preview, canPurchase }: {
+type RomDialogProps = {
     picker: Picker;
     title: string;
     consoleName: string;
-    price: number;
     preview: boolean;
-    canPurchase: boolean;
-}) {
+} & ({ price: number; canPurchase: boolean; launchLabel?: never } | { launchLabel: string; price?: never; canPurchase?: never });
+
+export function StoreRomDialog(props: RomDialogProps) {
+    const { picker } = props;
     return (
         <BottomSheet open={picker.romPickerOpen} onOpenChange={open => { if (!open) picker.closeRomPicker(); }}
             overlayClassName="owned-dialog-overlay" className="store-rom-dialog">
@@ -27,19 +28,12 @@ export function StoreRomDialog({ picker, title, consoleName, price, preview, can
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
                 </Drawer.Close>
             </header>
-            {picker.romPickerOpen && <StoreRomForm {...{ picker, title, consoleName, price, preview, canPurchase }} />}
+            {picker.romPickerOpen && <StoreRomForm {...props} />}
         </BottomSheet>
     );
 }
 
-function StoreRomForm({ picker, title, consoleName, price, preview, canPurchase }: {
-    picker: Picker;
-    title: string;
-    consoleName: string;
-    price: number;
-    preview: boolean;
-    canPurchase: boolean;
-}) {
+function StoreRomForm({ picker, title, consoleName, price, preview, canPurchase, launchLabel }: RomDialogProps) {
     const economyDisabled = useCollectionState(state => state.economyDisabled);
     const platform = usePlatform();
     const searchRef = useRef<HTMLInputElement>(null);
@@ -63,7 +57,7 @@ function StoreRomForm({ picker, title, consoleName, price, preview, canPurchase 
     }
 
     function confirm(result: WizzoGameSearchResult) {
-        if (preview) picker.closeRomPicker();
+        if (preview && !launchLabel) picker.closeRomPicker();
         else void picker.selectRom(result);
     }
 
@@ -109,8 +103,9 @@ function StoreRomForm({ picker, title, consoleName, price, preview, canPurchase 
                 <div className="store-rom-actions">
                     <Drawer.Close className="playroom-button playroom-press">Cancel</Drawer.Close>
                     <button className="playroom-button playroom-primary playroom-press"
-                        disabled={!file || loading || !canPurchase} onClick={() => { if (file) confirm(file); }}>
-                        <span>{price === 0 ? 'Add game' : 'Buy game'}</span>{!economyDisabled && <strong>{formatGamePrice(price)}</strong>}
+                        disabled={!file || loading || canPurchase === false} onClick={() => { if (file) confirm(file); }}>
+                        <span>{launchLabel ?? (price === 0 ? 'Add game' : 'Buy game')}</span>
+                        {price !== undefined && !economyDisabled && <strong>{formatGamePrice(price)}</strong>}
                     </button>
                 </div>
             </footer>

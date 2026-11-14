@@ -10,6 +10,7 @@ export function isRomPlaying(playing: WizzoPlayingResponse | null, romPath: stri
     const expectedCore = platform.mglConfig?.setname;
     if (expectedCore && playing.core !== expectedCore) return false;
     if (runningVariant && runningVariant.mglConfig?.setname !== expectedCore) return false;
+    if (playing.romPath) return romPath.replace(/\\/g, '/') === playing.romPath.replace(/\\/g, '/');
     const filename = romPath.replace(/\\/g, '/').split('/').pop()?.replace(/\.[^.]+$/, '');
     // Wizzo reports the ROM filename without its extension, not a LaunchBox title.
     return Boolean(filename && filename === playing.gameName);
@@ -17,5 +18,5 @@ export function isRomPlaying(playing: WizzoPlayingResponse | null, romPath: stri
 
 export function samePlayingGame(a: WizzoPlayingResponse | null, b: WizzoPlayingResponse | null): boolean {
     return a?.core === b?.core && a?.system === b?.system && a?.systemName === b?.systemName
-        && a?.game === b?.game && a?.gameName === b?.gameName;
+        && a?.game === b?.game && a?.gameName === b?.gameName && a?.romPath === b?.romPath;
 }

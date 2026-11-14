@@ -18,6 +18,7 @@ import zipfile
 import zlib
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
+from urllib.request import Request, urlopen
 
 
 STATE_ROUTE = "/api/playroom/state"
@@ -116,6 +117,26 @@ def active_game_revision():
         return ""
 
 
+def active_nes_rom():
+    try:
+        active = ACTIVE_GAME.read_text().strip()
+        if not active.lower().endswith(".mgl"):
+            return nes_rom_path(active).resolve() if active.lower().endswith(".nes") else None
+
+        request = Request(
+            "http://127.0.0.1:7497/api/v0.1",
+            data=b'{"jsonrpc":"2.0","id":1,"method":"media.active"}',
+            headers={"Content-Type": "application/json"},
+        )
+        with urlopen(request, timeout=1) as response:
+            media = json.load(response).get("result")
+        if not media or media.get("systemId") != "NES":
+            return None
+        return nes_rom_path(media["mediaPath"]).resolve()
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+
+
 def read_state():
     try:
         return json.loads(state_path.read_text(encoding="utf-8"))
@@ -145,12 +166,8 @@ class SPAHandler(http.server.SimpleHTTPRequestHandler):
                 raise ValueError("Invalid cheat selection.")
             with CHEATS_LOCK:
                 revision = active_game_revision()
-                try:
-                    active = ACTIVE_GAME.read_text().strip()
-                except FileNotFoundError:
-                    active = ""
-                if (revision == previous or not active.lower().endswith(".nes")
-                        or nes_rom_path(active).resolve() != rom.resolve()):
+                if (not revision or revision == previous or active_nes_rom() != rom.resolve()
+                        or active_game_revision() != revision):
                     return self.send_json(425, {"error": "The selected ROM is not active on MiSTer."})
                 entries = cheat_entries(rom)
                 if len(set(names)) != len(names) or any(n not in entries for n in names):

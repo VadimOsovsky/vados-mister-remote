@@ -123,6 +123,12 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
 // ── DERIVED MAPS (for backward compat) ──
 export const CONSOLE_KEYS = Object.keys(PLATFORMS) as ConsoleKey[];
 
+// Hardware families are independent of the groups used to share game collections.
+export const CONSOLE_GROUPS: { id: string; name: string; consoles: readonly ConsoleKey[] }[] = [
+  { id: 'nes', name: 'NES', consoles: ['nes_ntsc', 'nes_pal', 'famicom', 'fds', 'av_famicom', 'av_famicom_fds', 'dendy'] },
+];
+export const STARTER_CONSOLE: ConsoleKey = 'nes_ntsc';
+
 export const CONSOLE_NAMES: Record<ConsoleKey, string> =
   Object.fromEntries(CONSOLE_KEYS.map(k => [k, PLATFORMS[k].name])) as Record<ConsoleKey, string>;
 

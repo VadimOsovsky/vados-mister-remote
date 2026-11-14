@@ -108,63 +108,13 @@
   margin-left: 6px;
 }
 
-/* ── BEATEN CARD: Golden Trophy Treatment ── */
-
-@keyframes trophy-glow {
-  0%, 100% { filter: drop-shadow(0 0 3px rgba(255, 215, 0, 0.6)); }
-  50%      { filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.9)); }
-}
-
-.game-card.beaten {
-  position: relative;
-  border: 3px solid #D4B84A;
-  box-shadow:
-    0 0 0 1px rgba(212, 184, 74, 0.35),
-    0 0 10px rgba(255, 220, 50, 0.2);
-}
-
-/* Golden vignette on box art */
-.game-card.beaten .card-art-wrap::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    ellipse at center,
-    transparent 50%,
-    rgba(255, 220, 50, 0.10) 100%
-  );
-  pointer-events: none;
-  z-index: 1;
-}
-
-/* Enhanced trophy icon */
-.game-card.beaten .card-beaten {
-  width: 20px;
-  height: 20px;
-  animation: trophy-glow 3s ease-in-out infinite;
-}
-
-/* Golden badge */
-.game-card.beaten .card-badge {
-  background: linear-gradient(135deg, #CCA820 0%, #E8C840 50%, #CCA820 100%);
-}
-
-.game-card.beaten .card-title,
-.game-card.beaten .card-year {
-  color: #1a1200;
-}
-
-.game-card.beaten .card-year {
-  opacity: 0.7;
-}
-
 .collection-page .shelf-grid .game-grid-row {
   padding: 4px 20px 16px;
   gap: 20px;
   align-items: start;
 }
 
-.collection-page .game-card,.collection-page .game-card.beaten {
+.collection-page .game-card {
   background: none;
   border: 0;
   border-radius: 0;
@@ -295,25 +245,41 @@
   white-space: nowrap;
 }
 
+.collection-page .game-card.beaten .card-frame {
+  border-color: color-mix(in srgb, var(--gold) 60%, var(--ink));
+}
+
 .collection-page .card-beaten {
-  top: -9px;
-  right: -7px;
-  width: 30px;
-  height: 30px;
-  animation: none !important;
-  filter: none;
-  border: 2px solid var(--ink);
-  border-radius: 50%;
-  background: var(--gold);
-  color: var(--ink);
+  top: -10px;
+  right: -10px;
+  width: 44px;
+  height: 44px;
   display: grid;
   place-items: center;
-  box-shadow: 0 0 0 2px var(--card);
+  border: 1px solid #e9b64e;
+  border-radius: 13px;
+  background: var(--ink);
+  color: #ffda76;
+  box-shadow: 0 2px 4px #0004, inset 0 0 0 2px #ffffff16;
+  filter: none;
 }
 
 .collection-page .card-beaten svg {
-  width: 20px;
-  height: 20px;
+  width: 30px;
+  height: 30px;
+}
+
+.collection-page .shelf-grid .card-beaten {
+  top: -6px;
+  right: -6px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+}
+
+.collection-page .shelf-grid .card-beaten svg {
+  width: 19px;
+  height: 19px;
 }
 
 @media (hover: hover) {

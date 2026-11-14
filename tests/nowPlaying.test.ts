@@ -15,6 +15,14 @@ test('matches linked ROM filenames, including backslashes and dots in titles', (
     assert.equal(isRomPlaying(playing, '/games/NES/Another game.nes', 'nes_ntsc'), false);
 });
 
+test('matches MGL launches by the resolved ROM path and console variant', () => {
+    const mgl = { ...playing, game: 'NES/3159481354.mgl', gameName: '3159481354', romPath: rom };
+    assert.equal(isRomPlaying(mgl, rom, 'nes_ntsc'), true);
+    assert.equal(isRomPlaying(mgl, rom, 'nes_pal'), false);
+    assert.equal(isRomPlaying(mgl, rom.replace('/games/', '/backup/'), 'nes_ntsc'), false);
+    assert.equal(samePlayingGame(mgl, { ...mgl, romPath: undefined }), false);
+});
+
 test('does not match missing mappings, empty state or another system', () => {
     assert.equal(isRomPlaying(null, rom, 'nes_ntsc'), false);
     assert.equal(isRomPlaying(playing, null, 'nes_ntsc'), false);

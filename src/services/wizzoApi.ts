@@ -1,6 +1,8 @@
 // ── Wizzo Remote API Client ──
 // Based on mrext Remote API: https://github.com/wizzomafizzo/mrext/blob/main/docs/remote-api.md
 
+import { getActiveRomPath } from './zaparooLauncher';
+
 const DEFAULT_PORT = 8182;
 
 // ── Response types ──
@@ -25,6 +27,7 @@ export interface WizzoSearchResponse {
 }
 
 export interface WizzoPlayingResponse {
+  romPath?: string;
   core: string;
   system: string;
   systemName: string;
@@ -213,8 +216,15 @@ export class WizzoApi {
     return this.post('/games/launch', { path });
   }
 
-  getPlaying(signal?: AbortSignal): Promise<WizzoPlayingResponse> {
-    return this.request('/games/playing', { signal, cache: 'no-store' });
+  async getPlaying(signal?: AbortSignal): Promise<WizzoPlayingResponse> {
+    const playing = await this.request<WizzoPlayingResponse>('/games/playing', { signal, cache: 'no-store' });
+    if (!playing.game?.toLowerCase().endsWith('.mgl')) return playing;
+    try {
+      const romPath = await getActiveRomPath(this.host, signal);
+      return romPath ? { ...playing, romPath } : playing;
+    } catch {
+      return playing;
+    }
   }
 
   listIndexedSystems(): Promise<{ systems: WizzoSystem[] }> {

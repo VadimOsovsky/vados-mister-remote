@@ -1,7 +1,7 @@
 import { appStorage } from './sharedStorage';
 import { resolveGameArtwork } from './gameArtwork';
 import type { ConsoleKey, GameOverrides, LaunchBoxGame, SaveSlot, SortMode } from '../types';
-import { PLATFORMS } from '../constants';
+import { CONSOLE_KEYS, STARTER_CONSOLE } from '../constants';
 
 const HOST_KEY = 'mister_host';
 const ROM_MAPPINGS_KEY = 'rom_mappings';
@@ -10,6 +10,8 @@ const GAME_OVERRIDES_PREFIX = 'game_overrides';
 const COLLECTION_PREFIX = 'collection';
 const BEATEN_PREFIX = 'beaten';
 const ACTIVE_CONSOLE_KEY = 'active_console';
+const OWNED_CONSOLES_KEY = 'owned_consoles';
+const LEGACY_CONSOLES: ConsoleKey[] = ['nes_ntsc', 'nes_pal', 'famicom', 'fds', 'av_famicom', 'av_famicom_fds', 'dendy'];
 const CUSTOM_GAMES_PREFIX = 'custom_games';
 export function readEconomyDisabled(): boolean {
     return appStorage.getItem('store_free_games') === 'true';
@@ -217,11 +219,37 @@ export function removeCustomGame(consoleKey: ConsoleKey, gameId: string): void {
 
 export function readActiveConsole(): ConsoleKey | null {
     const val = appStorage.getItem(ACTIVE_CONSOLE_KEY);
-    return val && val in PLATFORMS ? val as ConsoleKey : null;
+    return val && getOwnedConsoles().includes(val as ConsoleKey) ? val as ConsoleKey : null;
 }
 
 export function writeActiveConsole(key: ConsoleKey): void {
-    appStorage.setItem(ACTIVE_CONSOLE_KEY, key);
+    if (getOwnedConsoles().includes(key)) appStorage.setItem(ACTIVE_CONSOLE_KEY, key);
+}
+
+export function getOwnedConsoles(): ConsoleKey[] {
+    const raw = appStorage.getItem(OWNED_CONSOLES_KEY);
+    if (raw === null) {
+        // Existing profiles could select every original model before ownership was introduced.
+        const existing = [ACTIVE_CONSOLE_KEY, WALLET_BALANCE_KEY, WALLET_LAST_TOPUP_KEY, 'store_free_games', ROM_MAPPINGS_KEY]
+            .some(key => appStorage.getItem(key) !== null)
+            || LEGACY_CONSOLES.some(key => getCollectionIds(key).length > 0);
+        return existing ? [...LEGACY_CONSOLES] : [STARTER_CONSOLE];
+    }
+    try {
+        const stored: unknown = JSON.parse(raw);
+        if (Array.isArray(stored)) {
+            return CONSOLE_KEYS.filter(key => key === STARTER_CONSOLE || stored.includes(key));
+        }
+    } catch { /* use the starter console for an invalid inventory */ }
+    return [STARTER_CONSOLE];
+}
+
+export function writeOwnedConsoles(keys: ConsoleKey[]): void {
+    appStorage.setItem(OWNED_CONSOLES_KEY, JSON.stringify(keys));
+}
+
+export function initializeOwnedConsoles(): void {
+    if (appStorage.getItem(OWNED_CONSOLES_KEY) === null) writeOwnedConsoles(getOwnedConsoles());
 }
 
 // ── Store sort ──
