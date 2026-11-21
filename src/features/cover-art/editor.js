@@ -1,6 +1,7 @@
 import qrcode from 'qrcode-generator';
 
 const savedDrafts = new Map();
+const printQueue = [];
 const storageKey = 'playroom-cover-art-v1';
 try {
     const entries = JSON.parse(localStorage.getItem(storageKey) || '[]');
@@ -171,11 +172,29 @@ export function mountCoverEditor(root, games, initialGameId) {
             },
         },
         art: { label: 'Cover artwork URL', url: true, file: true },
+        gameLogoSize: {
+            label: 'Game logo size',
+            defaultOption: '100',
+            range: { min: '25', max: '110' },
+        },
+        coverOrientation: {
+            label: 'Front artwork orientation',
+            defaultOption: 'original',
+            options: {
+                original: 'Original',
+                clockwise: 'Rotate 90° clockwise',
+                counterclockwise: 'Rotate 90° counterclockwise',
+            },
+        },
         gameLogo: { label: 'Game Logo URL', url: true, file: true },
         screenshotFrame: {
             label: 'Screenshot frame color',
             defaultOption: 'auto',
             options: { auto: 'Auto', black: 'Black', white: 'White' },
+        },
+        textColor: {
+            label: 'Text and divider color',
+            options: { black: 'Black', white: 'White' },
         },
     };
 
@@ -191,9 +210,9 @@ export function mountCoverEditor(root, games, initialGameId) {
 
     const panelFields = {
         front: { primary: ['art', 'background'], secondary: ['logo', 'app'] },
-        spine: { primary: ['title', 'background'], secondary: ['logo'] },
+        spine: { primary: ['title', 'gameLogoSize', 'background'], secondary: ['logo'] },
         back: {
-            primary: ['art', 'description', 'manual'],
+            primary: ['art', 'description', 'manual', 'textColor'],
             secondary: [
                 'background',
                 'screenshotFrame',
@@ -243,6 +262,8 @@ export function mountCoverEditor(root, games, initialGameId) {
 
     function resolved(panel, key) {
         const draft = currentDraft();
+        if (panel === 'back' && key === 'description')
+            return (draft.back.description ?? draft.global.description ?? '').trim();
         return draft[panel][key]?.trim() || draft.global[key]?.trim() || '';
     }
 
@@ -335,12 +356,18 @@ export function mountCoverEditor(root, games, initialGameId) {
                 : ''
             : imageSource(draft.global.gameLogo);
         paintImage(spineArt, spineImage);
+        const logoSize = Number(draft.spine.gameLogoSize || fields.gameLogoSize.defaultOption);
+        spineArt.style.setProperty('--spine-logo-scale', logoSize / 100);
         byId('spine-title').textContent = isSpineImage
             ? draft.global.title
             : spineOverride || draft.global.title;
         byId('spine-title').hidden = Boolean(spineImage) && !spineArt.hidden;
 
         const backLogo = byId('back-game-logo');
+        const textColor = backTextColor();
+        byId('print-back').style.setProperty('--back-text-color', textColor);
+        const textColorInput = byId('back-textColor-input');
+        if (textColorInput) textColorInput.value = textColor;
         const backLogoSource = imageSource(resolved('back', 'gameLogo'));
         paintImage(backLogo, backLogoSource);
         const frameColor = currentDraft().back.screenshotFrame || 'auto';
@@ -380,11 +407,28 @@ export function mountCoverEditor(root, games, initialGameId) {
         }
     }
 
+    const nfcCover = byId('nfc-cover');
+    const nfcFront = nfcCover.closest('.nfc-front');
+
+    function sizeNfcArtwork() {
+        const orientation = currentDraft().nfc.coverOrientation || 'original';
+        nfcFront.dataset.orientation = orientation;
+        if (nfcCover.hidden || !nfcCover.complete || !nfcCover.naturalHeight) {
+            nfcFront.style.removeProperty('--nfc-art-ratio');
+            return;
+        }
+        const ratio = nfcCover.naturalWidth / nfcCover.naturalHeight;
+        nfcFront.style.setProperty(
+            '--nfc-art-ratio',
+            orientation === 'original' ? ratio : 1 / ratio,
+        );
+    }
+
     function renderNfc() {
         const { global: settings } = currentDraft();
-        const coverImage = byId('nfc-cover');
-        paintImage(coverImage, imageSource(settings.art));
-        byId('nfc-empty').hidden = !coverImage.hidden;
+        paintImage(nfcCover, imageSource(settings.art));
+        byId('nfc-empty').hidden = !nfcCover.hidden;
+        sizeNfcArtwork();
         byId('nfc-back-title').textContent =
             settings.title || 'Untitled NES Game';
         fitNfcTitle();
@@ -477,14 +521,26 @@ export function mountCoverEditor(root, games, initialGameId) {
         return Object.assign(document.createElement(tag), properties);
     }
 
+    function backTextColor() {
+        const color = currentDraft().back.textColor;
+        if (color === 'black' || color === 'white') return color;
+        return inkFor(resolved('back', 'background') || '#f7f1df') === '#fff'
+            ? 'white'
+            : 'black';
+    }
+
     function makeField(scope, key) {
         const spineTitleField = scope === 'spine' && key === 'title';
         const field = spineTitleField
             ? { label: 'Title or logo URL', file: true }
-            : fields[key];
+            : key === 'textColor'
+              ? { ...fields.textColor, defaultOption: backTextColor() }
+              : fields[key];
         const draft = currentDraft();
-        const value =
-            (scope === 'nfc' && key === 'manual'
+        const backDescription = scope === 'back' && key === 'description';
+        const value = backDescription
+            ? (draft.back.description ?? draft.global.description ?? '')
+            : (scope === 'nfc' && key === 'manual'
                 ? (draft.nfc.manual ?? draft.global.manual)
                 : draft[scope][key]) || '';
         const isPanelOverride = scope !== 'global' && scope !== 'nfc';
@@ -513,13 +569,15 @@ export function mountCoverEditor(root, games, initialGameId) {
             }
             for (const [option, name] of Object.entries(field.options))
                 input.add(new Option(name, option));
+        } else if (field.range) {
+            input = make('input', { type: 'range', ...field.range });
         } else {
             input = make(field.area ? 'textarea' : 'input');
             if (field.area) input.rows = 3;
             if (field.max) input.maxLength = field.max;
             if (field.numeric) input.inputMode = 'numeric';
             if (field.url) input.inputMode = 'url';
-            const inherited = isPanelOverride ? draft.global[key] : '';
+            const inherited = isPanelOverride && !backDescription ? draft.global[key] : '';
             input.placeholder = spineTitleField
                 ? inherited || 'Game title or https://…'
                 : field.url &&
@@ -543,7 +601,14 @@ export function mountCoverEditor(root, games, initialGameId) {
             : field.file && /^(preset:|blob:|data:|off$)/.test(value)
               ? ''
               : value;
+        const showRangeValue = () => {
+            const percentage = input.value + '%';
+            label.textContent = field.label + ' · ' + percentage;
+            input.setAttribute('aria-valuetext', percentage);
+        };
+        if (field.range) showRangeValue();
         input.addEventListener('input', () => {
+            if (field.range) showRangeValue();
             if (field.numeric) input.value = input.value.replace(/[^0-9]/g, '');
             if (field.color) {
                 const valid =
@@ -706,6 +771,7 @@ export function mountCoverEditor(root, games, initialGameId) {
             byId('nfc-fields').replaceChildren(
                 makeField('global', 'title'),
                 makeField('global', 'art'),
+                makeField('nfc', 'coverOrientation'),
                 makeField('nfc', 'art'),
                 makeField('global', 'description'),
                 makeField('nfc', 'manual'),
@@ -752,13 +818,16 @@ export function mountCoverEditor(root, games, initialGameId) {
         setFormat('cassette'),
     );
     byId('format-nfc').addEventListener('click', () => setFormat('nfc'));
-    for (const id of ['nfc-cover', 'nfc-screenshot']) {
-        byId(id).addEventListener('error', () => {
-            byId(id).hidden = true;
-            if (id === 'nfc-cover') byId('nfc-empty').hidden = false;
-            else byId('nfc-shot').hidden = true;
-        });
-    }
+    nfcCover.addEventListener('load', sizeNfcArtwork);
+    nfcCover.addEventListener('error', () => {
+        nfcCover.hidden = true;
+        byId('nfc-empty').hidden = false;
+        sizeNfcArtwork();
+    });
+    byId('nfc-screenshot').addEventListener('error', (event) => {
+        event.currentTarget.hidden = true;
+        byId('nfc-shot').hidden = true;
+    });
 
     game.addEventListener('change', () => {
         byId('form-status').textContent = '';
@@ -833,6 +902,80 @@ export function mountCoverEditor(root, games, initialGameId) {
     byId('guides').addEventListener('change', (event) =>
         wrap.setAttribute('data-fold-lines', event.target.value),
     );
+    const addToPrintButton = byId('add-to-print');
+    const exportButton = byId('export-pdf');
+    const exportStatus = byId('export-status');
+    const printItems = byId('print-items');
+    let printing = false;
+
+    function renderPrintQueue() {
+        exportButton.textContent = `Print (${printQueue.length})`;
+        exportButton.disabled = printing || printQueue.length === 0;
+        byId('print-queue').hidden = printQueue.length === 0;
+    }
+
+    function makePrintItem(entry) {
+        const row = make('li');
+        const label = make('span', { textContent: entry.title });
+        const remove = make('button', { type: 'button', textContent: 'Remove' });
+        remove.setAttribute('aria-label', `Remove ${entry.title} from print queue`);
+        remove.addEventListener('click', () => {
+            printQueue.splice(printQueue.indexOf(entry), 1);
+            const sibling = row.nextElementSibling || row.previousElementSibling;
+            row.remove();
+            renderPrintQueue();
+            (sibling?.querySelector('button') || addToPrintButton).focus();
+        });
+        row.append(label, remove);
+        return row;
+    }
+
+    addToPrintButton.addEventListener('click', () => {
+        const isNfc = format === 'nfc';
+        const artwork = isNfc ? root.querySelector('.nfc-sheet') : wrap;
+        const title = currentDraft().global.title || 'Cover Art';
+        const copy = artwork.cloneNode(true);
+        const canvases = artwork.querySelectorAll('canvas');
+        copy.querySelectorAll('canvas').forEach((canvas, index) => {
+            if (canvas.closest('[hidden]')) return;
+            const image = make('img', {
+                className: 'print-qr',
+                src: canvases[index].toDataURL(),
+                alt: canvas.getAttribute('aria-label') || '',
+            });
+            canvas.replaceWith(image);
+        });
+        for (const node of copy.querySelectorAll('[id]')) node.removeAttribute('id');
+        copy.removeAttribute('id');
+        const entry = {
+            artwork: copy,
+            isNfc,
+            title: `${title} · ${isNfc ? 'NFC Card' : 'Cassette Cover'}`,
+        };
+        printQueue.push(entry);
+        printItems.append(makePrintItem(entry));
+        renderPrintQueue();
+        exportStatus.hidden = true;
+    });
+    printItems.replaceChildren(...printQueue.map(makePrintItem));
+    renderPrintQueue();
+
+    exportButton.addEventListener('click', async () => {
+        const entries = printQueue.slice();
+        printing = true;
+        renderPrintQueue();
+        exportStatus.hidden = true;
+        try {
+            const { printCover } = await import('./printCover.js');
+            if (active) await printCover(root, entries);
+        } catch {
+            exportStatus.textContent = 'Could not open the print dialog. Try exporting again.';
+            exportStatus.hidden = false;
+        } finally {
+            printing = false;
+            renderPrintQueue();
+        }
+    });
     const modeButtons = root.querySelectorAll('[data-mode]');
     for (const button of modeButtons)
         button.addEventListener('click', () => {

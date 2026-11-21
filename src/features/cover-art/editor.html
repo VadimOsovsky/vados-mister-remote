@@ -44,18 +44,27 @@
   <section class="panel" aria-labelledby="preview-title">
     <header class="panel-head">
       <h2 id="preview-title">Preview</h2>
-      <div class="modes" id="case-modes" role="group" aria-label="Preview mode">
-        <button type="button" data-mode="flat" aria-pressed="true">
-          Flat Layout
-        </button>
-        <button type="button" data-mode="case" aria-pressed="false">
-          In Case
-        </button>
+      <div class="preview-actions">
+        <div class="modes" id="case-modes" role="group" aria-label="Preview mode">
+          <button type="button" data-mode="flat" aria-pressed="true">
+            Flat Layout
+          </button>
+          <button type="button" data-mode="case" aria-pressed="false">
+            In Case
+          </button>
+        </div>
+        <button type="button" id="add-to-print">Add to print</button>
+        <button type="button" id="export-pdf" disabled>Print (0)</button>
       </div>
     </header>
+    <p class="export-status" id="export-status" role="status" hidden></p>
+    <details class="print-queue" id="print-queue" hidden>
+      <summary>Print queue</summary>
+      <ol id="print-items"></ol>
+    </details>
     <div class="stage" id="stage">
       <div class="preview">
-        <div class="measure">103 × 101 mm</div>
+        <div class="measure">104.4 × 101.6 mm</div>
         <div class="wrap" id="wrap" data-fold-lines="white">
           <section class="back" id="print-back" aria-label="Back Flap">
             <img
@@ -257,7 +266,6 @@
           >
         </div>
       </fieldset>
-      <span>Example dimensions</span>
     </footer>
   </section>
   <section class="panel editor" aria-labelledby="editor-title">

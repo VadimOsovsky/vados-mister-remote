@@ -132,6 +132,25 @@
   gap: 12px;
   padding: 14px 17px;
 }
+.cover-art-editor .preview-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.cover-art-editor .export-status {
+  margin: 0;
+  padding: 8px 16px;
+}
+.cover-art-editor .print-queue {
+  padding: 8px 16px;
+}
+.cover-art-editor .print-queue li + li {
+  margin-top: 6px;
+}
+.cover-art-editor .print-queue li button {
+  margin-inline-start: 8px;
+}
 .cover-art-editor h2 {
   font-size: 17px;
   margin: 0;
@@ -205,7 +224,7 @@
   display: grid;
   grid-template-columns: 25fr 13fr 65fr;
   grid-template-rows: minmax(0, 1fr);
-  aspect-ratio: 103/101;
+  aspect-ratio: 104.4/101.6;
   position: relative;
   container-type: inline-size;
   color: #201e1b;
@@ -234,6 +253,7 @@
   color: var(--panel-ink);
 }
 .cover-art-editor .back {
+  color: var(--back-text-color, var(--panel-ink));
   padding: 3.1cqw 2.25cqw 2.6cqw;
   display: flex;
   flex-direction: column;
@@ -253,9 +273,12 @@
 }
 .cover-art-editor .back-game-logo {
   display: block;
-  width: 100%;
-  height: 12cqw;
-  object-fit: contain;
+  align-self: center;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 12cqw;
+  margin-block: 0.5cqw 1cqw;
   flex: none;
 }
 .cover-art-editor .back figure {
@@ -300,7 +323,7 @@
   line-height: 1;
   text-align: center;
 }
-.cover-art-editor .manual-qr canvas {
+.cover-art-editor .manual-qr :is(canvas, .print-qr) {
   display: block;
   width: 20cqw;
   height: 20cqw;
@@ -353,7 +376,7 @@
   width: 72cqw;
   height: 10cqw;
   object-fit: contain;
-  transform: translate(-50%, -50%) rotate(90deg);
+  transform: translate(-50%, -50%) rotate(90deg) scale(var(--spine-logo-scale, 1));
 }
 .cover-art-editor .spine-bottom {
   position: relative;
@@ -459,7 +482,7 @@
 .cover-art-editor .wrap[data-fold-lines="white"] {
   --fold-line: #fff;
 }
-.cover-art-editor
+.cover-art-editor:not(.cover-art-print)
   .wrap:not([data-fold-lines="none"])
   :is(.spine, .front)::before {
   content: "";
@@ -476,7 +499,7 @@
 .cover-art-editor .case .wrap {
   width: min(75%, 280px);
   margin: auto;
-  aspect-ratio: 65/101;
+  aspect-ratio: calc(104.4 * 65 / 103) / 101.6;
   grid-template-columns: 1fr;
   border-radius: 10px;
   outline: 0;
@@ -659,7 +682,7 @@
   font-weight: 650;
   min-width: 0;
 }
-.cover-art-editor input:not([type="radio"], [type="color"], [type="file"]),
+.cover-art-editor input:not([type="radio"], [type="color"], [type="file"], [type="range"]),
 .cover-art-editor select,
 .cover-art-editor textarea {
   width: 100%;
@@ -776,18 +799,22 @@
   color: var(--nfc-ink);
 }
 .cover-art-editor .nfc-front {
-  grid-template-columns: minmax(0, 1fr) 44cqw;
-  background:
-    var(--nfc-weave) center/49cqw,
-    linear-gradient(150deg, #334970, #192c50 70%);
-  color: var(--nfc-paper);
+  --nfc-card-height: calc(100cqw * 54 / 85.6);
+  grid-template-columns: minmax(0, 1fr) min(100%, calc(var(--nfc-card-height) * var(--nfc-art-ratio, 0.7)));
+  grid-template-rows: minmax(0, 1fr);
+  background: var(--nfc-paper);
 }
 .cover-art-editor .nfc-info {
+  container-type: size;
   position: relative;
   display: grid;
   place-items: center;
   min-width: 0;
   min-height: 0;
+  overflow: hidden;
+  background:
+    var(--nfc-weave) center/49cqw,
+    linear-gradient(150deg, #334970, #192c50 70%);
 }
 .cover-art-editor .nfc-info:before,
 .cover-art-editor .nfc-info:after {
@@ -831,22 +858,22 @@
   opacity: 0.72;
 }
 .cover-art-editor .nfc-tap {
+  --tap-unit: min(1.78cqw, 1.585cqh);
   display: grid;
   justify-items: center;
-  gap: 2.5cqw;
+  gap: calc(2.5 * var(--tap-unit));
   color: #fff;
-  translate: -3.5cqw 0;
   transform: rotate(-90deg);
 }
 .cover-art-editor .nfc-emblem {
   display: block;
-  width: 34cqw;
-  height: 34cqw;
+  width: calc(34 * var(--tap-unit));
+  height: calc(34 * var(--tap-unit));
 }
 .cover-art-editor .nfc-launch {
   margin: 0;
   color: inherit;
-  font-size: 5.1cqw;
+  font-size: calc(5.1 * var(--tap-unit));
   line-height: 1;
   letter-spacing: -0.025em;
   font-weight: 850;
@@ -859,15 +886,24 @@
   position: relative;
   min-height: 0;
   overflow: hidden;
-  background: #101f3a;
 }
 .cover-art-editor .nfc-art img {
   position: absolute;
-  inset: 0;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
   display: block;
-  width: 100%;
+  width: auto;
+  max-width: none;
   height: 100%;
-  object-fit: contain;
+}
+.cover-art-editor .nfc-front:is([data-orientation="clockwise"], [data-orientation="counterclockwise"]) .nfc-art img {
+  width: var(--nfc-card-height);
+  height: auto;
+  rotate: 90deg;
+}
+.cover-art-editor .nfc-front[data-orientation="counterclockwise"] .nfc-art img {
+  rotate: -90deg;
 }
 .cover-art-editor .nfc-art span {
   font-size: 2.6cqw;
@@ -1007,7 +1043,7 @@
   width: 24.5cqw;
   text-align: center;
 }
-.cover-art-editor .nfc-qr canvas {
+.cover-art-editor .nfc-qr :is(canvas, .print-qr) {
   display: block;
   width: 24.5cqw;
   height: 24.5cqw;
@@ -1046,6 +1082,10 @@
     system-ui,
     sans-serif;
 }
+.cover-art-editor > :is(h1, .tabs, .layout) {
+  max-width: 1400px;
+  margin-inline: auto;
+}
 .cover-art-editor > h1 {
   margin-top: 12px;
 }
@@ -1064,4 +1104,74 @@
   color: var(--ink);
   font-weight: 600;
   text-decoration: none;
+}
+
+.cover-art-print-frame {
+  position: fixed;
+  width: 210mm;
+  height: 297mm;
+  border: 0;
+  left: -10000px;
+  top: 0;
+}
+
+.cover-art-editor.cover-art-print {
+  padding: 0;
+  overflow: visible;
+  background: white;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+  page: cover-art;
+}
+.cover-art-print .logo-filters {
+  position: absolute;
+}
+.cover-art-print .print-page {
+  padding: 12mm;
+}
+.cover-art-print .print-page + .print-page {
+  break-before: page;
+}
+.cover-art-print .print-page > * + * {
+  margin-top: 8mm;
+}
+.cover-art-print .wrap {
+  width: 104.4mm;
+  margin-inline: auto;
+  outline: 0.2mm solid black;
+  box-shadow: none;
+  break-inside: avoid;
+}
+.cover-art-print .nfc-sheet {
+  container-type: normal;
+  display: grid;
+  grid-template-columns: repeat(2, 85.6mm);
+  gap: 8mm;
+  width: max-content;
+  max-width: none;
+  break-inside: avoid;
+}
+.cover-art-print .print-nfc-side {
+  container-type: inline-size;
+}
+.cover-art-print .nfc-card {
+  border-radius: 0;
+  box-shadow: none;
+  outline: 0.2mm solid black;
+}
+.cover-art-print .print-qr {
+  image-rendering: auto;
+}
+.cover-art-print :is(.measure, .nfc-side-label) {
+  display: none;
+}
+
+@media print {
+  @page cover-art {
+    size: A4 portrait;
+    margin: 0;
+  }
+  body:has(.cover-art-print) {
+    margin: 0;
+  }
 }
