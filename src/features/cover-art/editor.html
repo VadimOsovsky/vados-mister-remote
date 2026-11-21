@@ -1,0 +1,352 @@
+<svg
+  class="logo-filters"
+  width="0"
+  height="0"
+  aria-hidden="true"
+  focusable="false"
+>
+  <defs>
+    <clipPath id="screenshot-frame" clipPathUnits="objectBoundingBox">
+      <path
+        d="M .081 .048 Q .5 -.021 .919 .048 Q .963 .055 .971 .099 Q 1.028 .5 .971 .901 Q .963 .945 .919 .952 Q .5 1.021 .081 .952 Q .037 .945 .029 .901 Q -.028 .5 .029 .099 Q .037 .055 .081 .048 Z"
+      />
+    </clipPath>
+    <filter id="light-playroom-lettering" color-interpolation-filters="sRGB">
+      <feColorMatrix
+        type="matrix"
+        values="
+        0 0 0 0 0.97
+        0 0 0 0 0.97
+        0 0 0 0 1
+        -0.8 -0.8 -0.8 0 1.4"
+      />
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="4" intercept="-2" />
+      </feComponentTransfer>
+      <feComposite in2="SourceAlpha" operator="in" />
+    </filter>
+  </defs>
+</svg>
+
+<h1>Cover Art Editor</h1>
+<nav class="tabs" aria-label="Format">
+  <button
+    type="button"
+    id="format-cassette"
+    class="selected"
+    aria-pressed="true"
+  >
+    Cassette Case
+  </button>
+  <button type="button" id="format-nfc" aria-pressed="false">NFC Card</button>
+</nav>
+<div class="layout">
+  <section class="panel" aria-labelledby="preview-title">
+    <header class="panel-head">
+      <h2 id="preview-title">Preview</h2>
+      <div class="modes" id="case-modes" role="group" aria-label="Preview mode">
+        <button type="button" data-mode="flat" aria-pressed="true">
+          Flat Layout
+        </button>
+        <button type="button" data-mode="case" aria-pressed="false">
+          In Case
+        </button>
+      </div>
+    </header>
+    <div class="stage" id="stage">
+      <div class="preview">
+        <div class="measure">103 × 101 mm</div>
+        <div class="wrap" id="wrap" data-fold-lines="white">
+          <section class="back" id="print-back" aria-label="Back Flap">
+            <img
+              id="back-game-logo"
+              class="back-game-logo"
+              alt="Game logo"
+              hidden
+            />
+            <h3 id="back-title"></h3>
+            <figure id="back-art">
+              <img id="screenshot" alt="Gameplay screenshot" />
+            </figure>
+            <p id="back-description"></p>
+            <div class="back-foot">
+              <a
+                id="manual-qr"
+                class="manual-qr"
+                target="_blank"
+                rel="noopener noreferrer"
+                hidden
+              >
+                <span>Game Manual</span>
+                <canvas
+                  id="manual-canvas"
+                  role="img"
+                  aria-label="Game manual QR code"
+                ></canvas>
+              </a>
+              <div class="back-meta">
+                <img
+                  id="back-logo"
+                  class="nes-logo"
+                  alt="Nintendo Entertainment System"
+                />
+                <strong id="back-year"></strong>
+              </div>
+            </div>
+          </section>
+          <section class="spine" id="print-spine" aria-label="Spine">
+            <div class="spine-center">
+              <img id="spine-art" alt="Game logo" hidden />
+              <strong id="spine-title"></strong>
+            </div>
+            <div class="spine-bottom">
+              <img
+                id="spine-logo"
+                class="nes-logo"
+                alt="Nintendo Entertainment System"
+              />
+            </div>
+          </section>
+          <section class="front" id="print-front" aria-label="Front Cover">
+            <header class="cover-header">
+              <img
+                id="front-logo"
+                class="nes-logo"
+                alt="Nintendo Entertainment System"
+              />
+              <span id="cover-app" class="cover-app">
+                <img
+                  id="cover-app-base"
+                  src="/cover-art/cover_app.webp"
+                  alt="MiSTer Playroom"
+                />
+                <img
+                  id="cover-app-light"
+                  class="cover-app-light"
+                  alt=""
+                  aria-hidden="true"
+                />
+              </span>
+            </header>
+            <div class="art-window">
+              <img id="cover" alt="Full game cover" />
+              <span class="art-empty" id="art-empty" hidden
+                >Add cover artwork</span
+              >
+            </div>
+          </section>
+        </div>
+        <div class="panel-labels" aria-hidden="true">
+          <span>Back Flap</span><span>Spine</span><span>Front Cover</span>
+        </div>
+      </div>
+    </div>
+    <div class="stage" id="nfc-stage" hidden>
+      <div class="nfc-sheet">
+        <div class="measure">85.6 × 54 mm</div>
+        <article class="nfc-card nfc-front" aria-label="NFC card front">
+          <div class="nfc-info">
+            <span class="nfc-print-detail top" aria-hidden="true"></span>
+            <span class="nfc-print-detail bottom" aria-hidden="true"></span>
+            <div class="nfc-tap">
+              <svg
+                class="nfc-emblem"
+                viewBox="0 0 80 80"
+                role="img"
+                aria-label="NFC"
+              >
+                <circle
+                  cx="40"
+                  cy="40"
+                  r="37"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                />
+                <path
+                  d="M21 30a25 25 0 0 1 38 0m-32 5a17 17 0 0 1 26 0m-21 5a10 10 0 0 1 16 0"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3.8"
+                  stroke-linecap="round"
+                />
+                <text
+                  x="40"
+                  y="62"
+                  fill="currentColor"
+                  text-anchor="middle"
+                  font-family="Arial,sans-serif"
+                  font-size="22"
+                  font-weight="700"
+                  letter-spacing=".6"
+                >
+                  NFC
+                </text>
+              </svg>
+              <p class="nfc-launch">Tap to launch</p>
+            </div>
+          </div>
+          <div class="nfc-art">
+            <img id="nfc-cover" alt="Full game cover" />
+            <span id="nfc-empty" hidden>Add cover artwork</span>
+          </div>
+        </article>
+        <p class="nfc-side-label">Front</p>
+        <article class="nfc-card nfc-back" aria-label="NFC card back">
+          <header class="nfc-back-header" id="nfc-back-header">
+            <img id="nfc-brand" alt="MiSTer Playroom" />
+            <strong id="nfc-back-title"></strong>
+          </header>
+          <div class="nfc-back-body">
+            <div class="nfc-notes">
+              <figure class="nfc-shot" id="nfc-shot">
+                <img id="nfc-screenshot" alt="Gameplay screenshot" />
+                <figcaption>Gameplay</figcaption>
+              </figure>
+              <div class="nfc-description" id="nfc-description-wrap">
+                <p id="nfc-description"></p>
+              </div>
+            </div>
+            <a
+              class="nfc-qr"
+              id="nfc-qr"
+              target="_blank"
+              rel="noopener noreferrer"
+              hidden
+            >
+              <canvas
+                id="nfc-canvas"
+                role="img"
+                aria-label="Game manual QR code"
+              ></canvas>
+              <span>Game Manual</span>
+            </a>
+          </div>
+          <footer>
+            <div class="nfc-care">
+              <strong>CAUTION</strong>
+              <span>Keep dry. Avoid heat, bending, and solvent cleaners.</span>
+            </div>
+          </footer>
+        </article>
+        <p class="nfc-side-label">Back</p>
+      </div>
+    </div>
+    <footer class="preview-foot" id="cassette-footer">
+      <fieldset
+        id="guides"
+        class="fold-controls"
+        aria-labelledby="fold-lines-label"
+      >
+        <span id="fold-lines-label">Fold lines</span>
+        <div class="fold-options">
+          <label
+            ><input type="radio" name="fold-lines" value="black" /><span
+              >Black</span
+            ></label
+          >
+          <label
+            ><input type="radio" name="fold-lines" value="white" checked /><span
+              >White</span
+            ></label
+          >
+          <label
+            ><input type="radio" name="fold-lines" value="none" /><span
+              >None</span
+            ></label
+          >
+        </div>
+      </fieldset>
+      <span>Example dimensions</span>
+    </footer>
+  </section>
+  <section class="panel editor" aria-labelledby="editor-title">
+    <header class="panel-head">
+      <h2 id="editor-title">Cover Settings</h2>
+    </header>
+    <form id="editor">
+      <label class="field"
+        >Game
+        <span class="game-row">
+          <img id="thumbnail" alt="" />
+          <select id="game"></select>
+        </span>
+      </label>
+      <details class="common" id="global-section">
+        <summary>Global Settings</summary>
+        <div class="settings" id="global-settings"></div>
+        <details class="advanced">
+          <summary>Game Details &amp; Branding</summary>
+          <div class="settings" id="global-details"></div>
+        </details>
+      </details>
+      <section
+        class="side-settings"
+        id="cassette-settings"
+        aria-labelledby="sides-title"
+      >
+        <h3 id="sides-title">Panel Settings</h3>
+        <div
+          class="side-tabs"
+          role="tablist"
+          aria-label="Cassette insert panel"
+        >
+          <button
+            type="button"
+            id="tab-front"
+            role="tab"
+            aria-controls="side-fields"
+            aria-selected="true"
+            data-side="front"
+          >
+            Front
+          </button>
+          <button
+            type="button"
+            id="tab-spine"
+            role="tab"
+            aria-controls="side-fields"
+            aria-selected="false"
+            tabindex="-1"
+            data-side="spine"
+          >
+            Spine
+          </button>
+          <button
+            type="button"
+            id="tab-back"
+            role="tab"
+            aria-controls="side-fields"
+            aria-selected="false"
+            tabindex="-1"
+            data-side="back"
+          >
+            Back Flap
+          </button>
+        </div>
+        <div
+          class="panel-fields"
+          id="side-fields"
+          role="tabpanel"
+          aria-labelledby="tab-front"
+        >
+          <div class="settings" id="side-primary"></div>
+          <details class="advanced" id="side-advanced">
+            <summary>More Panel Options</summary>
+            <div class="settings" id="side-secondary"></div>
+            <button type="button" class="reset" id="reset-side">
+              Restore panel defaults
+            </button>
+          </details>
+        </div>
+      </section>
+      <div class="settings" id="nfc-fields" hidden></div>
+      <p class="manual-status" id="manual-status" role="status"></p>
+      <p class="manual-status" id="nfc-status" role="status" hidden></p>
+      <p class="form-status" id="form-status" role="status"></p>
+      <button type="button" class="reset" id="reset">
+        Restore game defaults
+      </button>
+    </form>
+  </section>
+</div>

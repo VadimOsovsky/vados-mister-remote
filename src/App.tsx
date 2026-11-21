@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router';
 
 import type { LaunchBoxGame } from './types';
@@ -21,6 +21,8 @@ import { OwnedGameRoute } from './features/game-sheet/OwnedGameRoute';
 import './styles/themes.css';
 import './App.css';
 import './styles/playroom.css';
+
+const CoverArtPage = lazy(() => import('./features/cover-art/CoverArtPage').then(module => ({ default: module.CoverArtPage })));
 
 const TAB_ITEMS = [
     { to: '/collection', icon: GridIcon, label: 'Collection' },
@@ -121,6 +123,7 @@ export default function MisterRemote() {
                 <div className={isGamePage ? "app-content owned-game-layout" : "app-content"}>
                     <Routes>
                         <Route path="/collection" element={<CollectionPage onSelectGame={openGame} />} />
+                        <Route path="/collection/game/:gameId/cover-art" element={<Suspense fallback={<p role="status">Loading editor…</p>}><CoverArtPage /></Suspense>} />
                         <Route path="/collection/game/:gameId" element={<OwnedGameRoute />} />
                         <Route path="/store" element={<StorePage />} />
                         <Route path="/store/game/:gameId" element={<StoreGamePage />} />

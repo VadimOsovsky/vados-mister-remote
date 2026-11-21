@@ -68,6 +68,7 @@ export interface LaunchBoxImages {
   front?: string;
   back?: string;
   screenshot?: string;
+  clearLogo?: string;
 }
 
 export interface LaunchBoxGame {

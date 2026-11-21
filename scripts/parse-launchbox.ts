@@ -22,7 +22,7 @@ const PLATFORM_MAP: Record<string, string> = {
   'Nintendo Famicom Disk System': 'fds',
 };
 
-const WANTED_IMAGE_TYPES = new Set(['Box - Front', 'Box - Back', 'Screenshot - Gameplay']);
+const WANTED_IMAGE_TYPES = new Set(['Box - Front', 'Box - Back', 'Screenshot - Gameplay', 'Clear Logo']);
 
 interface RawGame {
   DatabaseID: string;
@@ -56,6 +56,7 @@ interface RegionImages {
   front?: string;
   back?: string;
   screenshot?: string;
+  clearLogo?: string;
 }
 
 interface OutputGame {
@@ -210,7 +211,6 @@ async function parseMetadataZip(): Promise<{ games: Map<string, RawGame>; images
       }
 
       textBuffer = '';
-      currentTag = '';
     });
 
     parser.on('end', () => {
@@ -271,6 +271,7 @@ async function buildOutput(games: Map<string, RawGame>, images: RawGameImage[], 
       if (!imgMap[region]) imgMap[region] = {};
       if (img.Type === 'Box - Front' && !imgMap[region].front) imgMap[region].front = img.FileName;
       else if (img.Type === 'Box - Back' && !imgMap[region].back) imgMap[region].back = img.FileName;
+      else if (img.Type === 'Clear Logo' && !imgMap[region].clearLogo) imgMap[region].clearLogo = img.FileName;
       else if (img.Type === 'Screenshot - Gameplay' && !imgMap[region].screenshot) imgMap[region].screenshot = img.FileName;
     }
 

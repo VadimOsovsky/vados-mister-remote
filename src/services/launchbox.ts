@@ -4,7 +4,7 @@ import { getCustomGames } from '../lib/storage';
 
 const IMAGE_CDN = 'https://images.launchbox-app.com';
 const DB_NAME = 'launchbox-cache';
-const DB_VERSION = 4;
+const DB_VERSION = 5;
 const STORE_NAME = 'platforms';
 
 // ── IndexedDB helpers ──

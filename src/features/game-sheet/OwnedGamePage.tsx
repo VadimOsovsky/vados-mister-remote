@@ -1,3 +1,4 @@
+import { Link } from 'react-router';
 import { appStorage, subscribeToValues } from '../../lib/sharedStorage';
 import { FavoriteStar } from '../collection/FavoriteBookmark';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
@@ -325,6 +326,9 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
                             {/*    <span><strong>View in 3D</strong><small>Rotate and zoom the box</small></span><span aria-hidden="true">↗</span>*/}
                             {/*</button>}*/}
                             <button className="owned-button playroom-press" onClick={() => edit('rom')}>{FileIcon}<span><strong>Game file</strong><small>{overrides.romName || 'Link or change ROM'}</small></span><span aria-hidden="true">→</span></button>
+                            {platform.lbPlatform === 'nes' && <Link className="owned-button playroom-press" to={'/collection/game/' + encodeURIComponent(selectedGame.id) + '/cover-art' + (preview ? '?preview=1' : '')}>
+                                {FileIcon}<span><strong>Create cover art</strong><small>Cassette case or NFC card</small></span><span aria-hidden="true">→</span>
+                            </Link>}
                         </div>
                     </Tabs.Content>
                     <Tabs.Content value="controls" className="owned-panel">
