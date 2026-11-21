@@ -75,8 +75,9 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
     const [editMode, setEditMode] = useState(false);
     const [flippingDisk, setFlippingDisk] = useState(false);
     const [flipError, setFlipError] = useState<string>();
-    const [gameAction, setGameAction] = useState<'exit' | 'restart' | null>(null);
+    const [gameAction, setGameAction] = useState<'exit' | 'restart' | 'start' | null>(null);
     const actionTrigger = useRef<HTMLButtonElement | null>(null);
+    const starting = gameAction === 'start';
     const restarting = gameAction === 'restart';
     const [actionPending, setActionPending] = useState(false);
     const [actionError, setActionError] = useState<string>();
@@ -144,6 +145,11 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
 
     async function runGameAction() {
         if (actionsBusy || actionPending || !gameAction) return;
+        if (starting) {
+            setGameAction(null);
+            startNewGame();
+            return;
+        }
         setActionPending(true);
         setActionError(undefined);
         try {
@@ -342,7 +348,7 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
             <aside className="owned-dock" aria-label="Game actions" data-has-flip={hasFlipDisk || undefined}>
                 {!romPickerOpen && romSearchError && <p className="owned-flip-error" role="alert">{romSearchError}</p>}
                 {flipError && <p className="owned-flip-error" role="alert">{flipError}</p>}
-                {!showExit && loadIndex !== null && <button className="owned-button owned-new-game playroom-press" aria-label={hasSelectedCheats ? 'Start new game with selected cheats' : 'Start new game'} title="Start new game" disabled={!connected || saves.savingSlot || saves.loadingSlot || flippingDisk} onClick={startNewGame}>{ResetIcon}<span>Start new game</span>
+                {!showExit && loadIndex !== null && <button className="owned-button owned-new-game playroom-press" aria-label={hasSelectedCheats ? 'Start new game with selected cheats' : 'Start new game'} title="Start new game" disabled={actionsBusy} onClick={event => { actionTrigger.current = event.currentTarget; setGameAction('start'); }}>{ResetIcon}<span>Start new game</span>
                     {hasSelectedCheats && <span className="owned-cheat-badge" aria-hidden="true">✦</span>}
                 </button>}
                 <Dialog.Root open={gameAction !== null} onOpenChange={open => {
@@ -365,21 +371,25 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
                         <Dialog.Overlay className="owned-dialog-overlay" />
                         <Dialog.Content className="owned-dialog owned-confirm owned-exit-dialog"
                             onCloseAutoFocus={event => {
+                                if (romPickerOpen) {
+                                    event.preventDefault();
+                                    return;
+                                }
                                 if (!actionTrigger.current?.isConnected) return;
                                 event.preventDefault();
                                 actionTrigger.current.focus();
                             }}>
-                            <span className="owned-exit-icon">{restarting ? ResetIcon : stopIcon}</span>
-                            <Dialog.Title>{restarting ? 'Restart game?' : 'Exit game?'}</Dialog.Title>
+                            <span className="owned-exit-icon">{gameAction === 'exit' ? stopIcon : ResetIcon}</span>
+                            <Dialog.Title>{starting ? 'Start new game?' : restarting ? 'Restart game?' : 'Exit game?'}</Dialog.Title>
                             <Dialog.Description>
-                                <strong>{displayTitle}</strong> {restarting ? 'will restart from the beginning.' : 'will close and MiSTer will return to its main menu.'} Unsaved progress will be lost.
+                                <strong>{displayTitle}</strong> {starting ? 'will start from the beginning. Unsaved progress may be lost.' : restarting ? 'will restart from the beginning. Unsaved progress will be lost.' : 'will close and MiSTer will return to its main menu. Unsaved progress will be lost.'}
                             </Dialog.Description>
                             {actionError && <p role="alert" className="owned-exit-error">{actionError}</p>}
                             <div className="owned-exit-actions">
                                 <Dialog.Close className="owned-button playroom-press" disabled={actionPending}>Cancel</Dialog.Close>
                                 <button className="owned-button owned-exit-button playroom-press"
                                     disabled={!!actionsBusy || actionPending} onClick={runGameAction}>
-                                    {restarting ? (actionPending ? 'Restarting…' : 'Restart game') : (actionPending ? 'Exiting…' : 'Exit game')}
+                                    {starting ? 'Start new game' : restarting ? (actionPending ? 'Restarting…' : 'Restart game') : (actionPending ? 'Exiting…' : 'Exit game')}
                                 </button>
                             </div>
                         </Dialog.Content>

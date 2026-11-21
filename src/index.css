@@ -1,4 +1,11 @@
 :root {
+  --box-cover-radius: 3px;
+  --box-cover-highlight: rgb(255 255 255 / 28%);
+  --box-cover-shadow:
+    -1px -1px 0 var(--box-cover-highlight),
+    0.5px 0.5px 0 rgb(0 0 0 / 28%),
+    2px 3px 5px rgb(0 0 0 / 24%);
+
   touch-action: pan-x pan-y;
   -webkit-user-select: none;
   user-select: none;

@@ -5,5 +5,12 @@
     "platform": "Famicom / NES",
     "languages": ["ja", "en", "ru"],
     "sourceUrl": "https://www.nintendo.co.jp/clv/manuals/ja/pdf/CLV-P-HAAAJ.pdf"
+  },
+  {
+    "id": "nes/the-legend-of-zelda",
+    "title": "The Legend of Zelda",
+    "platform": "Famicom Disk System",
+    "languages": ["ru"],
+    "sourceUrl": "https://www.nintendo.co.jp/clv/manuals/ja/pdf/CLV-P-HAANJ.pdf"
   }
 ]

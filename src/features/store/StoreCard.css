@@ -66,8 +66,8 @@
   height: auto;
   max-width: 100%;
   max-height: 100%;
-  border-radius: 3px;
-  box-shadow: 1px 3px 4px #0003;
+  border-radius: var(--box-cover-radius);
+  box-shadow: var(--box-cover-shadow);
 }
 .shop-art img { max-height: 100cqw; }
 .shop-art .card-art-placeholder { min-height: 100px; }

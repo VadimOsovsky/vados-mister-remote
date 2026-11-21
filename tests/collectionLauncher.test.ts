@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test, type TestContext } from 'node:test';
 import { setImmediate } from 'node:timers/promises';
-import { loadCollectionSave } from '../src/services/collectionLauncher';
+import { launchCollectionGame, loadCollectionSave } from '../src/services/collectionLauncher';
 import { appStorage } from '../src/lib/sharedStorage';
 import type { WizzoApi, WizzoPlayingResponse } from '../src/services/wizzoApi';
 
@@ -43,8 +43,8 @@ test('launches the linked game before loading when another ROM is running', asyn
     const actions: string[] = [];
     let launched = false;
     mockZaparooLaunch(t, xml => {
-        assert.ok(xml.includes('<option name="System Type" value="Dendy"/>'));
-        assert.ok(xml.includes(`path="${rom}"`));
+        assert.ok(xml.includes('<option name=^"System Type^" value=^"Dendy^"/>'));
+        assert.ok(xml.includes(`path=^"${rom}^"`));
         actions.push(rom);
         launched = true;
     });
@@ -63,7 +63,7 @@ test('launches the linked game before loading when another ROM is running', asyn
 test('never sends load keys if the launched ROM cannot be confirmed', async t => {
     t.mock.timers.enable({ apis: ['setTimeout'] });
     mockZaparooLaunch(t, xml => {
-        assert.ok(xml.includes('<option name="System Type" value="NTSC"/>'));
+        assert.ok(xml.includes('<option name=^"System Type^" value=^"NTSC^"/>'));
     });
     const api = {
         host: 'mister',
@@ -76,6 +76,15 @@ test('never sends load keys if the launched ROM cannot be confirmed', async t =>
         t.mock.timers.tick(500);
     }
     await rejected;
+});
+
+test('passes the full ROM path as one ZapScript argument when it contains a comma', async t => {
+    const flintstones = '/media/fat/games/NES/Flintstones, The - The Surprise at Dinosaur Peak! (USA).nes';
+    mockZaparooLaunch(t, script => {
+        assert.match(script, /^\*\*mister\.mgl:"(?:\^.|[^"^\r\n])*"$/);
+        assert.ok(script.includes(`path=^"${flintstones}^"`));
+    });
+    await launchCollectionGame({ host: 'mister' } as WizzoApi, 'nes_ntsc', 'game', flintstones);
 });
 
 test('rejects missing ROM mappings before sending any device commands', async t => {

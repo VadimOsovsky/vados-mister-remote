@@ -75,7 +75,10 @@ export async function launchGameForPlatform(
   wizzoApi: WizzoApi,
 ): Promise<void> {
   if (platform.mglConfig) {
-    await zaparooRequest(host, 'launch', { text: `**mister.mgl:${buildMglXml(platform.mglConfig, romPath)}` });
+    // Send the XML as one ZapScript argument, even if a ROM path contains delimiters.
+    const xml = buildMglXml(platform.mglConfig, romPath).trimEnd()
+      .replace(/[\^"|[\]\r\n\t]/g, char => `^${({ '\r': 'r', '\n': 'n', '\t': 't' } as Record<string, string>)[char] ?? char}`);
+    await zaparooRequest(host, 'launch', { text: `**mister.mgl:"${xml}"` });
     return;
   }
   await wizzoApi.launchGame(romPath);
