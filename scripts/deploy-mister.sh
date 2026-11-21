@@ -39,7 +39,7 @@ if [ -z "$PYTHON_BIN" ]; then
 fi
 
 echo "==> Bumping minor version..."
-npm version minor --no-git-tag-version
+yarn version --minor --no-git-tag-version
 
 echo "==> Building..."
 yarn build

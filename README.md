@@ -1,8 +1,10 @@
 # MiSTer Remote monorepo
 
+Install app dependencies with `yarn install --frozen-lockfile` using Yarn Classic 1.22.22.
+
 The application lives in `src/` and `public/` with its existing root build commands. Standalone HTML game manuals live in [`manuals/`](manuals/README.md) and have an independent GitHub Pages workflow. Manuals are excluded from the Vite output and MiSTer deployment.
 
-Build manuals with `npm run build:manuals`; verify publishing with `npm run test:manuals`. See the [manual authoring and deployment guide](manuals/README.md) for stable URLs and cache behavior.
+Build manuals with `yarn build:manuals`; verify publishing with `yarn test:manuals`. See the [manual authoring and deployment guide](manuals/README.md) for stable URLs and cache behavior.
 
 ## React + TypeScript + Vite
 
@@ -81,7 +83,7 @@ export default defineConfig([
 
 The production app uses the Playroom HTTP server from `scripts/spa-server.py` for its shared state. Deploy the server together with the frontend using `scripts/deploy-mister.sh`. State is stored at `/media/fat/playroom-data/state.json`, beside the deployment directory. Back up this file alongside the emulator's save files.
 
-On Windows, run `npm run deploy-mister:windows` with Windows PowerShell, the OpenSSH client, and `tar.exe` available. The default MiSTer address is `192.168.0.118`. To override it, run `npm run deploy-mister:windows -- 192.168.0.120` or set the `MISTER_IP` environment variable.
+On Windows, run `yarn deploy-mister:windows` with Windows PowerShell, the OpenSSH client, and `tar.exe` available. The default MiSTer address is `192.168.0.118`. To override it, run `yarn deploy-mister:windows 192.168.0.120` or set the `MISTER_IP` environment variable.
 
 Open the updated app first in the browser and at the address where your existing collection lives. The first browser with local data can import it while the shared store is uninitialized. Other devices then see the shared collection when they open the app. Browser storage is scoped to the origin, so data from localhost or another MiSTer address cannot be imported automatically. The import leaves the old browser data intact.
 

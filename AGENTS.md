@@ -7,13 +7,13 @@ MiSTer Remote — a React 19 + TypeScript PWA for remotely controlling a MiSTer 
 ## Commands
 
 ```bash
-npm run dev          # Start Vite dev server with HMR
-npm run build        # TypeScript check + Vite production build (tsc -b && vite build)
-npm test             # Run the TypeScript tests with Node 22.15+ and tsx
-npm run test:manuals  # Run the manual publishing tests
-npm run lint         # ESLint (flat config with TS + React Hooks plugins)
-npm run preview      # Preview production build locally
-npm run build-library  # Download LaunchBox metadata and generate public/launchbox/*.json
+yarn dev          # Start Vite dev server with HMR
+yarn build        # TypeScript check + Vite production build (tsc -b && vite build)
+yarn test             # Run the TypeScript tests with Node 22.15+ and tsx
+yarn test:manuals  # Run the manual publishing tests
+yarn lint         # ESLint (flat config with TS + React Hooks plugins)
+yarn preview      # Preview production build locally
+yarn build-library  # Download LaunchBox metadata and generate public/launchbox/*.json
 ```
 
 ## Architecture

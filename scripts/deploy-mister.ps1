@@ -20,16 +20,16 @@ function Assert-Success($operation) {
 
 Push-Location (Join-Path $PSScriptRoot '..')
 try {
-    Get-Command ssh.exe, scp.exe, tar.exe, npm.cmd | Out-Null
+    Get-Command ssh.exe, scp.exe, tar.exe, yarn.cmd | Out-Null
 
     Write-Host "==> Checking SSH and Python on MiSTer ($MisterIp)..."
     & ssh.exe -o ConnectTimeout=5 $target 'command -v python3 || command -v python'
     Assert-Success 'MiSTer connection and Python check'
 
     Write-Host '==> Bumping minor version and building...'
-    & npm.cmd version minor --no-git-tag-version
+    & yarn.cmd version --minor --no-git-tag-version
     Assert-Success 'Version bump'
-    & npm.cmd run build
+    & yarn.cmd build
     Assert-Success 'Build'
 
     Write-Host '==> Packing and uploading...'

@@ -10,7 +10,7 @@ This repository contains two independently deployed parts:
 1. Save a complete, UTF-8 HTML document at `<platform>/<game>/index.html`. Use lowercase ASCII slugs, for example `nes/super-mario-bros`.
 2. Embed all images as data URLs, and include CSS, scripts and translations in that same HTML file. No external runtime dependencies or service workers. A source PDF link is fine.
 3. Add an entry to `catalog.json`: `id`, `title`, `platform`, `languages` and `sourceUrl`. `id` is the relative directory path; the source URL is the original manual, not the generated web page.
-4. Run `npm run test:manuals` and `npm run build:manuals` from the repository root. Neither command needs app dependencies; the underlying scripts use only Node.js built-ins (Node 22+).
+4. Run `yarn test:manuals` and `yarn build:manuals` from the repository root. Neither command needs app dependencies; the underlying scripts use only Node.js built-ins (Node 22+).
 5. Commit the source HTML and catalog. Push to `main` to publish. Do not commit `manuals-dist/`, PDFs, crop intermediates or generated revision files.
 
 The Mario manual is an unofficial web adaptation with condensed, reorganized text rather than a verbatim transcription. Its embedded font license is retained inside the HTML.
