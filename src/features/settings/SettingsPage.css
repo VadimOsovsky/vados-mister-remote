@@ -1,7 +1,6 @@
 .settings-main { max-width: 620px; margin-inline: auto; padding: 24px; }
 .settings-intro { margin-bottom: 24px; }
 .settings-intro h1 { margin: 8px 0 0; font: var(--font-heading-display); letter-spacing: -.035em; }
-.settings-intro h1 span { color: var(--playroom-punctuation); }
 .settings-card {
   padding: 22px;
   margin-bottom: 24px;

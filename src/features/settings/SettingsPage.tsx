@@ -67,7 +67,7 @@ export function SettingsPage({ screenAwake }: { screenAwake: ReturnType<typeof u
                 <div className="settings-main">
                     <div className="settings-intro">
                         <p className="playroom-kicker">Make yourself at home</p>
-                        <h1>Settings<span>.</span></h1>
+                        <h1>Settings.</h1>
                     </div>
                     <section className="settings-card" aria-labelledby="connection-title">
                         <div className="settings-card-heading">
