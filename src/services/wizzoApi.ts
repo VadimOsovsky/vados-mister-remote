@@ -135,9 +135,12 @@ export type WizzoWsEvent =
 
 export class WizzoApi {
   private baseUrl: string;
+  readonly zaparooWsUrl: string;
 
   constructor(host: string, port = DEFAULT_PORT) {
-    this.baseUrl = `http://${host}:${port}/api`;
+    const proxy = /^https:\/\//i.test(host) ? new URL(host) : undefined;
+    this.baseUrl = proxy ? `${proxy.origin}/api` : `http://${host}:${port}/api`;
+    this.zaparooWsUrl = proxy ? `wss://${proxy.host}/zaparoo/api` : `ws://${host}:7497/api`;
   }
 
   get host(): string {
@@ -220,7 +223,7 @@ export class WizzoApi {
     const playing = await this.request<WizzoPlayingResponse>('/games/playing', { signal, cache: 'no-store' });
     if (!playing.game?.toLowerCase().endsWith('.mgl')) return playing;
     try {
-      const romPath = await getActiveRomPath(this.host, signal);
+      const romPath = await getActiveRomPath(this.zaparooWsUrl, signal);
       return romPath ? { ...playing, romPath } : playing;
     } catch {
       return playing;

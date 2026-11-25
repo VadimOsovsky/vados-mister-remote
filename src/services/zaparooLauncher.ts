@@ -1,8 +1,6 @@
 import type { PlatformDef } from '../types';
 import type { WizzoApi } from './wizzoApi';
 
-const ZAPAROO_PORT = 7497;
-
 function escapeXml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
 }
@@ -17,8 +15,7 @@ function buildMglXml({ setname, rbf, systemType }: NonNullable<PlatformDef['mglC
 `
 }
 
-function zaparooRequest<T>(host: string, method: string, params?: object, signal?: AbortSignal): Promise<T> {
-  const url = `ws://${host}:${ZAPAROO_PORT}/api`;
+function zaparooRequest<T>(url: string, method: string, params?: object, signal?: AbortSignal): Promise<T> {
   return new Promise((resolve, reject) => {
     const ws = new WebSocket(url);
     function finish(error: Error | null, result?: T) {
@@ -63,13 +60,12 @@ function zaparooRequest<T>(host: string, method: string, params?: object, signal
   });
 }
 
-export async function getActiveRomPath(host: string, signal?: AbortSignal): Promise<string | undefined> {
-  const media = await zaparooRequest<{ mediaPath?: string } | null>(host, 'media.active', undefined, signal);
+export async function getActiveRomPath(url: string, signal?: AbortSignal): Promise<string | undefined> {
+  const media = await zaparooRequest<{ mediaPath?: string } | null>(url, 'media.active', undefined, signal);
   return media?.mediaPath;
 }
 
 export async function launchGameForPlatform(
-  host: string,
   platform: PlatformDef,
   romPath: string,
   wizzoApi: WizzoApi,
@@ -78,7 +74,7 @@ export async function launchGameForPlatform(
     // Send the XML as one ZapScript argument, even if a ROM path contains delimiters.
     const xml = buildMglXml(platform.mglConfig, romPath).trimEnd()
       .replace(/[\^"|[\]\r\n\t]/g, char => `^${({ '\r': 'r', '\n': 'n', '\t': 't' } as Record<string, string>)[char] ?? char}`);
-    await zaparooRequest(host, 'launch', { text: `**mister.mgl:"${xml}"` });
+    await zaparooRequest(wizzoApi.zaparooWsUrl, 'launch', { text: `**mister.mgl:"${xml}"` });
     return;
   }
   await wizzoApi.launchGame(romPath);

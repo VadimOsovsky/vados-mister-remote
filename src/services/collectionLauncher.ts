@@ -25,7 +25,7 @@ export async function launchCollectionGame(api: WizzoApi, consoleKey: ConsoleKey
             throw new CheatLaunchError(error instanceof Error ? error.message : 'Could not prepare cheats.');
         }
     }
-    await launchGameForPlatform(api.host, PLATFORMS[consoleKey], romPath, api);
+    await launchGameForPlatform(PLATFORMS[consoleKey], romPath, api);
     recordGameLaunch(consoleKey, gameId);
     if (names.length) {
         try {

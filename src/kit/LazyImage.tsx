@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import './LazyImage.css';
 
-export function LazyImage({ src, fallbackSrc, alt, className, style, priority = false }: {
+export function LazyImage({ src, fallbackSrc, alt, className, style, priority = false, crossOrigin }: {
     src?: string;
     fallbackSrc?: string;
     alt: string;
     className?: string;
     style?: React.CSSProperties;
     priority?: boolean;
+    crossOrigin?: React.ImgHTMLAttributes<HTMLImageElement>['crossOrigin'];
 }) {
     const [loadedSource, setLoadedSource] = useState<string>();
     const [failedSources, setFailedSources] = useState<string[]>([]);
@@ -20,6 +21,7 @@ export function LazyImage({ src, fallbackSrc, alt, className, style, priority = 
     return (
         <img
             key={imageSrc}
+            crossOrigin={imageSrc === src ? crossOrigin : undefined}
             src={imageSrc}
             alt={alt}
             className={`lazy-image ${className || ''}`}

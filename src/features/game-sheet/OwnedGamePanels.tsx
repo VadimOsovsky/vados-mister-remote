@@ -54,6 +54,7 @@ export function OwnedGameSaves({ gameId, title, saves, previewScreenshot }: { ga
                 <span className="owned-save-art">
                     {slot ? <LazyImage src={slot.screenshotCore && slot.screenshotFilename
                         ? api.getScreenshotUrl(slot.screenshotCore, slot.screenshotFilename) : undefined}
+                        crossOrigin={api.wsUrl.startsWith('wss:') ? 'anonymous' : undefined}
                         fallbackSrc={previewScreenshot} alt="" /> : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M12 4v16M4 12h16" /></svg>}
                 </span>
                 {slot?.beaten && <span className="owned-medal" aria-hidden="true">✓</span>}

@@ -1,0 +1,52 @@
+{
+	admin off
+	persist_config off
+	auto_https disable_redirects
+	log default {
+		output discard
+	}
+}
+
+mister-playroom.duckdns.org {
+	bind 192.168.0.118
+	tls {
+		ca https://acme-v02.api.letsencrypt.org/directory
+		dns duckdns {env.DUCKDNS_API_TOKEN}
+		resolvers 1.1.1.1 8.8.8.8
+	}
+
+	@pages {
+		header Origin https://vadimosovsky.github.io
+		path /api/* /zaparoo/api
+	}
+	handle @pages {
+		header {
+			Access-Control-Allow-Origin https://vadimosovsky.github.io
+			+Vary Origin
+			Cache-Control no-store
+		}
+		@preflight method OPTIONS
+		header @preflight {
+			Access-Control-Allow-Methods "GET, HEAD, POST, PUT, DELETE, OPTIONS"
+			Access-Control-Allow-Headers Content-Type
+			Access-Control-Allow-Private-Network true
+		}
+		respond @preflight 204
+
+		handle_path /zaparoo/* {
+			reverse_proxy 127.0.0.1:7497 {
+				header_up Host 127.0.0.1:7497
+				header_up Origin http://127.0.0.1:7497
+				header_down -Access-Control-*
+			}
+		}
+		handle {
+			reverse_proxy 127.0.0.1:8182 {
+				header_down -Access-Control-*
+			}
+		}
+	}
+	@health path /
+	respond @health "MiSTer Playroom HTTPS proxy" 200
+	respond 403
+}

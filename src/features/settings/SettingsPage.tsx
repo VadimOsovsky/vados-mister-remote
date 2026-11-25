@@ -18,7 +18,7 @@ export function SettingsPage() {
     const economyDisabled = useCollectionState(state => state.economyDisabled);
     const setEconomyDisabled = useCollectionState(state => state.setEconomyDisabled);
     const hostedOnMister = isHostedOnMister();
-    const { settingsHost, setSettingsHost, settingsSaved, saveSettings } = useSettings(misterHost, setMisterHost);
+    const { settingsHost, setSettingsHost, settingsSaved, settingsError, saveSettings } = useSettings(misterHost, setMisterHost);
     const [indexStatus, setIndexStatus] = useState<IndexStatus>();
     const wsRef = useRef<WebSocket | null>(null);
 
@@ -75,13 +75,15 @@ export function SettingsPage() {
                         </> : <>
                         <p>Connect to your MiSTer on the same network.</p>
                         <form onSubmit={event => { event.preventDefault(); saveSettings(); }}>
-                            <label htmlFor="mister-host">MiSTer IP address</label>
+                            <label htmlFor="mister-host">MiSTer IP address or HTTPS proxy URL</label>
                             <input id="mister-host" value={settingsHost} onChange={event => setSettingsHost(event.target.value)}
                                 placeholder="192.168.0.118" autoComplete="off" spellCheck={false} required />
                             <button className="playroom-button playroom-primary playroom-press" type="submit">
                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>
                                 {settingsSaved ? 'Saved!' : 'Save connection'}
                             </button>
+                            {settingsError && <p role="alert">{settingsError}</p>}
+                            <p role="status">{connected ? 'Connected' : 'MiSTer API unavailable'}</p>
                         </form>
                         </>}
                     </section>
