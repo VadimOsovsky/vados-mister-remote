@@ -6,7 +6,7 @@ const apiOrigin = import.meta.env?.VITE_PLAYROOM_API_ORIGIN?.trim().replace(/\/+
 const endpoint = `${apiOrigin}/api/playroom/state`;
 let sharedEnabled = import.meta.env?.PROD && (import.meta.env.BASE_URL === '/' || Boolean(apiOrigin));
 const cacheKey = `playroom.snapshot:${endpoint}`;
-const sharedKey = /^(?:store_free_games|rom_mappings|active_console|owned_consoles|store_sort|wallet_balance|wallet_last_topup|wallet_beaten_rewarded|owned_game_tab|(?:save_slots|game_rom_versions|game_overrides|game_cheats|collection|favorites|beaten|custom_games)_.+|playroom\.recent\..+)$/;
+const sharedKey = /^(?:store_free_games|rom_mappings|active_console|owned_consoles|store_sort|wallet_balance|wallet_last_topup|wallet_beaten_rewarded|owned_game_tab|(?:save_slots|game_rom_versions|game_overrides|game_cheats|game_screenshots|collection|favorites|beaten|custom_games)_.+|playroom\.recent\..+)$/;
 
 let confirmed: Snapshot | undefined;
 let values: Values = {};

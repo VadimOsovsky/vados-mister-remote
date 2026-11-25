@@ -176,6 +176,18 @@
 
 .owned-panel { max-width: 860px; margin-inline: auto; padding: 24px 20px; }
 .owned-panel h2 { margin: 0; font: var(--font-heading-page); }
+.owned-panel-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: clamp(18px, 4vw, 30px);
+  border-radius: 18px;
+  color: var(--card);
+  background: radial-gradient(#ffffff23 1px, transparent 1.5px) right top / 8px 8px, var(--ink);
+}
+.owned-panel-banner .owned-eyebrow { color: var(--gold); }
+.owned-panel-banner p:last-child { margin: 8px 0 0; font: var(--font-caption); }
 .owned-eyebrow { margin: 0 0 8px; color: var(--muted); font: var(--font-label-nav); letter-spacing: .12em; text-transform: uppercase; }
 
 .owned-scene { margin: 20px 0 24px; }

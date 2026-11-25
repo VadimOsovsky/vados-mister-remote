@@ -1,5 +1,5 @@
 import { Link } from 'react-router';
-import { appStorage, subscribeToValues } from '../../lib/sharedStorage';
+import { appStorage, isSharedStorageReady, subscribeToValues } from '../../lib/sharedStorage';
 import { FavoriteStar } from '../collection/FavoriteBookmark';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
@@ -14,6 +14,7 @@ import { useRomPicker } from '../../hooks/useRomPicker';
 import { useSaveSlots } from '../../hooks/useSaveSlots';
 import type { LaunchBoxGame } from '../../types';
 import type { WizzoGameSearchResult } from '../../services/wizzoApi';
+import { captureScreenshot } from '../../services/misterScreenshots';
 import { BackArrowIcon, FlipDiskIcon, FileIcon, PencilIcon, PlayIcon, ResetIcon, TrophyIcon } from '../../lib/icons';
 import { getImageUrl, resolveImages, resolveScreenshots, resolveTitle } from '../../services/launchbox';
 import { getGameArtworkLanguage, getGameOverrides, deleteGameOverrides, getRomMapping, removeCustomGame, setRomMapping } from '../../lib/storage';
@@ -26,6 +27,7 @@ import { StoreRomDialog } from '../store/StoreRomDialog';
 import { GameLanguages } from './GameLanguages';
 import { OwnedGameAbout, OwnedGameSaves } from './OwnedGamePanels';
 import { OwnedGameCheats } from './OwnedGameCheats';
+import { OwnedGameScreenshots, type GameScreenshotGallery } from './OwnedGameScreenshots';
 import { slotLabel } from './slotLabel';
 import { getPreviewCover, getPreviewScreenshot } from '../collection/previewCovers';
 import { PlayroomHeader } from '../../kit/PlayroomHeader';
@@ -38,6 +40,7 @@ const tabs = [
     { key: 'library', label: 'Library' },
     { key: 'controls', label: 'Save / Load' },
     { key: 'cheats', label: 'Cheats' },
+    { key: 'screenshots', label: 'My screenshots' },
 ] as const;
 
 type GameTab = typeof tabs[number]['key'];
@@ -56,6 +59,16 @@ function readGameTab(): GameTab {
         if (isGameTab(value)) return value;
     } catch { /* localStorage unavailable */ }
     return 'main';
+}
+
+function readScreenshotGallery(value: string | null): GameScreenshotGallery {
+    try {
+        const gallery = JSON.parse(value ?? 'null') as GameScreenshotGallery | null;
+        if (Array.isArray(gallery?.images)) return gallery;
+    } catch {
+        // A missing or unreadable gallery starts empty.
+    }
+    return { images: [] };
 }
 
 export function OwnedGamePage(props: { selectedGame: LaunchBoxGame; onClose: () => void }) {
@@ -105,6 +118,12 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
         return () => window.clearTimeout(timer);
     }, [romPickerOpen, romSearchError, clearRomSearchError]);
     const saves = useSaveSlots(api, selectedGame, activeConsole);
+    const screenshotKey = `game_screenshots_${activeConsole}:${selectedGame.id}:${api.host}`;
+    const galleryValue = useSyncExternalStore(subscribeToValues, () => appStorage.getItem(screenshotKey));
+    const screenshotGallery = readScreenshotGallery(galleryValue);
+    const backdrop = screenshotGallery.images.find(image => image.path === screenshotGallery.backdropPath);
+    const [capturing, setCapturing] = useState(false);
+    const [screenshotError, setScreenshotError] = useState<string>();
     const pendingLoadSlot = useRef<number | null>(null);
     const [editField, setEditField] = useState<'rom' | undefined>();
 
@@ -141,8 +160,45 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
     const selectedIndex = activeTab === 'controls' && saves.saveSlots[saves.selectedSlot]
         ? saves.selectedSlot : null;
     const loadIndex = selectedIndex ?? latestIndex;
-    const actionsBusy = !connected || saves.savingSlot || saves.loadingSlot || flippingDisk;
+    const actionsBusy = !connected || saves.savingSlot || saves.loadingSlot || flippingDisk || capturing;
     const showExit = playing && selectedIndex === null;
+
+    async function takeGameScreenshot() {
+        if (actionsBusy || actionPending || !playing) return;
+        setCapturing(true);
+        setScreenshotError(undefined);
+        try {
+            const current = await api.getPlaying(AbortSignal.timeout(5000));
+            const rom = getRomMapping(selectedGame.id, activeConsole);
+            if (!current || useMisterState.getState().api !== api || !isRomPlaying(current, rom, activeConsole)) {
+                throw new Error('This game is no longer running on the connected MiSTer.');
+            }
+            const image = await captureScreenshot(api, current);
+            if (!isSharedStorageReady() || useMisterState.getState().api !== api) {
+                throw new Error('The screenshot was taken, but the connection changed before it could be added to the gallery.');
+            }
+            const gallery = readScreenshotGallery(appStorage.getItem(screenshotKey));
+            appStorage.setItem(screenshotKey, JSON.stringify({
+                ...gallery,
+                images: [image, ...gallery.images.filter(saved => saved.path !== image.path)],
+            }));
+        } catch (error) {
+            setScreenshotError(error instanceof Error ? error.message : 'Could not take a screenshot.');
+        } finally {
+            setCapturing(false);
+        }
+    }
+
+    function selectScreenshotBackdrop(path?: string) {
+        setScreenshotError(undefined);
+        try {
+            if (!isSharedStorageReady()) throw new Error('Storage unavailable');
+            const gallery = readScreenshotGallery(appStorage.getItem(screenshotKey));
+            appStorage.setItem(screenshotKey, JSON.stringify({ ...gallery, backdropPath: path }));
+        } catch {
+            setScreenshotError('Could not save the backdrop selection.');
+        }
+    }
 
     async function runGameAction() {
         if (actionsBusy || actionPending || gameAction === null) return;
@@ -263,7 +319,8 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
             </PlayroomHeader>
             <main className="owned-game-page page-scroll">
                 <section className="playroom-stage owned-game-hero">
-                    <GameBackdrop src={screenshots[0]} />
+                    <GameBackdrop src={backdrop ? api.getScreenshotUrl(backdrop.core, backdrop.filename) : undefined}
+                        fallbackSrc={screenshots[0]} />
                     <div className="owned-hero-inner">
                         <button type="button" className="owned-cover" aria-label="View front cover" disabled={!front} onClick={() => setGalleryIndex(-1)}>
                             <LazyImage src={frontPreview || undefined} fallbackSrc={front || undefined} alt="" priority />
@@ -354,6 +411,13 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
                     <Tabs.Content value="cheats" className="owned-panel">
                         {activeTab === 'cheats' && (connected ? <OwnedGameCheats gameId={selectedGame.id} consoleKey={activeConsole} onLink={() => edit('rom')} /> : <p>Connect MiSTer to manage cheats.</p>)}
                     </Tabs.Content>
+                    <Tabs.Content value="screenshots" className="owned-panel">
+                        <OwnedGameScreenshots key={screenshotKey} gallery={screenshotGallery}
+                            getUrl={image => api.getScreenshotUrl(image.core, image.filename)}
+                            canCapture={connected && playing} canEdit={connected} busy={!!actionsBusy || actionPending}
+                            capturing={capturing} error={screenshotError}
+                            onCapture={takeGameScreenshot} onBackdrop={selectScreenshotBackdrop} />
+                    </Tabs.Content>
                 </Tabs.Root>
             </main>
             <aside className="owned-dock" aria-label="Game actions" data-has-flip={hasFlipDisk || undefined}>
@@ -418,7 +482,7 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
                         title="Cheats selected for next launch" aria-label="Cheats selected">✦</span>}
                 </button>}
                 {hasFlipDisk && <button className="owned-button owned-flip-disk playroom-press"
-                    disabled={!connected || !playing || saves.loadingSlot || flippingDisk}
+                    disabled={!connected || !playing || saves.loadingSlot || flippingDisk || capturing}
                     aria-label="Flip Disk" aria-busy={flippingDisk}
                     title={playing ? 'Flip Disk' : 'Launch this game to flip the disk'} onClick={flipDisk}>
                     {FlipDiskIcon}

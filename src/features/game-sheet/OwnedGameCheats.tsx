@@ -27,7 +27,7 @@ export function OwnedGameCheats({ gameId, consoleKey, onLink }: {
 
 function CheatsBanner({ requiresZaparoo = false }: { requiresZaparoo?: boolean }) {
     return (
-        <div className="owned-cheats-banner">
+        <div className="owned-panel-banner owned-cheats-banner">
             <div>
                 <p className="owned-eyebrow">Game Genie</p>
                 <h2>Cheats</h2>

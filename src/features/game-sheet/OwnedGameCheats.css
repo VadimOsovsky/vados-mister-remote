@@ -1,16 +1,3 @@
-.owned-cheats-banner {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  padding: clamp(18px, 4vw, 30px);
-  border-radius: 18px;
-  color: var(--card);
-  background: radial-gradient(#ffffff23 1px, transparent 1.5px) right top / 8px 8px, var(--ink);
-}
-
-.owned-cheats-banner .owned-eyebrow { color: var(--gold); }
-.owned-cheats-banner p:last-child { margin: 8px 0 0; font: var(--font-caption); }
 .owned-cheats-banner svg { flex: 0 0 clamp(52px, 12vw, 80px); fill: var(--ink); stroke: var(--gold); stroke-width: 2; }
 .owned-cheats-banner .owned-cheats-bolt { fill: var(--gold); stroke: none; }
 

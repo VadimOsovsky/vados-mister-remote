@@ -300,12 +300,12 @@ export class WizzoApi {
 
   // ── Screenshots ──
 
-  listScreenshots(): Promise<WizzoScreenshot[]> {
-    return this.get('/screenshots');
+  listScreenshots(signal?: AbortSignal): Promise<WizzoScreenshot[]> {
+    return this.request('/screenshots', { signal, cache: 'no-store' });
   }
 
-  takeScreenshot(): Promise<void> {
-    return this.post('/screenshots');
+  takeScreenshot(signal?: AbortSignal): Promise<void> {
+    return this.request('/screenshots', { method: 'POST', signal });
   }
 
   getScreenshotUrl(core: string, filename: string): string {

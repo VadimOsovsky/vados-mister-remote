@@ -4,6 +4,7 @@ import type { WizzoApi } from '../services/wizzoApi';
 import { getRomVersions, getGameSaveKey, getOriginalGameSaveKey, getSaveSlots, putSaveSlot, deleteSaveSlot, getRomMapping } from '../lib/storage';
 import { loadCollectionSave } from '../services/collectionLauncher';
 import { isRomPlaying } from '../services/nowPlaying';
+import { captureScreenshot } from '../services/misterScreenshots';
 
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -81,15 +82,9 @@ export function useSaveSlots(api: WizzoApi, game: LaunchBoxGame, activeConsole: 
                 gameName: game.title,
             };
             try {
-                const previous = new Set((await api.listScreenshots() ?? []).map(image => image.path));
-                await api.takeScreenshot();
-                await wait(1000);
-                const screenshot = (await api.listScreenshots() ?? []).find(image =>
-                    image.core === playing.core
-                    && (image.game === playing.gameName || image.game === query.get('game'))
-                    && !previous.has(image.path));
-                slot.screenshotCore = screenshot?.core;
-                slot.screenshotFilename = screenshot?.filename;
+                const screenshot = await captureScreenshot(api, playing);
+                slot.screenshotCore = screenshot.core;
+                slot.screenshotFilename = screenshot.filename;
             } catch (err) {
                 console.warn('Save screenshot failed:', err);
             }
