@@ -45,14 +45,16 @@ echo "==> Building..."
 yarn build
 
 echo "==> Cleaning old files on MiSTer..."
-ssh_cmd "rm -rf $REMOTE_DIR/*"
+ssh_cmd "mkdir -p '$REMOTE_DIR' && for entry in '$REMOTE_DIR'/*; do [ \"\$entry\" = '$REMOTE_DIR/launchbox' ] || rm -rf \"\$entry\" || exit 1; done"
 
 echo "==> Uploading to MiSTer..."
-ssh_cmd "mkdir -p $REMOTE_DIR/launchbox"
-# Upload entire build output
-scp_cmd -r dist/* "$MISTER_USER@$MISTER_IP:$REMOTE_DIR/"
-# Upload LaunchBox game metadata
-scp_cmd public/launchbox/nes.json "$MISTER_USER@$MISTER_IP:$REMOTE_DIR/launchbox/"
+build_files=()
+for entry in dist/*; do
+  if [ "$entry" != "dist/launchbox" ]; then
+    build_files+=("$entry")
+  fi
+done
+scp_cmd -r "${build_files[@]}" "$MISTER_USER@$MISTER_IP:$REMOTE_DIR/"
 # Upload SPA server script
 scp_cmd scripts/spa-server.py "$MISTER_USER@$MISTER_IP:$REMOTE_DIR/server.py"
 

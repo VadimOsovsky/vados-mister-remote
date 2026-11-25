@@ -22,6 +22,7 @@ from urllib.request import Request, urlopen
 
 
 STATE_ROUTE = "/api/playroom/state"
+PAGES_ORIGIN = "https://vadimosovsky.github.io"
 STATE_LOCK = threading.Lock()
 MAX_STATE_BYTES = 4 * 1024 * 1024
 CHEATS_ROUTE = "/api/playroom/cheats"
@@ -129,10 +130,13 @@ def active_nes_rom():
             headers={"Content-Type": "application/json"},
         )
         with urlopen(request, timeout=1) as response:
-            media = json.load(response).get("result")
-        if not media or media.get("systemId") != "NES":
+            reply = json.load(response)
+        if not isinstance(reply, dict):
             return None
-        return nes_rom_path(media["mediaPath"]).resolve()
+        media = reply.get("result")
+        if not isinstance(media, dict) or media.get("systemId") != "NES":
+            return None
+        return nes_rom_path(media.get("mediaPath")).resolve()
     except (OSError, ValueError, KeyError, TypeError):
         return None
 
@@ -214,6 +218,10 @@ class SPAHandler(http.server.SimpleHTTPRequestHandler):
         # Only build assets with content hashes can be cached indefinitely.
         policy = "public, max-age=31536000, immutable" if self.is_versioned_asset() else "no-store"
         self.send_header("Cache-Control", policy)
+        if urlsplit(self.path).path == STATE_ROUTE:
+            self.send_header("Vary", "Origin")
+            if self.headers.get("Origin") == PAGES_ORIGIN:
+                self.send_header("Access-Control-Allow-Origin", PAGES_ORIGIN)
         super().end_headers()
 
     def send_head(self):
@@ -232,13 +240,25 @@ class SPAHandler(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def do_OPTIONS(self):
+        if self.path != STATE_ROUTE:
+            return self.send_error(404)
+        if self.headers.get("Origin") != PAGES_ORIGIN:
+            return self.send_error(403)
+        if self.headers.get("Access-Control-Request-Method") not in {"GET", "PUT"}:
+            return self.send_error(405)
+        self.send_response(204)
+        self.send_header("Access-Control-Allow-Methods", "GET, PUT")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.end_headers()
+
     def do_PUT(self):
         if self.path != STATE_ROUTE:
             return self.send_error(404)
 
-        # Writes are only accepted from the app served by this instance.
         origin = self.headers.get("Origin")
-        if origin and origin != "http://" + self.headers.get("Host", ""):
+        local_origin = "http://" + self.headers.get("Host", "")
+        if origin and origin not in {local_origin, PAGES_ORIGIN}:
             return self.send_error(403)
         if self.headers.get_content_type() != "application/json":
             return self.send_error(415)

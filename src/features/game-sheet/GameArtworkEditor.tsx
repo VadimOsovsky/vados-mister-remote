@@ -1,4 +1,4 @@
-import { useId, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
 import type { GameArtwork, GameOverrides } from '../../types';
 import { GAME_LANGUAGES } from '../../lib/gameLanguages';
@@ -7,15 +7,19 @@ import { LazyImage } from '../../kit/LazyImage';
 import { ArtworkPlaceholder } from './ArtworkPlaceholder';
 import './GameArtworkEditor.css';
 
-export function GameArtworkEditor({ draft, mediaLabel, initialLanguage = 'original', onChange, onWebManualChange }: {
+export function GameArtworkEditor({ draft, mediaLabel, initialLanguage = 'original', onChange, onWebManualChange, uploading, onUploadingChange }: {
     draft: GameOverrides;
     mediaLabel: string;
     initialLanguage?: string;
     onChange: (language: string, key: keyof GameArtwork, value: string) => void;
     onWebManualChange: (value: string) => void;
+    uploading: boolean;
+    onUploadingChange: (value: boolean) => void;
 }) {
     const [language, setLanguage] = useState(initialLanguage);
     const [asset, setAsset] = useState('boxFrontUrl');
+    const [uploadError, setUploadError] = useState('');
+    const manualFile = useRef<HTMLInputElement>(null);
     const id = useId();
     const original = language === 'original';
     const own = original ? draft : draft.artworkByLanguage?.[language] ?? {};
@@ -28,6 +32,31 @@ export function GameArtworkEditor({ draft, mediaLabel, initialLanguage = 'origin
     ] as const;
     const languages = [...new Set<string>([...GAME_LANGUAGES, ...Object.keys(draft.artworkByLanguage ?? {})])];
     const filled = ARTWORK_KEYS.filter(key => own[key]?.trim()).length;
+
+    async function uploadManualImage(file: File) {
+        setUploadError('');
+        onUploadingChange(true);
+        try {
+            const bitmap = await createImageBitmap(file);
+            try {
+                // Keep the image small enough for the shared collection snapshot.
+                const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
+                const canvas = document.createElement('canvas');
+                canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+                canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+                const context = canvas.getContext('2d');
+                if (!context) throw new Error('Image canvas unavailable');
+                context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+                onChange(language, 'manualPhotoUrl', canvas.toDataURL('image/webp', 0.85));
+            } finally {
+                bitmap.close();
+            }
+        } catch {
+            setUploadError('Could not open this image. Try a JPEG, PNG, or WebP file.');
+        } finally {
+            onUploadingChange(false);
+        }
+    }
 
     return <section className="artwork-editor" aria-label="Game artwork">
         <div className="artwork-editor-heading"><strong>Photos &amp; manual</strong><small>{filled ? `${filled} linked` : original ? 'Optional' : 'Using originals'}</small></div>
@@ -48,8 +77,19 @@ export function GameArtworkEditor({ draft, mediaLabel, initialLanguage = 'origin
             {assets.map(item => <Tabs.Content key={item.key} value={item.key} className="artwork-field-panel">
                 <ArtworkUrlField label={item.label + ' image URL'} clearLabel={'Clear ' + item.label + ' image'}
                     placeholder={original ? 'https://…' : 'Leave empty to use original'}
-                    value={own[item.key] ?? ''} onChange={value => onChange(language, item.key, value)} />
+                    value={own[item.key] ?? ''} onChange={value => onChange(language, item.key, value)}
+                    disabled={item.key === 'manualPhotoUrl' && uploading} />
                 {item.key === 'manualPhotoUrl' && <>
+                    <input ref={manualFile} type="file" accept="image/*" hidden onChange={event => {
+                        const file = event.currentTarget.files?.[0];
+                        event.currentTarget.value = '';
+                        if (file) void uploadManualImage(file);
+                    }} />
+                    <button type="button" className="sheet-btn sheet-btn-secondary artwork-manual-link"
+                        disabled={uploading} onClick={() => manualFile.current?.click()}>
+                        {uploading ? 'Opening image…' : 'Upload manual image'}
+                    </button>
+                    {uploadError && <p role="alert" className="artwork-editor-hint">{uploadError}</p>}
                     <ArtworkUrlField label="Manual document URL" clearLabel="Clear manual document"
                         placeholder="PDF or website (optional)" value={own.manualUrl ?? ''}
                         onChange={value => onChange(language, 'manualUrl', value)} manual />
@@ -63,7 +103,7 @@ export function GameArtworkEditor({ draft, mediaLabel, initialLanguage = 'origin
     </section>;
 }
 
-function ArtworkUrlField({ label, clearLabel, placeholder, value, onChange, manual, hint }: {
+function ArtworkUrlField({ label, clearLabel, placeholder, value, onChange, manual, hint, disabled }: {
     label: string;
     clearLabel: string;
     placeholder: string;
@@ -71,17 +111,19 @@ function ArtworkUrlField({ label, clearLabel, placeholder, value, onChange, manu
     onChange: (value: string) => void;
     manual?: boolean;
     hint?: string;
+    disabled?: boolean;
 }) {
     const id = useId();
+    const uploaded = value.startsWith('data:image/');
 
     return <div className={manual ? 'edit-game-field artwork-manual-link' : 'edit-game-field'}>
         <label className="edit-game-label" htmlFor={id}>{label}</label>
         <div className="artwork-url-row">
-            <input id={id} className="edit-game-input" type="url" placeholder={placeholder}
+            <input id={id} className="edit-game-input" type="url" placeholder={uploaded ? 'Image uploaded from device' : placeholder}
                 aria-describedby={hint ? id + '-hint' : undefined}
-                value={value} onChange={event => onChange(event.target.value)} />
+                disabled={disabled} value={uploaded ? '' : value} onChange={event => onChange(event.target.value)} />
             <button type="button" className="artwork-clear" aria-label={clearLabel}
-                disabled={!value} onClick={() => onChange('')}>×</button>
+                disabled={disabled || !value} onClick={() => onChange('')}>×</button>
         </div>
         {hint && <small id={id + '-hint'} className="artwork-editor-hint">{hint}</small>}
     </div>;

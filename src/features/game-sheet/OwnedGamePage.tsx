@@ -75,10 +75,11 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
     const [editMode, setEditMode] = useState(false);
     const [flippingDisk, setFlippingDisk] = useState(false);
     const [flipError, setFlipError] = useState<string>();
-    const [gameAction, setGameAction] = useState<'exit' | 'restart' | 'start' | null>(null);
+    const [gameAction, setGameAction] = useState<'exit' | 'restart' | 'start' | number | null>(null);
     const actionTrigger = useRef<HTMLButtonElement | null>(null);
     const starting = gameAction === 'start';
     const restarting = gameAction === 'restart';
+    const slotToLoad = typeof gameAction === 'number' ? gameAction : null;
     const [actionPending, setActionPending] = useState(false);
     const [actionError, setActionError] = useState<string>();
     const activeConsole = useCollectionState(state => state.activeConsole);
@@ -144,10 +145,10 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
     const showExit = playing && selectedIndex === null;
 
     async function runGameAction() {
-        if (actionsBusy || actionPending || !gameAction) return;
-        if (starting) {
+        if (actionsBusy || actionPending || gameAction === null) return;
+        if (starting || slotToLoad !== null) {
             setGameAction(null);
-            startNewGame();
+            startOrLoadGame(slotToLoad);
             return;
         }
         setActionPending(true);
@@ -221,14 +222,24 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
         void romPicker.handleLaunchGame();
     }
 
-    function continueGame() {
-        if (loadIndex === null) {
+    function startOrLoadGame(slot: number | null) {
+        if (slot === null) {
             startNewGame();
         } else if (saves.hasRomMapping) {
-            void saves.loadSlot(loadIndex);
+            void saves.loadSlot(slot);
         } else {
-            pendingLoadSlot.current = loadIndex;
+            pendingLoadSlot.current = slot;
             romPicker.openRomPicker(displayTitle);
+        }
+    }
+
+    function requestStartOrLoad(trigger: HTMLButtonElement, slot: number | null) {
+        const current = useMisterState.getState().nowPlaying;
+        if (current?.core && current.gameName) {
+            actionTrigger.current = trigger;
+            setGameAction(slot ?? 'start');
+        } else {
+            startOrLoadGame(slot);
         }
     }
 
@@ -348,7 +359,7 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
             <aside className="owned-dock" aria-label="Game actions" data-has-flip={hasFlipDisk || undefined}>
                 {!romPickerOpen && romSearchError && <p className="owned-flip-error" role="alert">{romSearchError}</p>}
                 {flipError && <p className="owned-flip-error" role="alert">{flipError}</p>}
-                {!showExit && loadIndex !== null && <button className="owned-button owned-new-game playroom-press" aria-label={hasSelectedCheats ? 'Start new game with selected cheats' : 'Start new game'} title="Start new game" disabled={actionsBusy} onClick={event => { actionTrigger.current = event.currentTarget; setGameAction('start'); }}>{ResetIcon}<span>Start new game</span>
+                {!showExit && loadIndex !== null && <button className="owned-button owned-new-game playroom-press" aria-label={hasSelectedCheats ? 'Start new game with selected cheats' : 'Start new game'} title="Start new game" disabled={actionsBusy} onClick={event => requestStartOrLoad(event.currentTarget, null)}>{ResetIcon}<span>Start new game</span>
                     {hasSelectedCheats && <span className="owned-cheat-badge" aria-hidden="true">✦</span>}
                 </button>}
                 <Dialog.Root open={gameAction !== null} onOpenChange={open => {
@@ -380,16 +391,17 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
                                 actionTrigger.current.focus();
                             }}>
                             <span className="owned-exit-icon">{gameAction === 'exit' ? stopIcon : ResetIcon}</span>
-                            <Dialog.Title>{starting ? 'Start new game?' : restarting ? 'Restart game?' : 'Exit game?'}</Dialog.Title>
+                            <Dialog.Title>{slotToLoad !== null ? `Load ${slotLabel(slotToLoad)}?` : starting ? 'Start new game?' : restarting ? 'Restart game?' : 'Exit game?'}</Dialog.Title>
                             <Dialog.Description>
-                                <strong>{displayTitle}</strong> {starting ? 'will start from the beginning. Unsaved progress may be lost.' : restarting ? 'will restart from the beginning. Unsaved progress will be lost.' : 'will close and MiSTer will return to its main menu. Unsaved progress will be lost.'}
+                                {slotToLoad !== null ? <>This will load a save for <strong>{displayTitle}</strong>. Unsaved progress in the running game may be lost.</>
+                                    : <><strong>{displayTitle}</strong> {starting ? 'will start from the beginning. Unsaved progress in the running game may be lost.' : restarting ? 'will restart from the beginning. Unsaved progress will be lost.' : 'will close and MiSTer will return to its main menu. Unsaved progress will be lost.'}</>}
                             </Dialog.Description>
                             {actionError && <p role="alert" className="owned-exit-error">{actionError}</p>}
                             <div className="owned-exit-actions">
                                 <Dialog.Close className="owned-button playroom-press" disabled={actionPending}>Cancel</Dialog.Close>
                                 <button className="owned-button owned-exit-button playroom-press"
                                     disabled={!!actionsBusy || actionPending} onClick={runGameAction}>
-                                    {starting ? 'Start new game' : restarting ? (actionPending ? 'Restarting…' : 'Restart game') : (actionPending ? 'Exiting…' : 'Exit game')}
+                                    {slotToLoad !== null ? 'Load save' : starting ? 'Start new game' : restarting ? (actionPending ? 'Restarting…' : 'Restart game') : (actionPending ? 'Exiting…' : 'Exit game')}
                                 </button>
                             </div>
                         </Dialog.Content>
@@ -397,7 +409,7 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
                 </Dialog.Root>
                 {!showExit && <button className="owned-button owned-gold owned-primary playroom-press"
                     disabled={!!actionsBusy}
-                    onClick={continueGame}>
+                    onClick={event => requestStartOrLoad(event.currentTarget, loadIndex)}>
                     {PlayIcon}
                     <span>
                         {saves.loadingSlot ? 'Loading…' : selectedIndex !== null ? `Load · ${slotLabel(selectedIndex)}` : loadIndex !== null ? 'Continue' : 'Play'}

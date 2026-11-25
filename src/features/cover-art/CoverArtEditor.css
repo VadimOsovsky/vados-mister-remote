@@ -939,6 +939,13 @@
   object-fit: contain;
   object-position: left;
 }
+.cover-art-editor .nfc-back-header .nfc-back-logo {
+  justify-self: end;
+  width: min(100%, calc(100% / var(--nfc-logo-scale, 1)));
+  object-position: right;
+  transform: scale(var(--nfc-logo-scale, 1));
+  transform-origin: right center;
+}
 .cover-art-editor .nfc-back-header strong {
   min-width: 0;
   font-family: "Barlow Condensed", "Arial Narrow", sans-serif;

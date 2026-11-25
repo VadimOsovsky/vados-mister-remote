@@ -187,6 +187,11 @@ export function mountCoverEditor(root, games, initialGameId) {
             },
         },
         gameLogo: { label: 'Game Logo URL', url: true, file: true },
+        titleMode: {
+            label: 'Back title format',
+            defaultOption: 'text',
+            options: { text: 'Text', logo: 'Image logo' },
+        },
         screenshotFrame: {
             label: 'Screenshot frame color',
             defaultOption: 'auto',
@@ -268,6 +273,7 @@ export function mountCoverEditor(root, games, initialGameId) {
     }
 
     function imageSource(value) {
+        if (!value || value === 'off') return '';
         if (presetLogos.has(value)) return presetLogos.get(value);
         if (value === 'preset:spine-logo') return marioSpineLogo;
         if (value === 'preset:cover') return data[game.value].art;
@@ -275,7 +281,6 @@ export function mountCoverEditor(root, games, initialGameId) {
         if (/^data:image\/(png|jpeg|webp|gif|svg\+xml);base64,/i.test(value))
             return value;
         if (value.startsWith('blob:')) return value;
-        if (value === 'off' || !value) return '';
         try {
             const url = new URL(value);
             return ['https:', 'http:'].includes(url.protocol) ? url.href : '';
@@ -425,21 +430,29 @@ export function mountCoverEditor(root, games, initialGameId) {
     }
 
     function renderNfc() {
-        const { global: settings } = currentDraft();
+        const { global: settings, nfc } = currentDraft();
         paintImage(nfcCover, imageSource(settings.art));
         byId('nfc-empty').hidden = !nfcCover.hidden;
         sizeNfcArtwork();
-        byId('nfc-back-title').textContent =
-            settings.title || 'Untitled NES Game';
+        const useLogo = nfc.titleMode === 'logo';
+        const title = byId('nfc-back-title');
+        const logo = byId('nfc-back-logo');
+        title.textContent = nfc.title?.trim() || settings.title || 'Untitled NES Game';
+        logo.alt = title.textContent;
+        paintImage(logo, useLogo ? imageSource(nfc.gameLogo) : '');
+        logo.style.setProperty('--nfc-logo-scale', Number(nfc.gameLogoSize || fields.gameLogoSize.defaultOption) / 100);
+        title.hidden = !logo.hidden;
+        byId('nfc-title-input').closest('.field').hidden = useLogo;
+        byId('nfc-gameLogo-input').closest('.field').hidden = !useLogo;
+        byId('nfc-gameLogoSize-input').closest('.field').hidden = !useLogo;
         fitNfcTitle();
         byId('nfc-description').textContent = settings.description;
         byId('nfc-description-wrap').hidden = !settings.description.trim();
         paintImage(byId('nfc-brand'), appLogoSource);
-        const draft = currentDraft();
         const screenshot = byId('nfc-screenshot');
-        paintImage(screenshot, imageSource(draft.nfc.art));
+        paintImage(screenshot, imageSource(nfc.art));
         byId('nfc-shot').hidden = screenshot.hidden;
-        renderManual(draft.nfc.manual ?? settings.manual, 'nfc');
+        renderManual(nfc.manual ?? settings.manual, 'nfc');
     }
 
     function setFormat(next) {
@@ -540,8 +553,8 @@ export function mountCoverEditor(root, games, initialGameId) {
         const backDescription = scope === 'back' && key === 'description';
         const value = backDescription
             ? (draft.back.description ?? draft.global.description ?? '')
-            : (scope === 'nfc' && key === 'manual'
-                ? (draft.nfc.manual ?? draft.global.manual)
+            : (scope === 'nfc' && (key === 'manual' || key === 'title')
+                ? (draft.nfc[key] ?? draft.global[key])
                 : draft[scope][key]) || '';
         const isPanelOverride = scope !== 'global' && scope !== 'nfc';
         const container = make('div', { className: 'field' });
@@ -769,7 +782,10 @@ export function mountCoverEditor(root, games, initialGameId) {
     function renderForm() {
         if (format === 'nfc') {
             byId('nfc-fields').replaceChildren(
-                makeField('global', 'title'),
+                makeField('nfc', 'titleMode'),
+                makeField('nfc', 'title'),
+                makeField('nfc', 'gameLogo'),
+                makeField('nfc', 'gameLogoSize'),
                 makeField('global', 'art'),
                 makeField('nfc', 'coverOrientation'),
                 makeField('nfc', 'art'),
@@ -818,6 +834,11 @@ export function mountCoverEditor(root, games, initialGameId) {
         setFormat('cassette'),
     );
     byId('format-nfc').addEventListener('click', () => setFormat('nfc'));
+    byId('nfc-back-logo').addEventListener('error', (event) => {
+        event.currentTarget.hidden = true;
+        byId('nfc-back-title').hidden = false;
+        fitNfcTitle();
+    });
     nfcCover.addEventListener('load', sizeNfcArtwork);
     nfcCover.addEventListener('error', () => {
         nfcCover.hidden = true;

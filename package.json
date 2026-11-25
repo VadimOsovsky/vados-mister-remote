@@ -2,7 +2,7 @@
   "name": "mister_remote",
   "private": true,
   "packageManager": "yarn@1.22.22",
-  "version": "0.28.0",
+  "version": "0.33.0",
   "type": "module",
   "scripts": {
     "build:manuals": "node scripts/build-manuals.mjs",
@@ -15,7 +15,8 @@
     "discover-ss-ids": "tsx scripts/discover-ss-ids.ts",
     "build-library": "node ./scripts/parse-launchbox.ts",
     "deploy-mister": "bash scripts/deploy-mister.sh 192.168.0.118",
-    "deploy-mister:windows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/deploy-mister.ps1"
+    "deploy-mister:windows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/deploy-mister.ps1",
+    "deploy-mister:launchbox": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/deploy-mister.ps1 -LaunchBox"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",

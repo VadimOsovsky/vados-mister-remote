@@ -37,6 +37,7 @@ export function EditGameForm({ game, regions, activeConsole, onSave, onCancel, o
         };
     });
     const [confirmDelete, setConfirmDelete] = useState(false);
+    const [uploadingArtwork, setUploadingArtwork] = useState(false);
 
     // ── ROM autocomplete state ──
     const api = useMisterState(state => state.api);
@@ -116,7 +117,7 @@ export function EditGameForm({ game, regions, activeConsole, onSave, onCancel, o
     const titleMissing = isNew && !draft.title?.trim();
 
     function handleSave() {
-        if (titleMissing) return;
+        if (titleMissing || uploadingArtwork) return;
         if (isNew) {
             setGameOverrides(game.id, activeConsole, cleanGameOverrides(draft));
             onSave();
@@ -191,7 +192,7 @@ export function EditGameForm({ game, regions, activeConsole, onSave, onCancel, o
                     </div>
                 </div>
 
-                <GameArtworkEditor draft={draft} mediaLabel={platform.mediaLabel} initialLanguage={isNew ? 'original' : getGameArtworkLanguage(game.id, activeConsole)} onWebManualChange={value => set('webManualUrl', value)} onChange={(language, key, value) => {
+                <GameArtworkEditor draft={draft} mediaLabel={platform.mediaLabel} initialLanguage={isNew ? 'original' : getGameArtworkLanguage(game.id, activeConsole)} uploading={uploadingArtwork} onUploadingChange={setUploadingArtwork} onWebManualChange={value => set('webManualUrl', value)} onChange={(language, key, value) => {
                     if (language === 'original') set(key, value);
                     else setDraft(previous => ({ ...previous, artworkByLanguage: {
                         ...previous.artworkByLanguage,
@@ -201,7 +202,7 @@ export function EditGameForm({ game, regions, activeConsole, onSave, onCancel, o
             </div>
 
             <div className="edit-game-actions">
-                <button className="sheet-btn sheet-btn-primary playroom-press" onClick={handleSave} disabled={titleMissing}>{isNew ? 'Save' : 'Save changes'}</button>
+                <button className="sheet-btn sheet-btn-primary playroom-press" onClick={handleSave} disabled={titleMissing || uploadingArtwork}>{isNew ? 'Save' : 'Save changes'}</button>
                 <button className="sheet-btn sheet-btn-secondary playroom-press" onClick={onCancel}>Cancel</button>
             </div>
 

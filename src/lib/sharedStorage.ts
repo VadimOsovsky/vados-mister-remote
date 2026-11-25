@@ -2,7 +2,8 @@ type Values = Record<string, string>;
 type Snapshot = { revision: number; values: Values };
 type SyncStatus = 'saved' | 'saving' | 'offline' | 'conflict';
 
-const endpoint = '/api/playroom/state';
+const apiOrigin = import.meta.env?.VITE_PLAYROOM_API_ORIGIN?.trim().replace(/\/+$/, '') ?? '';
+const endpoint = `${apiOrigin}/api/playroom/state`;
 const sharedKey = /^(?:store_free_games|rom_mappings|active_console|owned_consoles|store_sort|wallet_balance|wallet_last_topup|wallet_beaten_rewarded|owned_game_tab|(?:save_slots|game_rom_versions|game_overrides|game_cheats|collection|favorites|beaten|custom_games)_.+|playroom\.recent\..+)$/;
 
 let confirmed: Snapshot | undefined;

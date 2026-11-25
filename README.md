@@ -83,8 +83,16 @@ export default defineConfig([
 
 The production app uses the Playroom HTTP server from `scripts/spa-server.py` for its shared state. Deploy the server together with the frontend using `scripts/deploy-mister.sh`. State is stored at `/media/fat/playroom-data/state.json`, beside the deployment directory. Back up this file alongside the emulator's save files.
 
+For a GitHub Pages build, set `VITE_PLAYROOM_API_ORIGIN` at build time to the browser-reachable origin of the Playroom server (for example, `https://playroom.example.net`). The state endpoint accepts cross-origin reads and writes from `https://vadimosovsky.github.io`. Leave the variable unset when building for the MiSTer itself to use the same-origin endpoint. The published value is visible in the frontend bundle and should contain only the server origin.
+
 On Windows, run `yarn deploy-mister:windows` with Windows PowerShell, the OpenSSH client, and `tar.exe` available. The default MiSTer address is `192.168.0.118`. To override it, run `yarn deploy-mister:windows 192.168.0.120` or set the `MISTER_IP` environment variable.
+
+On Windows, run `yarn deploy-mister:launchbox` on first setup and whenever the JSON files in `public/launchbox` change. It accepts the same IP override and uploads the metadata without building the app or restarting the server. Both app deploy scripts preserve the existing LaunchBox directory on MiSTer.
 
 Open the updated app first in the browser and at the address where your existing collection lives. The first browser with local data can import it while the shared store is uninitialized. Other devices then see the shared collection when they open the app. Browser storage is scoped to the origin, so data from localhost or another MiSTer address cannot be imported automatically. The import leaves the old browser data intact.
 
 The MiSTer host address stays local to each browser. Vite development and its preview fixtures also use local browser data.
+
+## Photo credits
+
+AV Famicom photo by Muband, [New Famicom.jpg](https://commons.wikimedia.org/wiki/File:New_Famicom.jpg), licensed under [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/). The cropped WebP with a transparent background is available under the same license.

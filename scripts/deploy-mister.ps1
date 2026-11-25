@@ -1,5 +1,6 @@
 param(
-    [string]$MisterIp = $env:MISTER_IP
+    [string]$MisterIp = $env:MISTER_IP,
+    [switch]$LaunchBox
 )
 
 $ErrorActionPreference = 'Stop'
@@ -8,7 +9,7 @@ if (-not $MisterIp) {
 }
 
 $target = "root@$MisterIp"
-$archiveName = "mister-remote-$([Guid]::NewGuid().ToString('N')).tar"
+$archiveName = "mister-remote-$([Guid]::NewGuid().ToString('N')).tar.gz"
 $archive = Join-Path ([IO.Path]::GetTempPath()) $archiveName
 $remoteArchive = "/media/fat/$archiveName"
 
@@ -20,6 +21,18 @@ function Assert-Success($operation) {
 
 Push-Location (Join-Path $PSScriptRoot '..')
 try {
+    if ($LaunchBox) {
+        $remoteLibrary = '/media/fat/remote/launchbox'
+        & tar.exe -czf $archive -C public launchbox
+        Assert-Success 'LaunchBox archive creation'
+        & scp.exe -O $archive "${target}:$remoteArchive"
+        Assert-Success 'LaunchBox upload'
+        & ssh.exe $target "trap 'rm -f $remoteArchive' EXIT; mkdir -p $remoteLibrary && tar -xzf $remoteArchive -C /media/fat/remote"
+        Assert-Success 'LaunchBox installation'
+        Write-Host "LaunchBox ready at http://${MisterIp}:8183/launchbox/nes.json"
+        return
+    }
+
     Get-Command ssh.exe, scp.exe, tar.exe, yarn.cmd | Out-Null
 
     Write-Host "==> Checking SSH and Python on MiSTer ($MisterIp)..."
@@ -33,7 +46,7 @@ try {
     Assert-Success 'Build'
 
     Write-Host '==> Packing and uploading...'
-    & tar.exe -cf $archive -C dist . -C (Get-Location).Path public/launchbox/nes.json scripts/spa-server.py
+    & tar.exe --exclude './launchbox' -czf $archive -C dist . -C (Get-Location).Path scripts/spa-server.py
     Assert-Success 'Archive creation'
     & scp.exe -O $archive "${target}:$remoteArchive"
     Assert-Success 'Upload'
@@ -50,12 +63,12 @@ marker='# mister-remote'
 python_bin=$(command -v python3 || command -v python)
 
 mkdir -p "$remote_dir"
-rm -rf "$remote_dir"/*
-tar -xf "$archive" -C "$remote_dir"
-mkdir -p "$remote_dir/launchbox"
-mv "$remote_dir/public/launchbox/nes.json" "$remote_dir/launchbox/nes.json"
+for entry in "$remote_dir"/*; do
+    [ "$entry" = "$remote_dir/launchbox" ] || rm -rf "$entry"
+done
+tar -xzf "$archive" -C "$remote_dir"
 mv "$remote_dir/scripts/spa-server.py" "$remote_dir/server.py"
-rmdir "$remote_dir/public/launchbox" "$remote_dir/public" "$remote_dir/scripts"
+rmdir "$remote_dir/scripts"
 
 "$python_bin" - "$remote_dir/server.py" "$port" <<'PY'
 import os
