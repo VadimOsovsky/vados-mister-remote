@@ -33,7 +33,7 @@ jobs:
         env:
           VITE_PAGES_BASE: /${{ github.event.repository.name }}/app/
           VITE_WIZZO_ADDRESS: https://mister-playroom.duckdns.org
-          VITE_PLAYROOM_API_ORIGIN: ${{ vars.VITE_PLAYROOM_API_ORIGIN }}
+          VITE_PLAYROOM_API_ORIGIN: ${{ vars.VITE_PLAYROOM_API_ORIGIN || 'https://mister-playroom.duckdns.org' }}
         run: yarn build
       - name: Build manuals
         run: node scripts/build-manuals.mjs

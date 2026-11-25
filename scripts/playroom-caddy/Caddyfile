@@ -31,18 +31,26 @@ mister-playroom.duckdns.org {
 			Access-Control-Allow-Headers Content-Type
 			Access-Control-Allow-Private-Network true
 		}
-		respond @preflight 204
+		route {
+			respond @preflight 204
 
-		handle_path /zaparoo/* {
-			reverse_proxy 127.0.0.1:7497 {
-				header_up Host 127.0.0.1:7497
-				header_up Origin http://127.0.0.1:7497
-				header_down -Access-Control-*
+			handle /api/playroom/state {
+				reverse_proxy 127.0.0.1:8183 {
+					header_down -Access-Control-*
+				}
 			}
-		}
-		handle {
-			reverse_proxy 127.0.0.1:8182 {
-				header_down -Access-Control-*
+
+			handle_path /zaparoo/* {
+				reverse_proxy 127.0.0.1:7497 {
+					header_up Host 127.0.0.1:7497
+					header_up Origin http://127.0.0.1:7497
+					header_down -Access-Control-*
+				}
+			}
+			handle {
+				reverse_proxy 127.0.0.1:8182 {
+					header_down -Access-Control-*
+				}
 			}
 		}
 	}
