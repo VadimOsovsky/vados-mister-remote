@@ -4,6 +4,7 @@ import type { ConsoleKey, LaunchBoxGame } from '../types';
 import { loadCollectionGames, searchGames } from '../services/launchbox';
 import { useCollectionState } from '../state/collectionState';
 import { getRecentGames } from '../lib/recentGames';
+import { readCollectionGameCache, writeCollectionGameCache } from '../lib/collectionGameCache';
 import { PLATFORMS } from '../constants';
 
 import { getCollectionPreviewIds } from '../features/collection/collectionPreview';
@@ -16,30 +17,26 @@ export function useCollection(activeConsole: ConsoleKey) {
         if (!preview) return collectionIds;
         return [...new Set([...collectionIds, ...getCollectionPreviewIds(activeConsole)])];
     }, [activeConsole, collectionIds, preview]);
-    const [games, setGames] = useState<LaunchBoxGame[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [loadError, setLoadError] = useState(false);
+    const cachedGames = useMemo(() => readCollectionGameCache(activeConsole, displayedIds), [activeConsole, displayedIds]);
+    const [result, setResult] = useState<{ consoleKey: ConsoleKey; ids: string[]; games?: LaunchBoxGame[] }>();
     const [search, setSearch] = useState('');
+    const current = result?.consoleKey === activeConsole && result.ids === displayedIds ? result : undefined;
+    const games = current?.games ?? cachedGames;
+    const loading = !current && displayedIds.length > 0 && !games.length;
+    const loadError = Boolean(current && !current.games && !games.length);
 
     useEffect(() => {
         let cancelled = false;
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetching requires loading state toggle
-        setLoading(true);
-        loadCollectionGames(activeConsole, displayedIds).then(data => {
+        loadCollectionGames(activeConsole, displayedIds, { requireCatalog: true }).then(data => {
             if (!cancelled) {
-                setGames(data);
-                setLoadError(false);
+                if (!preview) writeCollectionGameCache(activeConsole, data);
+                setResult({ consoleKey: activeConsole, ids: displayedIds, games: data });
             }
         }).catch(() => {
-            if (!cancelled) {
-                setGames([]);
-                setLoadError(true);
-            }
-        }).finally(() => {
-            if (!cancelled) setLoading(false);
+            if (!cancelled) setResult({ consoleKey: activeConsole, ids: displayedIds });
         });
         return () => { cancelled = true; };
-    }, [activeConsole, displayedIds]);
+    }, [activeConsole, displayedIds, preview]);
 
     const filteredGames = useMemo(() => search ? searchGames(games, search) : games, [games, search]);
 
