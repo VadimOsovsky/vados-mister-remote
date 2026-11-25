@@ -6,6 +6,7 @@ const IMAGE_CDN = 'https://images.launchbox-app.com';
 const DB_NAME = 'launchbox-cache';
 const DB_VERSION = 5;
 const STORE_NAME = 'platforms';
+const base = import.meta.env?.BASE_URL ?? '/';
 
 // ── IndexedDB helpers ──
 function openDB(): Promise<IDBDatabase> {
@@ -124,19 +125,21 @@ export async function loadPlatformGames(consoleKey: ConsoleKey, { requireCatalog
     return memoryCache.get(platform)!;
   }
 
-  // Check IndexedDB cache
-  try {
-    const cached = await getCached(platform);
-    if (cached) {
-      memoryCache.set(platform, cached);
-      return cached;
+  // The local build retains its persistent catalog cache. Pages serves the catalog directly.
+  if (base === '/') {
+    try {
+      const cached = await getCached(platform);
+      if (cached) {
+        memoryCache.set(platform, cached);
+        return cached;
+      }
+    } catch {
+      // IndexedDB not available, proceed to fetch.
     }
-  } catch {
-    // IndexedDB not available, proceed to fetch
   }
 
   // Fetch from static JSON
-  const res = await fetch(`${import.meta.env?.BASE_URL ?? '/'}launchbox/${platform}.json`);
+  const res = await fetch(`${base}launchbox/${platform}.json`);
   if (!res.ok) {
     if (requireCatalog) throw new Error(`Could not load LaunchBox data for ${platform}`);
     console.warn(`LaunchBox data for ${platform} not found`);
@@ -146,8 +149,7 @@ export async function loadPlatformGames(consoleKey: ConsoleKey, { requireCatalog
   const games: LaunchBoxGame[] = await res.json();
   memoryCache.set(platform, games);
 
-  // Cache in IndexedDB (fire and forget)
-  setCache(platform, games).catch(() => {});
+  if (base === '/') void setCache(platform, games).catch(() => undefined);
 
   return games;
 }
