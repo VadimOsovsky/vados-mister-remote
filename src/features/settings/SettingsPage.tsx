@@ -130,8 +130,8 @@ export function SettingsPage({ screenAwake }: { screenAwake: ReturnType<typeof u
                             onClick={() => screenAwake.setPreference(!screenAwake.enabled)}>
                             Keep screen awake <span className="settings-switch-track" aria-hidden="true" />
                         </button>
-                        {!screenAwake.supported && <p>Screen wake lock is unavailable in this browser.</p>}
-                        {screenAwake.supported && screenAwake.enabled && !screenAwake.active && <p role="status">The screen may dim while wake lock is unavailable.</p>}
+                        {!screenAwake.supported && <p className="settings-hint">Unavailable in this browser.</p>}
+                        {screenAwake.supported && screenAwake.enabled && !screenAwake.active && <p className="settings-hint" role="status">The screen may still dim.</p>}
                     </section>
                     <p className="settings-local">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">

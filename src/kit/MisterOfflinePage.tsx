@@ -13,7 +13,6 @@ export function MisterOfflinePage({ screen }: { screen: 'collection' | 'remote' 
                 <section className="mister-offline-card" aria-labelledby="mister-offline-title">
                     <div className="mister-offline-icon" aria-hidden="true">
                         {collection ? GridIcon : RemoteIcon}
-                        <span />
                     </div>
                     <h1 id="mister-offline-title">MiSTer is offline</h1>
                     <p>{collection ? 'Connect your MiSTer to open your game collection.' : 'Connect your MiSTer to use the remote control.'}</p>

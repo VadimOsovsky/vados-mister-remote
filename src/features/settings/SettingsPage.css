@@ -24,6 +24,7 @@
 }
 .settings-symbol svg { width: 24px; height: 24px; }
 .settings-card > p { margin: 18px 0 20px; font: var(--font-field); line-height: 1.65; color: var(--muted); }
+.settings-card > .settings-hint { margin: 10px 0 0; font: var(--font-caption); }
 .settings-card form { display: grid; gap: 12px; }
 .settings-card label { font: var(--font-label-section); }
 .settings-card input {

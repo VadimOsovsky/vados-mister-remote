@@ -51,7 +51,6 @@ export function CollectionPage({ onSelectGame }: { onSelectGame: (game: LaunchBo
                     <div className="shelf-heading">
                         <h1>All games on your shelf</h1>
                     </div>
-                    {!writable && <p role="status">Showing your last synced collection. Connect MiSTer to make changes or play.</p>}
                     <div className="shelf-search-row">
                         <SearchBar value={search} onChange={setSearch} />
                         <button className="add-game-btn playroom-press playroom-field-action" aria-label="Add a game" disabled={!writable} onClick={() => setAddSheetOpen(true)}>
