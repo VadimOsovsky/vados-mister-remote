@@ -1,6 +1,7 @@
-import { useState, type ReactNode } from 'react';
+import { useState, useSyncExternalStore, type ReactNode } from 'react';
 import { useCollectionState } from '../state/collectionState';
 import { useMisterState } from '../state/misterState';
+import { getSyncStatus, subscribeToSync } from '../lib/sharedStorage';
 import { ConsoleBadge, ConsoleSheet } from './ConsoleCarousel/ConsoleSheet';
 import { PlayroomHeader } from './PlayroomHeader';
 import type { ConsoleKey } from '../types';
@@ -12,14 +13,17 @@ export function PlayroomConsoleHeader({ onSwitch, alternate, showAlternate = fal
     showAlternate?: boolean;
 }) {
     const connected = useMisterState(state => state.connected);
+    const syncStatus = useSyncExternalStore(subscribeToSync, getSyncStatus);
+    const available = connected && syncStatus !== 'offline';
     const setActiveConsole = useCollectionState(state => state.setActiveConsole);
     const [open, setOpen] = useState(false);
 
-    const connectionLabel = connected ? 'Connected to MiSTer' : 'Disconnected from MiSTer';
+    const connectionLabel = !connected ? 'Disconnected from MiSTer'
+        : available ? 'Connected to MiSTer' : 'Could not sync with MiSTer';
     const logo = (
         <div className="playroom-brand">
             <img className="playroom-logo" src={logoUrl} alt="Mister Playroom" decoding="sync" fetchPriority="high" />
-            <span className="playroom-connection-light" data-connected={connected}
+            <span className="playroom-connection-light" data-connected={available}
                 role="img" aria-label={connectionLabel} title={connectionLabel} />
         </div>
     );
