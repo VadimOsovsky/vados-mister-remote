@@ -194,6 +194,11 @@ export async function syncSharedStorage(refresh = false) {
 }
 
 export const appStorage = {
+    keys() {
+        if (confirmed) return Object.keys(online && fresh ? values : confirmed.values);
+        const snapshot = readCache();
+        return snapshot ? Object.keys(snapshot.values) : Object.keys(localStorage);
+    },
     getItem(key: string) {
         if (confirmed) return (online && fresh ? values : confirmed.values)[key] ?? null;
         const snapshot = readCache();

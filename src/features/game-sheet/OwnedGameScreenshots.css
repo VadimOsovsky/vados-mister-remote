@@ -63,3 +63,43 @@
 .owned-screenshot .owned-button[aria-pressed='true'] {
   background: color-mix(in srgb, var(--gold) 23%, var(--card));
 }
+
+.owned-screenshot-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.owned-screenshot-actions > :first-child { flex: 1; }
+
+.owned-screenshot-confirm {
+  box-sizing: border-box;
+  width: min(300px, calc(100vw - 24px));
+  padding: 16px;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: 0 8px 24px #0003;
+  font: var(--font-label);
+}
+
+@supports (position-area: block-start) {
+  .owned-screenshot-confirm {
+    inset: auto;
+    margin: 8px;
+    position-area: block-start span-inline-start;
+    position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;
+  }
+}
+
+.owned-screenshot-confirm p {
+  margin: 8px 0 12px;
+  font: var(--font-caption);
+}
+
+.owned-screenshot-confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}

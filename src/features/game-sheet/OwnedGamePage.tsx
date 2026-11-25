@@ -1,5 +1,5 @@
 import { Link } from 'react-router';
-import { appStorage, isSharedStorageReady, subscribeToValues } from '../../lib/sharedStorage';
+import { appStorage, getSyncStatus, isSharedStorageReady, subscribeToValues, syncSharedStorage } from '../../lib/sharedStorage';
 import { FavoriteStar } from '../collection/FavoriteBookmark';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
@@ -17,7 +17,7 @@ import type { WizzoGameSearchResult } from '../../services/wizzoApi';
 import { captureScreenshot } from '../../services/misterScreenshots';
 import { BackArrowIcon, FlipDiskIcon, FileIcon, PencilIcon, PlayIcon, ResetIcon, TrophyIcon } from '../../lib/icons';
 import { getImageUrl, resolveImages, resolveScreenshots, resolveTitle } from '../../services/launchbox';
-import { getGameArtworkLanguage, getGameOverrides, deleteGameOverrides, getRomMapping, removeCustomGame, setRomMapping } from '../../lib/storage';
+import { getGameArtworkLanguage, getGameOverrides, deleteGameOverrides, getRomMapping, isSaveSlotScreenshot, removeCustomGame, setRomMapping } from '../../lib/storage';
 import { readCheatSelection } from '../../services/gameCheats';
 import { launchCollectionGame } from '../../services/collectionLauncher';
 import { isRomPlaying } from '../../services/nowPlaying';
@@ -123,6 +123,7 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
     const screenshotGallery = readScreenshotGallery(galleryValue);
     const backdrop = screenshotGallery.images.find(image => image.path === screenshotGallery.backdropPath);
     const [capturing, setCapturing] = useState(false);
+    const [deletingScreenshot, setDeletingScreenshot] = useState<string>();
     const [screenshotError, setScreenshotError] = useState<string>();
     const pendingLoadSlot = useRef<number | null>(null);
     const [editField, setEditField] = useState<'rom' | undefined>();
@@ -197,6 +198,37 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
             appStorage.setItem(screenshotKey, JSON.stringify({ ...gallery, backdropPath: path }));
         } catch {
             setScreenshotError('Could not save the backdrop selection.');
+        }
+    }
+
+    async function deleteGameScreenshot(path: string) {
+        if (!connected || capturing || deletingScreenshot || saves.savingSlot) return;
+        setDeletingScreenshot(path);
+        setScreenshotError(undefined);
+        try {
+            await syncSharedStorage(true);
+            if (!isSharedStorageReady() || getSyncStatus() === 'conflict' || useMisterState.getState().api !== api) {
+                throw new Error('Reconnect MiSTer and sync your collection before deleting.');
+            }
+            const gallery = readScreenshotGallery(appStorage.getItem(screenshotKey));
+            const image = gallery.images.find(item => item.path === path);
+            if (!image) return;
+            if (isSaveSlotScreenshot(image.core, image.filename)) {
+                throw new Error('This screenshot is used by a save slot and was kept on MiSTer.');
+            }
+            await api.deleteScreenshot(image.core, image.filename, AbortSignal.timeout(5000));
+            if (!isSharedStorageReady()) {
+                throw new Error('MiSTer deleted the file. Reconnect and retry to remove it from the gallery.');
+            }
+            const latest = readScreenshotGallery(appStorage.getItem(screenshotKey));
+            appStorage.setItem(screenshotKey, JSON.stringify({
+                images: latest.images.filter(item => item.path !== path),
+                backdropPath: latest.backdropPath === path ? undefined : latest.backdropPath,
+            }));
+        } catch (error) {
+            setScreenshotError(error instanceof Error ? error.message : 'Could not delete the screenshot.');
+        } finally {
+            setDeletingScreenshot(undefined);
         }
     }
 
@@ -414,9 +446,10 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
                     <Tabs.Content value="screenshots" className="owned-panel">
                         <OwnedGameScreenshots key={screenshotKey} gallery={screenshotGallery}
                             getUrl={image => api.getScreenshotUrl(image.core, image.filename)}
-                            canCapture={connected && playing} canEdit={connected} busy={!!actionsBusy || actionPending}
-                            capturing={capturing} error={screenshotError}
-                            onCapture={takeGameScreenshot} onBackdrop={selectScreenshotBackdrop} />
+                            canCapture={connected && playing} canEdit={connected}
+                            busy={!!actionsBusy || actionPending || !!deletingScreenshot}
+                            capturing={capturing} deleting={deletingScreenshot} error={screenshotError}
+                            onCapture={takeGameScreenshot} onBackdrop={selectScreenshotBackdrop} onDelete={deleteGameScreenshot} />
                     </Tabs.Content>
                 </Tabs.Root>
             </main>

@@ -155,8 +155,10 @@ export class WizzoApi {
   private async request<T>(
     path: string,
     options?: RequestInit,
+    allowMissing = false,
   ): Promise<T> {
     const res = await fetch(`${this.baseUrl}${path}`, options);
+    if (allowMissing && res.status === 404) return undefined as T;
     if (!res.ok) {
       throw new Error(`Wizzo API error: ${res.status} ${res.statusText} on ${path}`);
     }
@@ -312,8 +314,11 @@ export class WizzoApi {
     return `${this.baseUrl}/screenshots/${encodeURIComponent(core)}/${encodeURIComponent(filename)}`;
   }
 
-  deleteScreenshot(core: string, filename: string): Promise<void> {
-    return this.del(`/screenshots/${encodeURIComponent(core)}/${encodeURIComponent(filename)}`);
+  deleteScreenshot(core: string, filename: string, signal?: AbortSignal): Promise<void> {
+    return this.request(`/screenshots/${encodeURIComponent(core)}/${encodeURIComponent(filename)}`, {
+      method: 'DELETE',
+      signal,
+    }, true);
   }
 
   // ── Scripts ──

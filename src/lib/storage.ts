@@ -74,6 +74,13 @@ export function getSaveSlots(gameId: string | number): (SaveSlot | null)[] {
     }
 }
 
+export function isSaveSlotScreenshot(core: string, filename: string): boolean {
+    const prefix = `${SAVE_SLOTS_PREFIX}_`;
+    return appStorage.keys().some(key => key.startsWith(prefix) &&
+        getSaveSlots(key.slice(prefix.length)).some(slot =>
+            slot?.screenshotCore === core && slot.screenshotFilename === filename));
+}
+
 export function putSaveSlot(gameId: string | number, slotIndex: number, slot: SaveSlot | null): (SaveSlot | null)[] {
     const slots = getSaveSlots(gameId);
     slots[slotIndex] = slot;
