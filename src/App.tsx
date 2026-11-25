@@ -5,6 +5,7 @@ import type { LaunchBoxGame } from './types';
 import { WalletFeedback } from './features/store/WalletFeedback';
 import { GridIcon, StoreIcon, RemoteIcon, SettingsIcon } from './lib/icons';
 import { useConnection } from './hooks/useConnection';
+import { useKeepScreenAwake } from './hooks/useKeepScreenAwake';
 import { useNowPlaying } from './hooks/useNowPlaying';
 import { useVisualViewport } from './hooks/useVisualViewport';
 import { useFocusedFieldScroll } from './hooks/useFocusedFieldScroll';
@@ -85,6 +86,7 @@ function WalletEffects() {
 }
 
 export default function MisterRemote() {
+    const screenAwake = useKeepScreenAwake();
     useVisualViewport();
     useFocusedFieldScroll();
     const platform = usePlatform();
@@ -152,7 +154,7 @@ export default function MisterRemote() {
                         <Route path="/store" element={<StorePage />} />
                         <Route path="/store/game/:gameId" element={<StoreGamePage />} />
                         <Route path="/remote" element={connected || preview ? <RemotePage /> : <MisterOfflinePage screen="remote" />} />
-                        <Route path="/settings" element={<SettingsPage />} />
+                        <Route path="/settings" element={<SettingsPage screenAwake={screenAwake} />} />
                         <Route path="*" element={<Navigate to="/collection" replace />} />
                     </Routes>
                 </div>

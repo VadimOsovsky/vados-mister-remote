@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useCollectionState } from '../../state/collectionState';
 import { useMisterState, useMisterWritable } from '../../state/misterState';
 import { useSettings } from '../../hooks/useSettings';
+import type { useKeepScreenAwake } from '../../hooks/useKeepScreenAwake';
 import { isHostedOnMister } from '../../lib/storage';
 import { PlayroomConsoleHeader } from '../../kit/PlayroomConsoleHeader';
 import { OsdIcon, ResetIcon, SearchIcon, StoreIcon } from '../../lib/icons';
@@ -13,7 +14,7 @@ const appVersion = pagesBuild ? `${version}+pages.${pagesBuild}` : version;
 
 type IndexStatus = { label: string; percent?: number; busy: boolean };
 
-export function SettingsPage() {
+export function SettingsPage({ screenAwake }: { screenAwake: ReturnType<typeof useKeepScreenAwake> }) {
     const api = useMisterState(state => state.api);
     const connected = useMisterState(state => state.connected);
     const writable = useMisterWritable();
@@ -116,6 +117,21 @@ export function SettingsPage() {
                             className="playroom-button playroom-press settings-switch" onClick={() => setEconomyDisabled(!economyDisabled)}>
                             Disable economy <span className="settings-switch-track" aria-hidden="true" />
                         </button>
+                    </section>
+                    <section className="settings-card" aria-labelledby="display-title">
+                        <div className="settings-card-heading">
+                            <span className="settings-symbol" aria-hidden="true">{OsdIcon}</span>
+                            <h2 id="display-title">Display</h2>
+                        </div>
+                        <p id="screen-awake-description">Keep the screen on while Playroom is visible.</p>
+                        <button type="button" role="switch" aria-checked={screenAwake.enabled && screenAwake.supported}
+                            aria-describedby="screen-awake-description" disabled={!screenAwake.supported}
+                            className="playroom-button playroom-press settings-switch"
+                            onClick={() => screenAwake.setPreference(!screenAwake.enabled)}>
+                            Keep screen awake <span className="settings-switch-track" aria-hidden="true" />
+                        </button>
+                        {!screenAwake.supported && <p>Screen wake lock is unavailable in this browser.</p>}
+                        {screenAwake.supported && screenAwake.enabled && !screenAwake.active && <p role="status">The screen may dim while wake lock is unavailable.</p>}
                     </section>
                     <p className="settings-local">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
