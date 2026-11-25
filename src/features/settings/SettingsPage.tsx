@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useCollectionState } from '../../state/collectionState';
-import { useMisterState } from '../../state/misterState';
+import { useMisterState, useMisterWritable } from '../../state/misterState';
 import { useSettings } from '../../hooks/useSettings';
 import { isHostedOnMister } from '../../lib/storage';
 import { PlayroomConsoleHeader } from '../../kit/PlayroomConsoleHeader';
@@ -13,6 +13,7 @@ type IndexStatus = { label: string; percent?: number; busy: boolean };
 export function SettingsPage() {
     const api = useMisterState(state => state.api);
     const connected = useMisterState(state => state.connected);
+    const writable = useMisterWritable();
     const misterHost = useMisterState(state => state.misterHost);
     const setMisterHost = useMisterState(state => state.setMisterHost);
     const economyDisabled = useCollectionState(state => state.economyDisabled);
@@ -93,7 +94,7 @@ export function SettingsPage() {
                             <div><p className="playroom-kicker">02 · Your game files</p><h2 id="index-title">Game search</h2></div>
                         </div>
                         <p>Added or removed ROMs? Rebuild the search index to keep your game files up to date.</p>
-                        <button className="playroom-button playroom-press" onClick={reindex} disabled={indexStatus?.busy}>
+                        <button className="playroom-button playroom-press" onClick={reindex} disabled={!connected || indexStatus?.busy}>
                             {ResetIcon} Reindex games
                         </button>
                         {indexStatus && <div className="index-progress" role="status">
@@ -108,7 +109,7 @@ export function SettingsPage() {
                             <div><p className="playroom-kicker">03 · Your collection</p><h2 id="store-title">Game store</h2></div>
                         </div>
                         <p id="economy-description">Pause money and rewards, and add games and consoles for free. Your balance and past rewards are kept for when you turn the economy back on.</p>
-                        <button type="button" role="switch" aria-checked={economyDisabled} aria-describedby="economy-description"
+                        <button type="button" role="switch" aria-checked={economyDisabled} aria-describedby="economy-description" disabled={!writable}
                             className="playroom-button playroom-press settings-switch" onClick={() => setEconomyDisabled(!economyDisabled)}>
                             Disable economy <span className="settings-switch-track" aria-hidden="true" />
                         </button>

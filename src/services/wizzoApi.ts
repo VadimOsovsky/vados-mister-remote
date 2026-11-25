@@ -195,8 +195,8 @@ export class WizzoApi {
 
   // ── System Info ──
 
-  getSysInfo(): Promise<WizzoSysInfo> {
-    return this.get('/sysinfo');
+  getSysInfo(signal?: AbortSignal): Promise<WizzoSysInfo> {
+    return this.request('/sysinfo', { signal });
   }
 
   // ── Systems ──

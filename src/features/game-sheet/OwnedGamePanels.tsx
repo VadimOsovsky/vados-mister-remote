@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { useCollectionState } from '../../state/collectionState';
-import { useMisterState, useIsGamePlaying } from '../../state/misterState';
+import { useMisterState, useIsGamePlaying, useMisterWritable } from '../../state/misterState';
 import type { LaunchBoxGame } from '../../types';
 import type { useSaveSlots } from '../../hooks/useSaveSlots';
 import { LockIcon, UnlockIcon, SaveIcon, TrashIcon } from '../../lib/icons';
@@ -35,7 +35,7 @@ export function OwnedGameAbout({ game, screenshots }: { game: LaunchBoxGame; scr
 
 export function OwnedGameSaves({ gameId, title, saves, previewScreenshot }: { gameId: string; title: string; saves: ReturnType<typeof useSaveSlots>; previewScreenshot?: string }) {
     const api = useMisterState(state => state.api);
-    const connected = useMisterState(state => state.connected);
+    const connected = useMisterWritable();
     const activeConsole = useCollectionState(state => state.activeConsole);
     const markAsBeaten = useCollectionState(state => state.markAsBeaten);
     const unmarkAsBeaten = useCollectionState(state => state.unmarkAsBeaten);
@@ -68,22 +68,22 @@ export function OwnedGameSaves({ gameId, title, saves, previewScreenshot }: { ga
             <strong>{slotLabel(index)}</strong>
             <div className="owned-save-actions">
                 {current ? <>
-                    <button className="owned-button playroom-press" aria-pressed={!!current.beaten} onClick={() => {
+                    <button className="owned-button playroom-press" aria-pressed={!!current.beaten} disabled={!connected} onClick={() => {
                         if (saves.handleToggleBeaten()) markAsBeaten(gameId, title);
                         else unmarkAsBeaten(gameId);
                     }}>✓ {current.beaten ? 'Completed' : 'Mark completed'}</button>
                     <button className="owned-button owned-icon playroom-press" aria-label={current.locked ? 'Unprotect save' : 'Protect save'}
-                        aria-pressed={!!current.locked} onClick={saves.handleToggleLock}>{current.locked ? LockIcon : UnlockIcon}</button>
+                        aria-pressed={!!current.locked} disabled={!connected} onClick={saves.handleToggleLock}>{current.locked ? LockIcon : UnlockIcon}</button>
                 </> : <p>Save your next adventure here. Start playing, then choose “Save to this slot”.</p>}
             </div>
         </section>
         <div className="owned-save-tools">
             <button className="owned-button playroom-press" disabled={!connected || !playing || !!current?.locked || saves.savingSlot || saves.loadingSlot}
                 onClick={() => saves.handleSave()}>{SaveIcon}{saves.savingSlot ? 'Saving…' : 'Save to this slot'}</button>
-            <button className="owned-button playroom-press" disabled={!current || current.locked} onClick={() => setConfirmDelete(true)}>{TrashIcon} Delete save</button>
+            <button className="owned-button playroom-press" disabled={!connected || !current || current.locked} onClick={() => setConfirmDelete(true)}>{TrashIcon} Delete save</button>
         </div>
         {saves.saveError && <p role="alert">{saves.saveError}</p>}
-        <Dialog.Root open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <Dialog.Root open={connected && confirmDelete} onOpenChange={setConfirmDelete}>
             <Dialog.Portal>
                 <Dialog.Overlay className="owned-dialog-overlay" />
                 <Dialog.Content className="owned-dialog owned-confirm">

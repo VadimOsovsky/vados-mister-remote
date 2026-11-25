@@ -9,7 +9,7 @@ import { PhotoViewer } from '../../kit/PhotoViewer';
 import { GameBackdrop } from '../../kit/GameBackdrop';
 
 import { useCollectionState, usePlatform } from '../../state/collectionState';
-import { useMisterState, useIsGamePlaying } from '../../state/misterState';
+import { useMisterState, useIsGamePlaying, useMisterWritable } from '../../state/misterState';
 import { useRomPicker } from '../../hooks/useRomPicker';
 import { useSaveSlots } from '../../hooks/useSaveSlots';
 import type { LaunchBoxGame } from '../../types';
@@ -89,7 +89,7 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
         return Boolean(rom && readCheatSelection(activeConsole, rom).length);
     });
     const api = useMisterState(state => state.api);
-    const connected = useMisterState(state => state.connected);
+    const connected = useMisterWritable();
     const beatenIds = useCollectionState(state => state.beatenIds);
     const favoriteIds = useCollectionState(state => state.favoriteIds);
     const toggleFavorite = useCollectionState(state => state.toggleFavorite);
@@ -259,7 +259,7 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
             <PlayroomHeader>
                 <button className="owned-back" aria-label="Back to collection" onClick={onClose}>{BackArrowIcon} Back</button>
                 <span className="owned-system" title={platform.branding || platform.name}>{platform.branding || platform.name}</span>
-                <button className="owned-button owned-icon owned-edit-button playroom-press" aria-label="Edit game" onClick={() => edit()}>{PencilIcon}</button>
+                <button className="owned-button owned-icon owned-edit-button playroom-press" aria-label="Edit game" disabled={!connected} onClick={() => edit()}>{PencilIcon}</button>
             </PlayroomHeader>
             <main className="owned-game-page page-scroll">
                 <section className="playroom-stage owned-game-hero">
@@ -279,9 +279,9 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
                                 {completed && <span className="owned-hero-completed">Completed{completedIndex >= 0 && ' · Slot ' + (completedIndex + 1)}</span>}
                             </div>
                             <div className="owned-hero-actions">
-                                <GameLanguages game={selectedGame} disabled={saves.savingSlot || saves.loadingSlot || flippingDisk} onChange={onVersionChange} />
+                                <GameLanguages game={selectedGame} disabled={!connected || saves.savingSlot || saves.loadingSlot || flippingDisk} onChange={onVersionChange} />
                             <button type="button" className="playroom-button playroom-press owned-favorite"
-                                title={favorite ? 'Remove from favorites' : 'Add to favorites'} aria-label={favorite ? 'Remove from favorites' : 'Add to favorites'} aria-pressed={favorite} onClick={() => toggleFavorite(selectedGame.id)}>
+                                title={favorite ? 'Remove from favorites' : 'Add to favorites'} aria-label={favorite ? 'Remove from favorites' : 'Add to favorites'} aria-pressed={favorite} disabled={!connected} onClick={() => toggleFavorite(selectedGame.id)}>
                                 <FavoriteStar filled={favorite} /><span>{favorite ? 'Favorited' : 'Favorite'}</span>
                             </button>
                             </div>
@@ -342,7 +342,7 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
                             {/*    </svg>*/}
                             {/*    <span><strong>View in 3D</strong><small>Rotate and zoom the box</small></span><span aria-hidden="true">↗</span>*/}
                             {/*</button>}*/}
-                            <button className="owned-button playroom-press" onClick={() => edit('rom')}>{FileIcon}<span><strong>Game file</strong><small>{overrides.romName || 'Link or change ROM'}</small></span><span aria-hidden="true">→</span></button>
+                            <button className="owned-button playroom-press" disabled={!connected} onClick={() => edit('rom')}>{FileIcon}<span><strong>Game file</strong><small>{overrides.romName || 'Link or change ROM'}</small></span><span aria-hidden="true">→</span></button>
                             {platform.lbPlatform === 'nes' && <Link className="owned-button playroom-press" to={'/collection/game/' + encodeURIComponent(selectedGame.id) + '/cover-art' + (preview ? '?preview=1' : '')}>
                                 {FileIcon}<span><strong>Create cover art</strong><small>Cassette case or NFC card</small></span><span aria-hidden="true">→</span>
                             </Link>}
@@ -352,7 +352,7 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
                         <OwnedGameSaves gameId={selectedGame.id} title={selectedGame.title} saves={saves} previewScreenshot={previewScreenshot || undefined} />
                     </Tabs.Content>
                     <Tabs.Content value="cheats" className="owned-panel">
-                        {activeTab === 'cheats' && <OwnedGameCheats gameId={selectedGame.id} consoleKey={activeConsole} onLink={() => edit('rom')} />}
+                        {activeTab === 'cheats' && (connected ? <OwnedGameCheats gameId={selectedGame.id} consoleKey={activeConsole} onLink={() => edit('rom')} /> : <p>Connect MiSTer to manage cheats.</p>)}
                     </Tabs.Content>
                 </Tabs.Root>
             </main>
@@ -424,13 +424,13 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
                     {FlipDiskIcon}
                 </button>}
             </aside>
-            <GameFormDrawer open={editMode} onOpenChange={setEditMode} title="Edit game"
+            <GameFormDrawer open={connected && editMode} onOpenChange={setEditMode} title="Edit game"
                 showClose autoFocus={editField !== 'rom'}>
                 <EditGameForm game={selectedGame} regions={regions} activeConsole={activeConsole} initialField={editField}
                     onSave={closeEdit} onCancel={closeEdit} onDelete={deleteGame} />
             </GameFormDrawer>
             <StoreRomDialog
-                picker={{ ...romPicker, romPickerOpen: romPickerOpen && !editMode, selectRom: selectGameRom, closeRomPicker: closeGameRomPicker }}
+                picker={{ ...romPicker, romPickerOpen: connected && romPickerOpen && !editMode, selectRom: selectGameRom, closeRomPicker: closeGameRomPicker }}
                 title={displayTitle} consoleName={platform.name} preview={false}
                 launchLabel={pendingLoadSlot.current === null ? 'Play' : 'Load save'} />
             {boxOpen && boxFront && <PreviewBox front={boxFront} back={`${import.meta.env.BASE_URL}playroom/preview/mario3-back.jpg`}

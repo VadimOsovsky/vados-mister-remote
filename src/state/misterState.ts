@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { create } from 'zustand';
 import { getRomMapping, readHost } from '../lib/storage';
-import { subscribeToValues } from '../lib/sharedStorage';
+import { isSharedStorageReady, subscribeToSync, subscribeToValues } from '../lib/sharedStorage';
 import { isRomPlaying } from '../services/nowPlaying';
 import { WizzoApi, type WizzoPlayingResponse } from '../services/wizzoApi';
 import type { ConsoleKey } from '../types';
@@ -29,4 +29,10 @@ export function useIsGamePlaying(gameId: string, consoleKey: ConsoleKey) {
     const readMapping = () => getRomMapping(gameId, consoleKey);
     const path = useSyncExternalStore(subscribeToValues, readMapping);
     return useMisterState(state => isRomPlaying(state.nowPlaying, path, consoleKey));
+}
+
+export function useMisterWritable() {
+    const connected = useMisterState(state => state.connected);
+    const storageReady = useSyncExternalStore(subscribeToSync, isSharedStorageReady);
+    return connected && storageReady;
 }

@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { useCollectionState, initializeCollectionState } from '../src/state/collectionState';
 import {
-    getSyncStatus, initializeSharedStorage, subscribeToSync, subscribeToValues, syncSharedStorage,
+    appStorage, getSyncStatus, initializeSharedStorage, isSharedStorageReady, setSharedStorageOnline,
+    subscribeToSync, subscribeToValues, syncSharedStorage,
 } from '../src/lib/sharedStorage';
 import { addCustomGame, getFavoriteIds, getRomMapping, setFavorite } from '../src/lib/storage';
 import { consolePrice } from '../src/lib/consolePricing';
@@ -10,6 +11,16 @@ import { loadCollectionGames } from '../src/services/launchbox';
 import type { LaunchBoxGame } from '../src/types';
 
 test('console purchases debit the wallet and persist ownership in one shared update', async t => {
+    const stored = new Map<string, string>();
+    const originalStorage = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+    Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: {
+        getItem: (key: string) => stored.get(key) ?? null,
+        setItem: (key: string, value: string) => stored.set(key, value),
+    } });
+    t.after(() => {
+        if (originalStorage) Object.defineProperty(globalThis, 'localStorage', originalStorage);
+        else Reflect.deleteProperty(globalThis, 'localStorage');
+    });
     let server = { revision: 1, values: { wallet_balance: '79', owned_consoles: '["nes_ntsc"]' } as Record<string, string> };
     const writes: typeof server[] = [];
     t.mock.method(globalThis, 'fetch', async (_url: string, init?: RequestInit) => {
@@ -48,6 +59,30 @@ test('console purchases debit the wallet and persist ownership in one shared upd
     assert.equal(writes.length, 1);
     assert.equal(writes[0].values.wallet_balance, '0');
     assert.equal(writes[0].values.owned_consoles, '["nes_ntsc","famicom"]');
+
+    const cache = JSON.parse(localStorage.getItem('playroom.snapshot:/api/playroom/state') ?? 'null');
+    assert.deepEqual(cache, server);
+    setSharedStorageOnline(false);
+    assert.equal(isSharedStorageReady(), false);
+    appStorage.setItem('wallet_balance', '999');
+    appStorage.removeItem('owned_consoles');
+    assert.equal(state().purchaseGame('offline', 0, '/offline.nes'), false);
+    assert.equal(appStorage.getItem('wallet_balance'), '0');
+    assert.equal(appStorage.getItem('owned_consoles'), '["nes_ntsc","famicom"]');
+    assert.equal(writes.length, 1);
+
+    server = { revision: server.revision + 1, values: { ...server.values, wallet_balance: '25' } };
+    setSharedStorageOnline(true);
+    await syncSharedStorage();
+    assert.equal(isSharedStorageReady(), true);
+    assert.equal(state().balance, 25);
+    assert.equal(writes.length, 1);
+
+    server = { revision: server.revision + 1, values: { ...server.values, wallet_balance: '30' } };
+    await syncSharedStorage(true);
+    assert.equal(state().balance, 30);
+    assert.deepEqual(JSON.parse(stored.get('playroom.snapshot:/api/playroom/state') ?? 'null'), server);
+    assert.equal(writes.length, 1);
 });
 
 test('collection actions publish grouped writes and pick up remote changes', async t => {

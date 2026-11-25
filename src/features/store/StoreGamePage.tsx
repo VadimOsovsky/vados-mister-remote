@@ -5,7 +5,7 @@ import { GameScreenshots } from '../../kit/GameScreenshots';
 import { GameBackdrop } from '../../kit/GameBackdrop';
 import { GameRating } from '../../kit/GameRating';
 import { useCollectionState, usePlatform } from '../../state/collectionState';
-import { useMisterState } from '../../state/misterState';
+import { useMisterState, useMisterWritable } from '../../state/misterState';
 import { useRomPicker } from '../../hooks/useRomPicker';
 import { PlayroomHeader } from '../../kit/PlayroomHeader';
 import { ExpandableDescription } from '../../kit/ExpandableDescription';
@@ -71,6 +71,7 @@ function StoreDetailHeader({ backUrl, balance }: { backUrl: string; balance: num
 
 function StoreProduct({ game, preview, backUrl }: { game: LaunchBoxGame; preview: boolean; backUrl: string }) {
     const api = useMisterState(state => state.api);
+    const writable = useMisterWritable();
     const activeConsole = useCollectionState(state => state.activeConsole);
     const platform = usePlatform();
     const balance = useCollectionState(state => state.balance);
@@ -86,12 +87,15 @@ function StoreProduct({ game, preview, backUrl }: { game: LaunchBoxGame; preview
     const price = storePrice(game, activeConsole, preview, economyDisabled);
     const wallet = preview ? 120 : balance;
     const owned = !preview && collectionIds.includes(game.id);
+    const available = preview || writable;
+    const canPurchase = available && !owned && wallet >= price;
     const romPicker = useRomPicker(api, platform, game, activeConsole, romPath => {
+        if (!canPurchase) return;
         if (purchaseGame(game.id, price, romPath)) {
             if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
             setPurchased(true);
         }
-    }, !preview);
+    }, !preview && writable);
     const images = resolveImages(game, platform.imageRegions);
     const localCover = preview && getPreviewCover(activeConsole, game.id);
     const front = localCover || (images.front && getImageUrl(images.front));
@@ -140,7 +144,7 @@ function StoreProduct({ game, preview, backUrl }: { game: LaunchBoxGame; preview
                     <div className="store-product-heading">
                         <h1>{title}</h1>
                         <button type="button" className="playroom-button playroom-icon-button playroom-press store-favorite-button"
-                            aria-label="Favorite" aria-pressed={favorite} onClick={() => toggleFavorite(game.id)}>
+                            aria-label="Favorite" aria-pressed={favorite} disabled={!available} onClick={() => toggleFavorite(game.id)}>
                             <StoreHeart filled={favorite} />
                         </button>
                     </div>
@@ -164,12 +168,12 @@ function StoreProduct({ game, preview, backUrl }: { game: LaunchBoxGame; preview
             <aside className="owned-dock store-dock" aria-label="Purchase">
                 {!economyDisabled && <div className="store-dock-price"><small>Price</small><strong>{formatGamePrice(price)}</strong></div>}
                 <button className="owned-button owned-gold owned-primary playroom-press"
-                    disabled={owned || wallet < price} onClick={() => romPicker.openRomPicker(title)}>
-                    {StoreIcon}<span>{owned ? 'In your collection' : wallet < price ? 'Not enough funds' : economyDisabled ? 'Add game' : 'Buy game'}</span>
+                    disabled={!canPurchase} onClick={() => romPicker.openRomPicker(title)}>
+                    {StoreIcon}<span>{!available ? 'Connect MiSTer to buy' : owned ? 'In your collection' : wallet < price ? 'Not enough funds' : economyDisabled ? 'Add game' : 'Buy game'}</span>
                 </button>
             </aside>
             <StoreRomDialog picker={romPicker} title={title} consoleName={platform.name}
-                price={price} preview={preview} canPurchase={!owned && wallet >= price} />
+                price={price} preview={preview} canPurchase={canPurchase} />
             <PhotoViewer index={galleryIndex ?? null} onClose={() => setGalleryIndex(undefined)} slides={slides} />
         </>
     );

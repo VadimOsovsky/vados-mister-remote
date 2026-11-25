@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { PLATFORMS, STARTER_CONSOLE } from '../constants';
 import type { ConsoleKey } from '../types';
-import { batchStorageWrites, subscribeToValues } from '../lib/sharedStorage';
+import { batchStorageWrites, isSharedStorageReady, subscribeToValues } from '../lib/sharedStorage';
 import {
     readActiveConsole, writeActiveConsole, getCollectionIds, addCollectionId, removeCollectionId,
     getFavoriteIds, setFavorite, getBeatenIds, addBeatenId, removeBeatenId,
@@ -26,8 +26,7 @@ function readCollection(previous?: ReturnType<typeof readCollectionSnapshot>) {
     };
 }
 
-function readCollectionSnapshot() {
-    const activeConsole = readActiveConsole() ?? STARTER_CONSOLE;
+function readCollectionSnapshot(activeConsole = readActiveConsole() ?? STARTER_CONSOLE) {
     return {
         activeConsole,
         ownedConsoles: getOwnedConsoles(),
@@ -68,7 +67,10 @@ export const useCollectionState = create<CollectionState>((set, get) => ({
     balance: 0,
     economyDisabled: false,
     ...emptyFeedback,
-    setActiveConsole: writeActiveConsole,
+    setActiveConsole: key => {
+        if (isSharedStorageReady()) writeActiveConsole(key);
+        else set(readCollectionSnapshot(key));
+    },
     setEconomyDisabled: (disabled: boolean) => {
         writeEconomyDisabled(disabled);
         set(emptyFeedback);
@@ -89,6 +91,7 @@ export const useCollectionState = create<CollectionState>((set, get) => ({
         setFavorite(key, id, false);
     }),
     purchaseGame: (id: string, price: number, romPath: string) => {
+        if (!isSharedStorageReady()) return false;
         const key = get().activeConsole;
         const free = readEconomyDisabled();
         const purchased = batchStorageWrites(() => {
@@ -101,6 +104,7 @@ export const useCollectionState = create<CollectionState>((set, get) => ({
         return purchased;
     },
     purchaseConsole: key => {
+        if (!isSharedStorageReady()) return false;
         const owned = getOwnedConsoles();
         const price = consolePrice(key, owned);
         if (price === null) return false;

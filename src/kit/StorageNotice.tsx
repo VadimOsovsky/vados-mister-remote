@@ -8,7 +8,7 @@ export function StorageNotice() {
     return <aside role="alert" className="storage-notice">
         {status === 'conflict'
             ? 'Another device changed the same data. Reload to discard your unsynced changes.'
-            : 'Changes have not been saved to MiSTer.'}
+            : 'Could not sync with MiSTer.'}
         {status === 'conflict'
             ? <button onClick={() => window.location.reload()}>Reload</button>
             : <button onClick={() => void syncSharedStorage()}>Retry</button>}

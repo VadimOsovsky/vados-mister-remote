@@ -2,6 +2,7 @@ import { useId, useLayoutEffect, useRef, useState } from 'react';
 import { Drawer } from 'vaul';
 import { BottomSheet } from '../BottomSheet';
 import { useCollectionState, usePlatform } from '../../state/collectionState';
+import { useMisterWritable } from '../../state/misterState';
 import { CONSOLE_GROUPS, PLATFORMS } from '../../constants';
 import { consolePrice } from '../../lib/consolePricing';
 import { formatPrice } from '../../lib/pricing';
@@ -207,6 +208,7 @@ function ConsoleCheckout({ consoleKey, price, balance, free, purchased, error, o
     onBuy: () => void;
     onSelect: () => void;
 }) {
+    const writable = useMisterWritable();
     const platform = PLATFORMS[consoleKey];
     const photo = consolePhotos[consoleKey];
     const shortfall = price === null || free ? 0 : Math.max(0, price - balance);
@@ -233,8 +235,8 @@ function ConsoleCheckout({ consoleKey, price, balance, free, purchased, error, o
             {shortfall > 0 && <p className="console-checkout-status" role="status">You need {formatPrice(shortfall)} more.</p>}
             {error && <p className="console-checkout-status" role="alert">Could not add this console. Try again.</p>}
             <button type="button" className="console-checkout-action playroom-button playroom-primary playroom-press"
-                disabled={shortfall > 0} onClick={owned ? onSelect : onBuy}>
-                <span>{owned ? `Play on ${platform.name}` : free ? 'Add console' : 'Buy console'}</span>
+                disabled={!owned && (!writable || shortfall > 0)} onClick={owned ? onSelect : onBuy}>
+                <span>{owned ? `Play on ${platform.name}` : !writable ? 'Connect MiSTer to buy' : free ? 'Add console' : 'Buy console'}</span>
                 {!free && price !== null && <strong>{formatPrice(price)}</strong>}
             </button>
         </div>

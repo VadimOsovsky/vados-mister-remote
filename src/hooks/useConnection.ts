@@ -9,7 +9,7 @@ export function useConnection(api: WizzoApi) {
 
         async function poll() {
             try {
-                await api.getSysInfo();
+                await api.getSysInfo(AbortSignal.timeout(4000));
                 if (alive) setConnectedApi(api);
             } catch {
                 if (alive) setConnectedApi(undefined);

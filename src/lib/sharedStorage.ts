@@ -4,12 +4,17 @@ type SyncStatus = 'saved' | 'saving' | 'offline' | 'conflict';
 
 const apiOrigin = import.meta.env?.VITE_PLAYROOM_API_ORIGIN?.trim().replace(/\/+$/, '') ?? '';
 const endpoint = `${apiOrigin}/api/playroom/state`;
+let sharedEnabled = import.meta.env?.PROD && (import.meta.env.BASE_URL === '/' || Boolean(apiOrigin));
+const cacheKey = `playroom.snapshot:${endpoint}`;
 const sharedKey = /^(?:store_free_games|rom_mappings|active_console|owned_consoles|store_sort|wallet_balance|wallet_last_topup|wallet_beaten_rewarded|owned_game_tab|(?:save_slots|game_rom_versions|game_overrides|game_cheats|collection|favorites|beaten|custom_games)_.+|playroom\.recent\..+)$/;
 
 let confirmed: Snapshot | undefined;
 let values: Values = {};
 let status: SyncStatus = 'saved';
 let syncing = false;
+let online = false;
+let fresh = false;
+let cached: Snapshot | null | undefined;
 const valueListeners = new Set<() => void>();
 let batchDepth = 0;
 let changed = false;
@@ -53,6 +58,33 @@ export function subscribeToSync(listener: () => void) {
 }
 
 export const getSyncStatus = () => status;
+export const isSharedStorageReady = () => !sharedEnabled || (online && fresh && status !== 'offline');
+export const hasSharedSnapshot = () => Boolean(confirmed ?? readCache());
+
+function readCache() {
+    if (!sharedEnabled) return null;
+    if (cached === undefined) {
+        try {
+            const snapshot = JSON.parse(localStorage.getItem(cacheKey) ?? 'null') as Snapshot | null;
+            cached = snapshot && Number.isInteger(snapshot.revision) && snapshot.values ? snapshot : null;
+        } catch { cached = null; }
+    }
+    return cached;
+}
+
+function cacheSnapshot(snapshot: Snapshot) {
+    cached = snapshot;
+    try { localStorage.setItem(cacheKey, JSON.stringify(snapshot)); }
+    catch { /* The current snapshot remains available in memory. */ }
+}
+
+export function setSharedStorageOnline(available: boolean) {
+    if (online === available) return;
+    online = available;
+    if (!available) fresh = false;
+    report(status);
+    publishValues();
+}
 
 function report(next: SyncStatus) {
     status = next;
@@ -60,7 +92,7 @@ function report(next: SyncStatus) {
 }
 
 async function fetchState() {
-    const response = await fetch(endpoint, { cache: 'no-store' });
+    const response = await fetch(endpoint, { cache: 'no-store', signal: AbortSignal.timeout(4000) });
     if (!response.ok) throw new Error('Could not read shared data');
     return await response.json() as Snapshot;
 }
@@ -70,13 +102,17 @@ function writeState(snapshot: Snapshot) {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(snapshot),
+        signal: AbortSignal.timeout(8000),
     });
 }
 
 export async function initializeSharedStorage() {
-    const base = import.meta.env?.BASE_URL ?? '/';
-    if (import.meta.env?.DEV || (base !== '/' && !apiOrigin)) return;
-
+    // Standalone consumers can opt into same-origin syncing explicitly.
+    if (!import.meta.env) {
+        sharedEnabled = true;
+        online = true;
+    }
+    if (!sharedEnabled || !online) return;
     let snapshot = await fetchState();
     if (snapshot.revision === 0) {
         const legacy: Values = {};
@@ -84,7 +120,7 @@ export async function initializeSharedStorage() {
             const value = localStorage.getItem(key);
             if (sharedKey.test(key) && value !== null) legacy[key] = value;
         }
-        if (Object.keys(legacy).length) {
+        if (online && Object.keys(legacy).length) {
             const response = await writeState({ revision: 0, values: legacy });
             if (response.status === 409) snapshot = await fetchState();
             else if (response.ok) snapshot = await response.json() as Snapshot;
@@ -92,15 +128,33 @@ export async function initializeSharedStorage() {
         }
     }
     confirmed = snapshot;
-    values = { ...snapshot.values };
+    values = snapshot.values;
+    cacheSnapshot(snapshot);
+    fresh = online;
+    publishValues();
 }
 
-export async function syncSharedStorage() {
-    if (!confirmed || syncing || status === 'conflict') return;
+export async function syncSharedStorage(refresh = false) {
+    if (!sharedEnabled || !online || syncing || status === 'conflict') return;
+    const clean = fresh && confirmed?.values === values && status === 'saved';
+    if (clean && !refresh) return;
+    const wasFresh = fresh;
     syncing = true;
-    report('saving');
+    if (!clean) report('saving');
     try {
-        while (true) {
+        if (!confirmed || (!fresh && confirmed.values === values)) await initializeSharedStorage();
+        else if (clean) {
+            const latest = await fetchState();
+            // Writes made during this GET still use their original revision for conflict resolution.
+            if (online && confirmed.values === values && latest.revision !== confirmed.revision) {
+                confirmed = latest;
+                values = latest.values;
+                cacheSnapshot(latest);
+                publishValues();
+            }
+        }
+        if (online && confirmed?.values !== values) report('saving');
+        while (online && confirmed && confirmed.values !== values) {
             const sent = values;
             const response = await writeState({ revision: confirmed.revision, values: sent });
             if (response.status === 409) {
@@ -124,11 +178,16 @@ export async function syncSharedStorage() {
             }
             if (!response.ok) throw new Error('Could not save shared data');
             confirmed = await response.json() as Snapshot;
-            if (sent === values) break;
+            cacheSnapshot(confirmed);
+            if (sent === values) values = confirmed.values;
         }
+        fresh = online;
         report('saved');
+        if (!wasFresh) publishValues();
     } catch {
+        fresh = false;
         report('offline');
+        publishValues();
     } finally {
         syncing = false;
     }
@@ -136,9 +195,12 @@ export async function syncSharedStorage() {
 
 export const appStorage = {
     getItem(key: string) {
-        return confirmed ? values[key] ?? null : localStorage.getItem(key);
+        if (confirmed) return (online && fresh ? values : confirmed.values)[key] ?? null;
+        const snapshot = readCache();
+        return snapshot ? snapshot.values[key] ?? null : localStorage.getItem(key);
     },
     setItem(key: string, value: string) {
+        if (!isSharedStorageReady()) return;
         if (!confirmed) {
             if (localStorage.getItem(key) === value) return;
             localStorage.setItem(key, value);
@@ -150,6 +212,7 @@ export const appStorage = {
         valuesChanged();
     },
     removeItem(key: string) {
+        if (!isSharedStorageReady()) return;
         if (!confirmed) {
             if (localStorage.getItem(key) === null) return;
             localStorage.removeItem(key);

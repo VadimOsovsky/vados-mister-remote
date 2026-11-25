@@ -4,7 +4,7 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import type { ConsoleKey, LaunchBoxGame } from '../../types';
 import { usePlatform } from '../../state/collectionState';
-import { useMisterState, useIsGamePlaying } from '../../state/misterState';
+import { useMisterState, useIsGamePlaying, useMisterWritable } from '../../state/misterState';
 import { getRomMapping, getSaveSlots, getGameSaveKey } from '../../lib/storage';
 import { PlayIcon } from '../../lib/icons';
 import { launchCollectionGame, loadCollectionSave } from '../../services/collectionLauncher';
@@ -34,7 +34,7 @@ export function RecentlyPlayed({ games, consoleKey, preview, mock, onSelect, onH
     onHistoryChange: () => void;
 }) {
     const api = useMisterState(state => state.api);
-    const connected = useMisterState(state => state.connected);
+    const connected = useMisterWritable();
     const platform = usePlatform();
     const [selectedId, setSelectedId] = useState(games[0].game.id);
     const [launching, setLaunching] = useState(false);

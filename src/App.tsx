@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense, useEffect, useSyncExternalStore } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router';
 
 import type { LaunchBoxGame } from './types';
@@ -17,6 +17,8 @@ import { StoreGamePage } from './features/store/StoreGamePage';
 import { SettingsPage } from './features/settings/SettingsPage';
 import { RemotePage } from './features/remote/RemotePage';
 import { OwnedGameRoute } from './features/game-sheet/OwnedGameRoute';
+import { MisterOfflinePage } from './kit/MisterOfflinePage';
+import { hasSharedSnapshot, isSharedStorageReady, setSharedStorageOnline, subscribeToSync, syncSharedStorage } from './lib/sharedStorage';
 
 import './styles/themes.css';
 import './App.css';
@@ -34,6 +36,19 @@ const TAB_ITEMS = [
 function MisterConnection() {
     const api = useMisterState(state => state.api);
     const connected = useConnection(api);
+    useEffect(() => {
+        setSharedStorageOnline(connected);
+        if (!connected) return;
+        const refresh = () => void syncSharedStorage(true);
+        refresh();
+        const interval = window.setInterval(refresh, 3000);
+        window.addEventListener('focus', refresh);
+        return () => {
+            window.clearInterval(interval);
+            window.removeEventListener('focus', refresh);
+            setSharedStorageOnline(false);
+        };
+    }, [api, connected]);
     const nowPlaying = useNowPlaying(api, connected);
     useEffect(() => {
         useMisterState.setState(state => state.api === api ? { connected, nowPlaying } : state);
@@ -42,6 +57,8 @@ function MisterConnection() {
 }
 
 function WalletEffects() {
+    const connected = useMisterState(state => state.connected);
+    const storageReady = useSyncExternalStore(subscribeToSync, isSharedStorageReady);
     const economyDisabled = useCollectionState(state => state.economyDisabled);
     const visit = useCollectionState(state => state.visit);
     const notice = useCollectionState(state => state.walletNotice);
@@ -49,6 +66,7 @@ function WalletEffects() {
     const dismissCompletion = useCollectionState(state => state.dismissCompletion);
 
     useEffect(() => {
+        if (!connected || !storageReady) return;
         const check = () => {
             if (document.visibilityState !== 'hidden') visit();
         };
@@ -61,7 +79,7 @@ function WalletEffects() {
             window.removeEventListener('focus', check);
             document.removeEventListener('visibilitychange', check);
         };
-    }, [economyDisabled, visit]);
+    }, [connected, storageReady, economyDisabled, visit]);
 
     return economyDisabled ? null : <WalletFeedback notice={notice} completion={completion} onDismiss={dismissCompletion} />;
 }
@@ -73,7 +91,13 @@ export default function MisterRemote() {
     const activeConsole = useCollectionState(state => state.activeConsole);
     const location = useLocation();
     const navigate = useNavigate();
-    const isGamePage = location.pathname.startsWith('/collection/game/') || location.pathname.startsWith('/store/game/');
+    const connected = useMisterState(state => state.connected);
+    const storageReady = useSyncExternalStore(subscribeToSync, isSharedStorageReady);
+    const preview = import.meta.env.DEV && new URLSearchParams(location.search).get('preview') === '1';
+    const cachedCollection = useSyncExternalStore(subscribeToSync, hasSharedSnapshot);
+    const collectionAvailable = preview || cachedCollection || (connected && storageReady);
+    const offlineCollection = <MisterOfflinePage screen="collection" />;
+    const isGamePage = (collectionAvailable && location.pathname.startsWith('/collection/game/')) || location.pathname.startsWith('/store/game/');
 
     function openGame(game: LaunchBoxGame) {
         navigate('/collection/game/' + encodeURIComponent(game.id) + location.search, {
@@ -122,18 +146,18 @@ export default function MisterRemote() {
             <div className={`app ${platform.theme}`}>
                 <div className={isGamePage ? "app-content owned-game-layout" : "app-content"}>
                     <Routes>
-                        <Route path="/collection" element={<CollectionPage onSelectGame={openGame} />} />
-                        <Route path="/collection/game/:gameId/cover-art" element={<Suspense fallback={<p role="status">Loading editor…</p>}><CoverArtPage /></Suspense>} />
-                        <Route path="/collection/game/:gameId" element={<OwnedGameRoute />} />
+                        <Route path="/collection" element={collectionAvailable ? <CollectionPage onSelectGame={openGame} /> : offlineCollection} />
+                        <Route path="/collection/game/:gameId/cover-art" element={preview || (connected && storageReady) ? <Suspense fallback={<p role="status">Loading editor…</p>}><CoverArtPage /></Suspense> : offlineCollection} />
+                        <Route path="/collection/game/:gameId" element={collectionAvailable ? <OwnedGameRoute /> : offlineCollection} />
                         <Route path="/store" element={<StorePage />} />
                         <Route path="/store/game/:gameId" element={<StoreGamePage />} />
-                        <Route path="/remote" element={<RemotePage />} />
+                        <Route path="/remote" element={connected || preview ? <RemotePage /> : <MisterOfflinePage screen="remote" />} />
                         <Route path="/settings" element={<SettingsPage />} />
                         <Route path="*" element={<Navigate to="/collection" replace />} />
                     </Routes>
                 </div>
 
-                {!isGamePage && <TabBar items={TAB_ITEMS} search={import.meta.env.DEV && new URLSearchParams(location.search).get('preview') === '1' ? '?preview=1' : ''} />}
+                {!isGamePage && <TabBar items={TAB_ITEMS} search={preview ? '?preview=1' : ''} />}
             </div>
         </>
     );

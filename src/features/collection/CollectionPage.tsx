@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { useCollectionState, usePlatform } from '../../state/collectionState';
+import { useMisterWritable } from '../../state/misterState';
 import { useCollection } from '../../hooks/useCollection';
 import { useNavigate } from 'react-router';
 import { PlusIcon } from '../../lib/icons';
@@ -22,6 +23,7 @@ export function CollectionPage({ onSelectGame }: { onSelectGame: (game: LaunchBo
     const beatenIds = useCollectionState(state => state.beatenIds);
     const favoriteIds = useCollectionState(state => state.favoriteIds);
     const { recentGames, mockRecent, loading, loadError, preview, search, setSearch, filteredGames } = useCollection(activeConsole);
+    const writable = useMisterWritable() || preview;
     const completedGames = filteredGames.filter(game => beatenIds.includes(game.id));
     const favoriteGames = filteredGames.filter(game => favoriteIds.includes(game.id));
     const [, setHistoryVersion] = useState(0);
@@ -49,9 +51,10 @@ export function CollectionPage({ onSelectGame }: { onSelectGame: (game: LaunchBo
                     <div className="shelf-heading">
                         <h1>All games on your shelf</h1>
                     </div>
+                    {!writable && <p role="status">Showing your last synced collection. Connect MiSTer to make changes or play.</p>}
                     <div className="shelf-search-row">
                         <SearchBar value={search} onChange={setSearch} />
-                        <button className="add-game-btn playroom-press playroom-field-action" aria-label="Add a game" onClick={() => setAddSheetOpen(true)}>
+                        <button className="add-game-btn playroom-press playroom-field-action" aria-label="Add a game" disabled={!writable} onClick={() => setAddSheetOpen(true)}>
                             {PlusIcon}
                         </button>
                     </div>
@@ -91,7 +94,7 @@ export function CollectionPage({ onSelectGame }: { onSelectGame: (game: LaunchBo
                     onSelect={onSelectGame} scrollRef={scrollRef} preview={preview} />
             </div>
 
-            <AddGameSheet open={addSheetOpen} onOpenChange={setAddSheetOpen} />
+            {writable && <AddGameSheet open={addSheetOpen} onOpenChange={setAddSheetOpen} />}
         </div>
     );
 }
