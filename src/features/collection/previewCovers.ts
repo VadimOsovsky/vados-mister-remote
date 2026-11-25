@@ -16,10 +16,10 @@ export function getPreviewCover(consoleKey: ConsoleKey, gameId: string) {
     const name = PLATFORMS[consoleKey].lbPlatform === 'fds' ? fds[gameId]
         : consoleKey === 'famicom' || consoleKey === 'av_famicom' ? japan[gameId] ?? nes[gameId]
         : nes[gameId];
-    return name ? `/playroom/preview/${name}.webp` : undefined;
+    return name ? `${import.meta.env.BASE_URL}playroom/preview/${name}.webp` : undefined;
 }
 
 export function getPreviewScreenshot(gameId: string) {
     const name = nes[gameId] || ({ '90335': 'castlevania', '91920': 'zelda' } as Record<string, string>)[gameId];
-    return name ? `/playroom/preview/${name}-screen.png` : undefined;
+    return name ? `${import.meta.env.BASE_URL}playroom/preview/${name}-screen.png` : undefined;
 }

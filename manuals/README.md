@@ -23,7 +23,7 @@ Language can be selected with `?lang=ja`, `?lang=en` or `?lang=ru`; the buttons 
 
 ## Publishing
 
-`.github/workflows/deploy-manuals.yml` validates pull requests and publishes changes to manuals, their builder, tests or the workflow on `main`. It can also be run manually. Only `manuals-dist/` is uploaded; the application is never built or published by this workflow.
+`.github/workflows/deploy.yml` validates pull requests and publishes the manuals and Playroom together on pushes to `main`. It can also be run manually. The artifact serves manuals at their existing URLs and the app under `/app/`.
 
 One-time repository setting: **Settings → Pages → Build and deployment → Source → GitHub Actions**. Remove an obsolete custom domain there if it should no longer be used. No personal access token or S3 credentials are needed; the deploy job uses the scoped `GITHUB_TOKEN` and OIDC.
 

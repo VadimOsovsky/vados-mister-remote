@@ -46,11 +46,11 @@ export function mountCoverEditor(root, games, initialGameId) {
     const metroidLogoUrl =
         'https://images.launchbox-app.com//593a64c0-bfb3-4940-827a-53683cc663ae.png';
     const presetLogos = new Map([
-        [marioLogoUrl, '/cover-art/mario_logo.png'],
-        [zeldaLogoUrl, '/cover-art/zelda_logo.png'],
-        [metroidLogoUrl, '/cover-art/metroid_logo.png'],
+        [marioLogoUrl, `${import.meta.env.BASE_URL}cover-art/mario_logo.png`],
+        [zeldaLogoUrl, `${import.meta.env.BASE_URL}cover-art/zelda_logo.png`],
+        [metroidLogoUrl, `${import.meta.env.BASE_URL}cover-art/metroid_logo.png`],
     ]);
-    const marioSpineLogo = '/cover-art/mario_spine_logo.png';
+    const marioSpineLogo = `${import.meta.env.BASE_URL}cover-art/mario_spine_logo.png`;
 
     const presets = {
         mario: {
@@ -61,8 +61,8 @@ export function mountCoverEditor(root, games, initialGameId) {
             manual: 'https://www.nintendo.co.jp/clv/manuals/en/pdf/CLV-P-NAACE.pdf',
             description:
                 'Travel through eight worlds with Mario and Luigi. Take flight as Raccoon Mario, discover secrets, and rescue the kings.',
-            art: '/cover-art/mario_art.webp',
-            screen: '/cover-art/mario_screen.png',
+            art: `${import.meta.env.BASE_URL}cover-art/mario_art.webp`,
+            screen: `${import.meta.env.BASE_URL}cover-art/mario_screen.png`,
         },
         zelda: {
             title: 'The Legend of Zelda',
@@ -72,8 +72,8 @@ export function mountCoverEditor(root, games, initialGameId) {
             manual: 'https://www.nintendo.co.jp/clv/manuals/en/pdf/CLV-P-NAANE.pdf',
             description:
                 'Explore Hyrule, recover the eight pieces of the Triforce of Wisdom, and rescue Princess Zelda.',
-            art: '/cover-art/zelda_art.webp',
-            screen: '/cover-art/zelda_screen.png',
+            art: `${import.meta.env.BASE_URL}cover-art/zelda_art.webp`,
+            screen: `${import.meta.env.BASE_URL}cover-art/zelda_screen.png`,
         },
         metroid: {
             title: 'Metroid',
@@ -83,8 +83,8 @@ export function mountCoverEditor(root, games, initialGameId) {
             manual: 'https://www.nintendo.co.jp/clv/manuals/en/pdf/CLV-P-NAAQE.pdf',
             description:
                 'Explore planet Zebes as Samus Aran. Collect upgrades to stop the Space Pirates.',
-            art: '/cover-art/metroid_art.webp',
-            screen: '/cover-art/metroid_screen.png',
+            art: `${import.meta.env.BASE_URL}cover-art/metroid_art.webp`,
+            screen: `${import.meta.env.BASE_URL}cover-art/metroid_screen.png`,
         },
         custom: {
             title: '',
@@ -136,15 +136,15 @@ export function mountCoverEditor(root, games, initialGameId) {
     let format = 'cassette';
 
     const frontLogos = {
-        original: '/cover-art/nes_front_original.svg',
-        black: '/cover-art/nes_front_black.svg',
-        white: '/cover-art/nes_front_white.svg',
+        original: `${import.meta.env.BASE_URL}cover-art/nes_front_original.svg`,
+        black: `${import.meta.env.BASE_URL}cover-art/nes_front_black.svg`,
+        white: `${import.meta.env.BASE_URL}cover-art/nes_front_white.svg`,
     };
 
     const logos = {
-        original: '/cover-art/nes_original.svg',
-        black: '/cover-art/nes_black.png',
-        white: '/cover-art/nes_white.png',
+        original: `${import.meta.env.BASE_URL}cover-art/nes_original.svg`,
+        black: `${import.meta.env.BASE_URL}cover-art/nes_black.png`,
+        white: `${import.meta.env.BASE_URL}cover-art/nes_white.png`,
     };
 
     const fields = {

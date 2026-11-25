@@ -136,7 +136,7 @@ export async function loadPlatformGames(consoleKey: ConsoleKey, { requireCatalog
   }
 
   // Fetch from static JSON
-  const res = await fetch(`/launchbox/${platform}.json`);
+  const res = await fetch(`${import.meta.env?.BASE_URL ?? '/'}launchbox/${platform}.json`);
   if (!res.ok) {
     if (requireCatalog) throw new Error(`Could not load LaunchBox data for ${platform}`);
     console.warn(`LaunchBox data for ${platform} not found`);

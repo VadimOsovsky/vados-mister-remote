@@ -15,7 +15,7 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
   nes_ntsc: {
     name: 'NES',
     mediaLabel: 'Cartridge',
-    logo: '/consoles/nes_logo.png',
+    logo: `${import.meta.env?.BASE_URL ?? '/'}consoles/nes_logo.png`,
     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/NES-Console-Set.png/960px-NES-Console-Set.png',
     theme: 'theme-nes-ntsc',
     branding: 'Nintendo Entertainment System',
@@ -29,7 +29,7 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
   nes_pal: {
     name: 'NES (PAL)',
     mediaLabel: 'Cartridge',
-    logo: '/consoles/nes_logo.png',
+    logo: `${import.meta.env?.BASE_URL ?? '/'}consoles/nes_logo.png`,
     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Wikipedia_NES_PAL.jpg/960px-Wikipedia_NES_PAL.jpg',
     theme: 'theme-nes-pal',
     branding: 'Nintendo Entertainment System',

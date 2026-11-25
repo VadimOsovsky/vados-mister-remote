@@ -74,7 +74,8 @@ function writeState(snapshot: Snapshot) {
 }
 
 export async function initializeSharedStorage() {
-    if (import.meta.env?.DEV) return;
+    const base = import.meta.env?.BASE_URL ?? '/';
+    if (import.meta.env?.DEV || (base !== '/' && !apiOrigin)) return;
 
     let snapshot = await fetchState();
     if (snapshot.revision === 0) {

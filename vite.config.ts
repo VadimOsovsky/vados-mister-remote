@@ -4,7 +4,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => ({
-  base: '/',
+  base: process.env.VITE_PAGES_BASE || '/',
   server: {
     proxy: {
       '/api/playroom/cheats': {

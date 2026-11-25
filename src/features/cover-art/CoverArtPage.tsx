@@ -126,7 +126,7 @@ function CoverArtEditor({
     useEffect(() => {
         const element = root.current;
         if (!element) return;
-        element.innerHTML = template;
+        element.innerHTML = template.replace('src="/cover-art/', `src="${import.meta.env.BASE_URL}cover-art/`);
         const unmount = mountCoverEditor(element, games, initialGameId);
         return () => {
             unmount();

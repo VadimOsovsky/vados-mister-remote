@@ -433,7 +433,7 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
                 picker={{ ...romPicker, romPickerOpen: romPickerOpen && !editMode, selectRom: selectGameRom, closeRomPicker: closeGameRomPicker }}
                 title={displayTitle} consoleName={platform.name} preview={false}
                 launchLabel={pendingLoadSlot.current === null ? 'Play' : 'Load save'} />
-            {boxOpen && boxFront && <PreviewBox front={boxFront} back="/playroom/preview/mario3-back.jpg"
+            {boxOpen && boxFront && <PreviewBox front={boxFront} back={`${import.meta.env.BASE_URL}playroom/preview/mario3-back.jpg`}
                 title={displayTitle} onClose={() => setBoxOpen(false)} />}
             <PhotoViewer index={galleryIndex === -1 ? 0 : galleryIndex} onClose={() => setGalleryIndex(null)} slides={galleryIndex === -1 ? [{ src: front || '' }] : slides} />
         </>

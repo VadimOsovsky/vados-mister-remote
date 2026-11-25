@@ -83,7 +83,11 @@ export default defineConfig([
 
 The production app uses the Playroom HTTP server from `scripts/spa-server.py` for its shared state. Deploy the server together with the frontend using `scripts/deploy-mister.sh`. State is stored at `/media/fat/playroom-data/state.json`, beside the deployment directory. Back up this file alongside the emulator's save files.
 
-For a GitHub Pages build, set `VITE_PLAYROOM_API_ORIGIN` at build time to the browser-reachable origin of the Playroom server (for example, `https://playroom.example.net`). The state endpoint accepts cross-origin reads and writes from `https://vadimosovsky.github.io`. Leave the variable unset when building for the MiSTer itself to use the same-origin endpoint. The published value is visible in the frontend bundle and should contain only the server origin.
+## GitHub Pages
+
+Pushes to `main` build and publish the manuals at the existing URLs and the app at [`/app/`](https://vadimosovsky.github.io/vados-mister-remote/app/). Both are published in one deployment. The repository uses GitHub Actions as its Pages source.
+
+The Pages app uses browser-local storage by default. For shared collection data, set the Actions repository variable `VITE_PLAYROOM_API_ORIGIN` to a browser-reachable HTTPS origin for the Playroom server. The state endpoint accepts cross-origin requests from `https://vadimosovsky.github.io`. This public setting configures collection sync only. Device control still requires a browser connection to MiSTer and depends on the browser's HTTPS and local-network rules. Builds for MiSTer use the same-origin storage endpoint by default.
 
 On Windows, run `yarn deploy-mister:windows` with Windows PowerShell, the OpenSSH client, and `tar.exe` available. The default MiSTer address is `192.168.0.118`. To override it, run `yarn deploy-mister:windows 192.168.0.120` or set the `MISTER_IP` environment variable.
 
