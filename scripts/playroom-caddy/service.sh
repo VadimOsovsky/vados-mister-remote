@@ -54,6 +54,8 @@ set_token() {
     unset token
     sync
     printf 'DuckDNS token saved.\n'
+    stop
+    start
 }
 
 stop() {
