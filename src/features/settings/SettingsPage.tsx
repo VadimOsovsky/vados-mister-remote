@@ -8,6 +8,9 @@ import { OsdIcon, ResetIcon, SearchIcon, StoreIcon } from '../../lib/icons';
 import './SettingsPage.css';
 import { version } from '../../../package.json';
 
+const pagesBuild = import.meta.env.VITE_PAGES_BUILD;
+const appVersion = pagesBuild ? `${version}+pages.${pagesBuild}` : version;
+
 type IndexStatus = { label: string; percent?: number; busy: boolean };
 
 export function SettingsPage() {
@@ -120,7 +123,7 @@ export function SettingsPage() {
                         </svg>
                         Settings are saved on this device only.
                     </p>
-                    <p className="settings-version">App version {version}</p>
+                    <p className="settings-version">App version {appVersion}</p>
                 </div>
             </main>
         </div>
