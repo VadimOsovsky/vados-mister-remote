@@ -41,7 +41,7 @@ export function GameCard({ game, regions, activeConsole, onSelect, preview, rece
     const images = resolveImages(game, regions);
     const displayTitle = overrides.title || resolveTitle(game, PLATFORMS[activeConsole].nameRegions);
     const localCover = preview ? getPreviewCover(activeConsole, game.id) : undefined;
-    const frontSrc = overrides.boxFrontUrl || localCover || (images.front ? getImageUrl(images.front, 300) : undefined);
+    const frontSrc = overrides.boxFrontUrl || localCover || (images.front ? `${getImageUrl(images.front, 300)}&collection-cover=1` : undefined);
     const directCover = images.front ? getImageUrl(images.front) : undefined;
     const coverScale = PLATFORMS[activeConsole].coverScale;
     const slots = getSaveSlots(getGameSaveKey(game.id, activeConsole));

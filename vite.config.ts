@@ -30,6 +30,18 @@ export default defineConfig(({ mode }) => ({
       workbox: {
         cleanupOutdatedCaches: true,
         globPatterns: ['index.html', 'assets/**/*.{js,css,webp,png}', 'pwa-*.png', 'apple-touch-icon.png', 'favicon.png'],
+        runtimeCaching: [
+          {
+            urlPattern: ({ request, url }) => request.destination === 'image' &&
+              url.origin === 'https://wsrv.nl' && url.searchParams.get('collection-cover') === '1',
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'collection-cover-previews',
+              cacheableResponse: { statuses: [0, 200] },
+              expiration: { maxEntries: 50 },
+            },
+          },
+        ],
       },
       manifest: {
         name: 'Mister Playroom',
