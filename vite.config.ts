@@ -25,7 +25,12 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     VitePWA({
-      selfDestroying: true,
+      // Pages runs over HTTPS. Keep retiring stale workers on the local HTTP build.
+      selfDestroying: !process.env.VITE_PAGES_BASE,
+      workbox: {
+        cleanupOutdatedCaches: true,
+        globPatterns: ['index.html', 'assets/**/*.{js,css,webp,png}', 'pwa-*.png', 'apple-touch-icon.png', 'favicon.png'],
+      },
       manifest: {
         name: 'Mister Playroom',
         short_name: 'Playroom',
@@ -33,6 +38,8 @@ export default defineConfig(({ mode }) => ({
         theme_color: '#e7e8e4',
         background_color: '#e7e8e4',
         display: 'standalone',
+        id: './',
+        start_url: './',
         icons: [
           {
             src: 'pwa-192x192.png',
