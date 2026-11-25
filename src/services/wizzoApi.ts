@@ -314,6 +314,11 @@ export class WizzoApi {
     return `${this.baseUrl}/screenshots/${encodeURIComponent(core)}/${encodeURIComponent(filename)}`;
   }
 
+  get screenshotCrossOrigin(): 'anonymous' | undefined {
+    // The HTTPS relay requires an Origin header, including for image requests.
+    return this.baseUrl.startsWith('https:') ? 'anonymous' : undefined;
+  }
+
   deleteScreenshot(core: string, filename: string, signal?: AbortSignal): Promise<void> {
     return this.request(`/screenshots/${encodeURIComponent(core)}/${encodeURIComponent(filename)}`, {
       method: 'DELETE',

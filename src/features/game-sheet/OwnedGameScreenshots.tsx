@@ -10,9 +10,10 @@ export interface GameScreenshotGallery {
     backdropPath?: string;
 }
 
-export function OwnedGameScreenshots({ gallery, getUrl, canCapture, canEdit, busy, capturing, deleting, error, onCapture, onBackdrop, onDelete }: {
+export function OwnedGameScreenshots({ gallery, getUrl, crossOrigin, canCapture, canEdit, busy, capturing, deleting, error, onCapture, onBackdrop, onDelete }: {
     gallery: GameScreenshotGallery;
     getUrl: (image: WizzoScreenshot) => string;
+    crossOrigin?: React.ImgHTMLAttributes<HTMLImageElement>['crossOrigin'];
     canCapture: boolean;
     canEdit: boolean;
     busy: boolean;
@@ -50,7 +51,7 @@ export function OwnedGameScreenshots({ gallery, getUrl, canCapture, canEdit, bus
                 const isDeleting = deleting === image.path;
                 return <div className="owned-screenshot" key={image.path}>
                     <button type="button" className="owned-screenshot-preview" aria-label={`View ${label.toLowerCase()}`} onClick={() => setViewing(image.path)}>
-                        <LazyImage src={getUrl(image)} alt={label} />
+                        <LazyImage src={getUrl(image)} crossOrigin={crossOrigin} alt={label} />
                     </button>
                     <div className="owned-screenshot-actions">
                         <button type="button" className="owned-button playroom-press" disabled={!canEdit || isDeleting} aria-pressed={selected}
@@ -79,7 +80,7 @@ export function OwnedGameScreenshots({ gallery, getUrl, canCapture, canEdit, bus
                 </div>;
             })}
         </div>
-        <PhotoViewer index={index < 0 ? null : index} onClose={() => setViewing(undefined)}
+        <PhotoViewer index={index < 0 ? null : index} onClose={() => setViewing(undefined)} crossOrigin={crossOrigin}
             slides={gallery.images.map(image => ({ src: getUrl(image) }))} />
     </>;
 }

@@ -352,7 +352,7 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
             <main className="owned-game-page page-scroll">
                 <section className="playroom-stage owned-game-hero">
                     <GameBackdrop src={backdrop ? api.getScreenshotUrl(backdrop.core, backdrop.filename) : undefined}
-                        fallbackSrc={screenshots[0]} />
+                        fallbackSrc={screenshots[0]} crossOrigin={api.screenshotCrossOrigin} />
                     <div className="owned-hero-inner">
                         <button type="button" className="owned-cover" aria-label="View front cover" disabled={!front} onClick={() => setGalleryIndex(-1)}>
                             <LazyImage src={frontPreview || undefined} fallbackSrc={front || undefined} alt="" priority />
@@ -446,6 +446,7 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
                     <Tabs.Content value="screenshots" className="owned-panel">
                         <OwnedGameScreenshots key={screenshotKey} gallery={screenshotGallery}
                             getUrl={image => api.getScreenshotUrl(image.core, image.filename)}
+                            crossOrigin={api.screenshotCrossOrigin}
                             canCapture={connected && playing} canEdit={connected}
                             busy={!!actionsBusy || actionPending || !!deletingScreenshot}
                             capturing={capturing} deleting={deletingScreenshot} error={screenshotError}
