@@ -22,7 +22,7 @@ function RewardBalance({ balance }: { balance: number }) {
 }
 
 export function WalletFeedback({ notice, completion, onDismiss }: {
-    notice: { amount: number; id: number } | null;
+    notice: { amount: number; id: number; sale?: boolean } | null;
     completion: { title: string; balance: number } | null;
     onDismiss: () => void;
 }) {
@@ -36,8 +36,8 @@ export function WalletFeedback({ notice, completion, onDismiss }: {
         <div className="wallet-notice-region" role="status" aria-live="polite">
             {notice && dismissed !== notice.id && !completion && <div key={notice.id} className="wallet-notice">
                 <span className="store-coin" aria-hidden="true">$</span>
-                <span>{notice.amount > 0 ? 'Daily pocket money' : 'Added to your collection'}</span>
-                <strong>{notice.amount > 0 ? '+' : '−'}{formatPrice(Math.abs(notice.amount))}</strong>
+                <span>{notice.sale ? 'Sold from your collection' : notice.amount > 0 ? 'Daily pocket money' : 'Added to your collection'}</span>
+                {notice.amount !== 0 && <strong>{notice.amount > 0 ? '+' : '−'}{formatPrice(Math.abs(notice.amount))}</strong>}
             </div>}
         </div>
         <Dialog.Root open={!!completion} onOpenChange={open => { if (!open) onDismiss(); }}>

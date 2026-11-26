@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { useCollectionState, initializeCollectionState } from '../src/state/collectionState';
+import { consoleResalePrice, gameResalePrice, useCollectionState, initializeCollectionState } from '../src/state/collectionState';
 import {
-    appStorage, getSyncStatus, initializeSharedStorage, isSharedStorageReady, setSharedStorageOnline,
+    appStorage, confirmSharedStorageWrites, getSyncStatus, initializeSharedStorage, isSharedStorageReady, setSharedStorageOnline,
     subscribeToSync, subscribeToValues, syncSharedStorage,
 } from '../src/lib/sharedStorage';
 import { addCustomGame, getFavoriteIds, getRomMapping, setFavorite } from '../src/lib/storage';
@@ -83,10 +83,39 @@ test('console purchases debit the wallet and persist ownership in one shared upd
     assert.equal(state().balance, 30);
     assert.deepEqual(JSON.parse(stored.get('playroom.snapshot:/api/playroom/state') ?? 'null'), server);
     assert.equal(writes.length, 1);
+
+    state().setActiveConsole('famicom');
+    await syncSharedStorage();
+    const game: LaunchBoxGame = {
+        id: 'resale-test', title: 'Resale test', year: '', genre: '', desc: '', developer: '',
+        publisher: '', maxPlayers: '', rating: 5, ratingCount: 1, images: {},
+    };
+    assert.equal(state().purchaseGame(game.id, 9.99, '/resale.nes'), true);
+    assert.equal(gameResalePrice(game), 38.5);
+    assert.equal(state().sellGame('famicom', game, 6.99), false);
+    assert.equal(state().sellGame('famicom', game, 38.5), true);
+    assert.equal(state().sellGame('famicom', game, 38.5), false);
+    assert.equal(state().balance, 58.51);
+    assert.equal(getRomMapping(game.id, 'famicom'), '/resale.nes');
+    state().setEconomyDisabled(true);
+    assert.equal(state().purchaseGame(game.id, 55, '/resale.nes'), true);
+    state().setEconomyDisabled(false);
+
+    assert.equal(consoleResalePrice('famicom', ['famicom']), 112);
+    assert.equal(consoleResalePrice('famicom', state().ownedConsoles), 56);
+    assert.equal(state().sellConsole('nes_ntsc', 56), false);
+    assert.equal(state().sellConsole('famicom', 56), true);
+    assert.equal(state().sellConsole('famicom', 56), false);
+    assert.equal(state().activeConsole, 'nes_ntsc');
+    assert.equal(state().balance, 114.51);
+    assert.equal(state().purchaseConsole('famicom'), true);
+    state().setActiveConsole('famicom');
+    assert.deepEqual(state().collectionIds, [game.id]);
+    assert.equal(await confirmSharedStorageWrites(), true);
 });
 
 test('collection actions publish grouped writes and pick up remote changes', async t => {
-    const base = { revision: 1, values: { wallet_balance: '100', owned_consoles: '["nes_ntsc"]' } };
+    const base = { revision: 1, values: { wallet_balance: '100', owned_consoles: '["nes_ntsc","famicom"]', collection_famicom: '["another-game"]' } };
     let server: { revision: number; values: Record<string, string> } = base;
     const writes: typeof server[] = [];
     t.mock.method(globalThis, 'fetch', async (_url: string, init?: RequestInit) => {
@@ -165,12 +194,20 @@ test('collection actions publish grouped writes and pick up remote changes', asy
     assert.equal(state().balance, 150);
     await freeSettled;
 
-    server = { revision: server.revision + 1, values: { ...server.values, [favoriteKey]: '["conflicting"]' } };
+    state().setEconomyDisabled(false);
+    assert.equal(await confirmSharedStorageWrites(), true);
+    const remoteValues = { ...server.values, wallet_balance: '167.5', collection_famicom: '[]' };
+    server = { revision: server.revision + 1, values: remoteValues };
     const conflictSettled = settled();
-    state().toggleFavorite('local-game');
+    const zelda: LaunchBoxGame = {
+        id: 'zelda', title: 'Zelda', year: '', genre: '', desc: '', developer: '',
+        publisher: '', maxPlayers: '', rating: 0, ratingCount: 0, images: {},
+    };
+    assert.equal(state().sellGame(key, zelda, 17.5), true);
     await conflictSettled;
     assert.equal(getSyncStatus(), 'conflict');
-    assert.deepEqual(state().favoriteIds, ['new-remote-game', 'local-game']);
+    assert.deepEqual(server.values, remoteValues);
+    assert.deepEqual(state().favoriteIds, ['new-remote-game']);
     assert.deepEqual(getFavoriteIds(key), state().favoriteIds);
     const writeCount = writes.length;
     await syncSharedStorage();

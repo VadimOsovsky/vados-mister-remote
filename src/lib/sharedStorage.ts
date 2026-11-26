@@ -1,3 +1,5 @@
+import { DAILY_ALLOWANCE, normalizeVisitDate, STARTING_BALANCE } from './walletVisit';
+
 type Values = Record<string, string>;
 type Snapshot = { revision: number; values: Values };
 type SyncStatus = 'saved' | 'saving' | 'offline' | 'conflict';
@@ -6,7 +8,8 @@ const apiOrigin = import.meta.env?.VITE_PLAYROOM_API_ORIGIN?.trim().replace(/\/+
 const endpoint = `${apiOrigin}/api/playroom/state`;
 let sharedEnabled = import.meta.env?.PROD && (import.meta.env.BASE_URL === '/' || Boolean(apiOrigin));
 const cacheKey = `playroom.snapshot:${endpoint}`;
-const sharedKey = /^(?:store_free_games|rom_mappings|active_console|owned_consoles|store_sort|wallet_balance|wallet_last_topup|wallet_beaten_rewarded|owned_game_tab|(?:save_slots|game_rom_versions|game_overrides|game_cheats|game_screenshots|collection|favorites|beaten|custom_games)_.+|playroom\.recent\..+)$/;
+const walletVisitPrefix = cacheKey + ':wallet-visit:';
+const sharedKey = /^(?:store_free_games|rom_mappings|active_console|owned_consoles|wallet_balance|wallet_last_topup|wallet_allowance_since|wallet_visit_\d{4}-\d{2}-\d{2}|wallet_beaten_rewarded|owned_game_tab|(?:save_slots|game_rom_versions|game_overrides|game_cheats|game_screenshots|collection|favorites|beaten|custom_games)_.+|playroom\.recent\..+)$/;
 
 let confirmed: Snapshot | undefined;
 let values: Values = {};
@@ -15,6 +18,7 @@ let syncing = false;
 let online = false;
 let fresh = false;
 let cached: Snapshot | null | undefined;
+let walletVisitDates: string[] | undefined;
 const valueListeners = new Set<() => void>();
 let batchDepth = 0;
 let changed = false;
@@ -58,8 +62,23 @@ export function subscribeToSync(listener: () => void) {
 }
 
 export const getSyncStatus = () => status;
-export const isSharedStorageReady = () => !sharedEnabled || (online && fresh && status !== 'offline');
+export const isSharedStorageReady = () => !sharedEnabled || (online && fresh && status !== 'offline' && !pendingWalletVisits().length);
 export const hasSharedSnapshot = () => Boolean(confirmed ?? readCache());
+
+export async function confirmSharedStorageWrites(): Promise<boolean> {
+    if (!sharedEnabled) return true;
+    await syncSharedStorage(true);
+    if (status === 'saving') {
+        await new Promise<void>(resolve => {
+            const unsubscribe = subscribeToSync(() => {
+                if (status === 'saving') return;
+                unsubscribe();
+                resolve();
+            });
+        });
+    }
+    return isSharedStorageReady() && status === 'saved' && confirmed?.values === values;
+}
 
 function readCache() {
     if (!sharedEnabled) return null;
@@ -76,6 +95,64 @@ function cacheSnapshot(snapshot: Snapshot) {
     cached = snapshot;
     try { localStorage.setItem(cacheKey, JSON.stringify(snapshot)); }
     catch { /* The current snapshot remains available in memory. */ }
+}
+
+export function handleSharedStorageChange(key: string | null) {
+    if (!sharedEnabled || (key !== null && key !== cacheKey && !key.startsWith(walletVisitPrefix))) return;
+    cached = undefined;
+    walletVisitDates = undefined;
+    publishValues();
+    report(status);
+    void syncSharedStorage(key === cacheKey);
+}
+
+function pendingWalletVisits(): string[] {
+    if (walletVisitDates) return walletVisitDates;
+    try {
+        walletVisitDates = Object.keys(localStorage)
+            .filter(key => key.startsWith(walletVisitPrefix))
+            .map(key => key.slice(walletVisitPrefix.length))
+            .filter(date => /^\d{4}-\d{2}-\d{2}$/.test(date))
+            .sort();
+        return walletVisitDates;
+    } catch { return []; }
+}
+
+function applyWalletVisits(base: Values, dates: string[]): Values {
+    if (!dates.length || base.store_free_games === 'true') return base;
+    const last = base.wallet_last_topup;
+    // Older snapshots only record the last paid date. Treat it as the migration cutoff.
+    const since = base.wallet_allowance_since ?? (last ? normalizeVisitDate(last) : dates[0]);
+    let next = base;
+    if (!last) {
+        next = { ...base, wallet_balance: String(STARTING_BALANCE), wallet_last_topup: since, wallet_allowance_since: since };
+    }
+    for (const date of dates) {
+        const key = 'wallet_visit_' + date;
+        if (date <= since || next[key]) continue;
+        if (next === base) next = { ...base };
+        next[key] = 'true';
+        next.wallet_allowance_since = since;
+        next.wallet_balance = String(Math.round((Number(next.wallet_balance ?? 0) + DAILY_ALLOWANCE) * 100) / 100);
+        const lastDay = normalizeVisitDate(next.wallet_last_topup);
+        next.wallet_last_topup = date > lastDay ? date : lastDay;
+    }
+    return next;
+}
+
+export function queueWalletVisit(date: string): { balance: number; reward: number } | undefined {
+    if (!sharedEnabled) return undefined;
+    const before = Number(appStorage.getItem('wallet_balance') ?? 0);
+    const last = appStorage.getItem('wallet_last_topup');
+    if (appStorage.getItem('store_free_games') === 'true' || (last && date <= normalizeVisitDate(last))) {
+        return { balance: before, reward: 0 };
+    }
+    try { localStorage.setItem(walletVisitPrefix + date, '1'); }
+    catch { return { balance: before, reward: 0 }; }
+    walletVisitDates = undefined;
+    const balance = Number(appStorage.getItem('wallet_balance') ?? 0);
+    valuesChanged();
+    return { balance, reward: last ? DAILY_ALLOWANCE : 0 };
 }
 
 export function setSharedStorageOnline(available: boolean) {
@@ -137,10 +214,10 @@ export async function initializeSharedStorage() {
 export async function syncSharedStorage(refresh = false) {
     if (!sharedEnabled || !online || syncing || status === 'conflict') return;
     const clean = fresh && confirmed?.values === values && status === 'saved';
-    if (clean && !refresh) return;
+    if (clean && !refresh && !pendingWalletVisits().length) return;
     const wasFresh = fresh;
     syncing = true;
-    if (!clean) report('saving');
+    if (!clean || pendingWalletVisits().length) report('saving');
     try {
         if (!confirmed || (!fresh && confirmed.values === values)) await initializeSharedStorage();
         else if (clean) {
@@ -153,7 +230,7 @@ export async function syncSharedStorage(refresh = false) {
                 publishValues();
             }
         }
-        if (online && confirmed?.values !== values) report('saving');
+        if (online && (confirmed?.values !== values || pendingWalletVisits().length)) report('saving');
         while (online && confirmed && confirmed.values !== values) {
             const sent = values;
             const response = await writeState({ revision: confirmed.revision, values: sent });
@@ -161,10 +238,14 @@ export async function syncSharedStorage(refresh = false) {
                 const latest = await fetchState();
                 const base = confirmed.values;
                 const merged = { ...latest.values };
+                const sameWalletChange = values.wallet_balance !== base.wallet_balance &&
+                    values.wallet_balance === latest.values.wallet_balance;
                 for (const key of new Set([...Object.keys(base), ...Object.keys(values)])) {
                     const value = values[key];
                     if (value === base[key]) continue;
-                    if (latest.values[key] !== base[key] && latest.values[key] !== value) {
+                    const ownershipChanged = key === 'owned_consoles' || key.startsWith('collection_');
+                    // Two different transactions can produce the same wallet balance.
+                    if (latest.values[key] !== value && (latest.values[key] !== base[key] || (sameWalletChange && ownershipChanged))) {
                         report('conflict');
                         return;
                     }
@@ -181,6 +262,27 @@ export async function syncSharedStorage(refresh = false) {
             cacheSnapshot(confirmed);
             if (sent === values) values = confirmed.values;
         }
+        while (online && confirmed) {
+            const dates = pendingWalletVisits();
+            if (!dates.length) break;
+            const next = applyWalletVisits(confirmed.values, dates);
+            if (next !== confirmed.values) {
+                const response = await writeState({ revision: confirmed.revision, values: next });
+                if (response.status === 409) {
+                    confirmed = await fetchState();
+                    values = confirmed.values;
+                    cacheSnapshot(confirmed);
+                    continue;
+                }
+                if (!response.ok) throw new Error('Could not save wallet visits');
+                confirmed = await response.json() as Snapshot;
+                values = confirmed.values;
+                cacheSnapshot(confirmed);
+            }
+            for (const date of dates) localStorage.removeItem(walletVisitPrefix + date);
+            walletVisitDates = undefined;
+            publishValues();
+        }
         fresh = online;
         report('saved');
         if (!wasFresh) publishValues();
@@ -195,14 +297,21 @@ export async function syncSharedStorage(refresh = false) {
 
 export const appStorage = {
     keys() {
-        if (confirmed) return Object.keys(online && fresh ? values : confirmed.values);
-        const snapshot = readCache();
-        return snapshot ? Object.keys(snapshot.values) : Object.keys(localStorage);
+        return Object.keys((online && fresh && confirmed ? values : (readCache() ?? confirmed)?.values) ?? localStorage);
     },
     getItem(key: string) {
-        if (confirmed) return (online && fresh ? values : confirmed.values)[key] ?? null;
-        const snapshot = readCache();
-        return snapshot ? snapshot.values[key] ?? null : localStorage.getItem(key);
+        const base = online && fresh && confirmed ? values : (readCache() ?? confirmed)?.values;
+        const value = base ? base[key] ?? null : localStorage.getItem(key);
+        if (!sharedEnabled || (key !== 'wallet_balance' && key !== 'wallet_last_topup')) return value;
+        const dates = pendingWalletVisits();
+        if (!dates.length) return value;
+        const wallet = base ?? {
+            wallet_balance: localStorage.getItem('wallet_balance') ?? '0',
+            wallet_last_topup: localStorage.getItem('wallet_last_topup') ?? '',
+            store_free_games: localStorage.getItem('store_free_games') ?? '',
+        };
+        const projected = applyWalletVisits(wallet, dates);
+        return projected === wallet ? value : projected[key] ?? null;
     },
     setItem(key: string, value: string) {
         if (!isSharedStorageReady()) return;

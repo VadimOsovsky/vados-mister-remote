@@ -2,7 +2,7 @@
   "name": "mister_remote",
   "private": true,
   "packageManager": "yarn@1.22.22",
-  "version": "0.33.0",
+  "version": "0.34.0",
   "type": "module",
   "scripts": {
     "build:manuals": "node scripts/build-manuals.mjs",

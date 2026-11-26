@@ -1,9 +1,9 @@
 import { useId, useLayoutEffect, useRef, useState } from 'react';
 import { Drawer } from 'vaul';
 import { BottomSheet } from '../BottomSheet';
-import { useCollectionState, usePlatform } from '../../state/collectionState';
+import { consoleResalePrice, useCollectionState, usePlatform } from '../../state/collectionState';
 import { useMisterWritable } from '../../state/misterState';
-import { CONSOLE_GROUPS, PLATFORMS } from '../../constants';
+import { CONSOLE_GROUPS, PLATFORMS, STARTER_CONSOLE } from '../../constants';
 import { consolePrice } from '../../lib/consolePricing';
 import { formatPrice } from '../../lib/pricing';
 import { ChevronDownIcon } from '../../lib/icons';
@@ -51,10 +51,13 @@ export function ConsoleSheet({ open, onOpenChange, onSwitch }: {
     const balance = useCollectionState(state => state.balance);
     const free = useCollectionState(state => state.economyDisabled);
     const purchaseConsole = useCollectionState(state => state.purchaseConsole);
+    const sellConsole = useCollectionState(state => state.sellConsole);
+    const writable = useMisterWritable();
     const platform = PLATFORMS[activeConsole];
     const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
     const [pending, setPending] = useState<ConsoleKey | null>(null);
     const [purchased, setPurchased] = useState(false);
+    const [selling, setSelling] = useState(false);
     const [error, setError] = useState(false);
     const [seenOpen, setSeenOpen] = useState(open);
     const groupId = useId();
@@ -63,6 +66,7 @@ export function ConsoleSheet({ open, onOpenChange, onSwitch }: {
     const origin = useRef<ConsoleKey | null>(null);
     const restoreFocus = useRef(false);
     const price = pending ? consolePrice(pending, owned) : null;
+    const sale = pending && selling && owned.includes(pending) && !free ? consoleResalePrice(pending, owned) : null;
 
     if (seenOpen !== open) {
         setSeenOpen(open);
@@ -70,6 +74,7 @@ export function ConsoleSheet({ open, onOpenChange, onSwitch }: {
             setExpandedGroup(null);
             setPending(null);
             setPurchased(false);
+            setSelling(false);
             setError(false);
         }
     }
@@ -103,13 +108,39 @@ export function ConsoleSheet({ open, onOpenChange, onSwitch }: {
                     {ChevronDownIcon}
                 </button>}
                 <Drawer.Title ref={heading} tabIndex={-1} className="picker-title">
-                    {purchased ? 'Console added!' : pending ? 'Buy console' : 'Consoles'}
+                    {purchased ? 'Console added!' : selling && pending ? 'Sell console' : pending ? 'Buy console' : 'Consoles'}
                 </Drawer.Title>
                 <Drawer.Close className="console-sheet-close" aria-label="Close">×</Drawer.Close>
             </header>
 
             <div className="console-sheet-body" ref={scroller} data-vaul-no-drag>
-                {pending ? (
+                {pending && selling ? (
+                    <div className="console-checkout">
+                        <div className="console-checkout-art">
+                            {consolePhotos[pending] && <img src={consolePhotos[pending]} alt="" />}
+                        </div>
+                        <div className="console-checkout-title"><h3>{PLATFORMS[pending].name}</h3></div>
+                        <p className="console-checkout-status">
+                            Its games will be available again if you buy this console back.
+                            {pending === activeConsole && ` You'll switch to ${PLATFORMS[STARTER_CONSOLE].name}.`}
+                        </p>
+                        {sale !== null && <dl className="console-checkout-details">
+                            <div><dt>Sale payout</dt><dd>{formatPrice(sale)}</dd></div>
+                            <div><dt>Balance after sale</dt><dd>{formatPrice(Math.round((balance + sale) * 100) / 100)}</dd></div>
+                        </dl>}
+                        {!writable && <p className="console-checkout-status" role="status">Connect MiSTer to sell.</p>}
+                        {(sale === null || error) && <p className="console-checkout-status" role="alert">Could not sell this console. Go back and try again.</p>}
+                        <button type="button" className="console-checkout-action playroom-button playroom-primary playroom-press"
+                            disabled={!writable || sale === null} onClick={() => {
+                                if (sale !== null && sellConsole(pending, sale)) {
+                                    if (pending === activeConsole) onSwitch(STARTER_CONSOLE);
+                                    onOpenChange(false);
+                                } else setError(true);
+                            }}>
+                            Sell console{sale !== null && <strong>{formatPrice(sale)}</strong>}
+                        </button>
+                    </div>
+                ) : pending ? (
                     <ConsoleCheckout key={pending} consoleKey={pending} price={price} balance={balance} free={free}
                         purchased={purchased} error={error} onBuy={() => confirmPurchase(pending)}
                         onSelect={() => selectConsole(pending)} />
@@ -145,10 +176,21 @@ export function ConsoleSheet({ open, onOpenChange, onSwitch }: {
                                         {ownedModels.length > 0 && <section className="picker-section">
                                             <h3>Owned</h3>
                                             <div className="picker-options">
-                                                {ownedModels.map(key => <button type="button" key={key} className="picker-option playroom-press"
-                                                    aria-current={key === activeConsole || undefined} onClick={() => selectConsole(key)}>
-                                                    <ConsoleTile photo={consolePhotos[key]} name={PLATFORMS[key].name} label={key === activeConsole ? '✓ Selected' : 'Select'} />
-                                                </button>)}
+                                                {ownedModels.map(key => <div key={key} className="picker-owned-model">
+                                                    <button type="button" className="picker-option playroom-press"
+                                                        aria-current={key === activeConsole || undefined} onClick={() => selectConsole(key)}>
+                                                        <ConsoleTile photo={consolePhotos[key]} name={PLATFORMS[key].name} label={key === activeConsole ? '✓ Selected' : 'Select'} />
+                                                    </button>
+                                                    {!free && key !== STARTER_CONSOLE && <button type="button" className="picker-sell playroom-press"
+                                                        aria-label={`Sell ${PLATFORMS[key].name} for ${formatPrice(consoleResalePrice(key, owned))}`}
+                                                        data-console={key} onClick={() => {
+                                                            origin.current = key;
+                                                            setSelling(true);
+                                                            setPending(key);
+                                                        }}>
+                                                        Sell · {formatPrice(consoleResalePrice(key, owned))}
+                                                    </button>}
+                                                </div>)}
                                             </div>
                                         </section>}
                                         {forSale.length > 0 && <section className="picker-section">
@@ -160,6 +202,7 @@ export function ConsoleSheet({ open, onOpenChange, onSwitch }: {
                                                 {forSale.map(key => <button type="button" key={key} className="picker-option playroom-press"
                                                     data-console={key} onClick={() => {
                                                         origin.current = key;
+                                                        setSelling(false);
                                                         setPending(key);
                                                     }}>
                                                     <ConsoleTile photo={consolePhotos[key]} name={PLATFORMS[key].name}

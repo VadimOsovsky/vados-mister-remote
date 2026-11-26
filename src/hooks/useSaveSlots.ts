@@ -1,12 +1,22 @@
 import { useCallback, useState } from 'react';
 import type { ConsoleKey, LaunchBoxGame, SaveSlot } from '../types';
 import type { WizzoApi } from '../services/wizzoApi';
-import { getRomVersions, getGameSaveKey, getOriginalGameSaveKey, getSaveSlots, putSaveSlot, deleteSaveSlot, getRomMapping } from '../lib/storage';
+import { getRomVersions, getGameSaveKey, getOriginalGameSaveKey, getSaveSlots, putSaveSlot, deleteSaveSlot, getRomMapping, isGalleryScreenshot, isSaveSlotScreenshot } from '../lib/storage';
+import { confirmSharedStorageWrites } from '../lib/sharedStorage';
 import { loadCollectionSave } from '../services/collectionLauncher';
 import { isRomPlaying } from '../services/nowPlaying';
 import { captureScreenshot } from '../services/misterScreenshots';
 
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+async function removeUnusedSaveScreenshot(api: WizzoApi, slot: SaveSlot | null) {
+    const core = slot?.screenshotCore;
+    const filename = slot?.screenshotFilename;
+    if (!core || !filename) return;
+    if (!await confirmSharedStorageWrites()) throw new Error('Save slot changes could not be synced.');
+    if (isSaveSlotScreenshot(core, filename) || isGalleryScreenshot(core, filename)) return;
+    await api.deleteScreenshot(core, filename, AbortSignal.timeout(5000));
+}
 
 async function readSaveVersion(query: URLSearchParams): Promise<string | null> {
     const response = await fetch(`/api/playroom/save-state?${query}`, { cache: 'no-store' });
@@ -41,11 +51,10 @@ export function useSaveSlots(api: WizzoApi, game: LaunchBoxGame, activeConsole: 
 
     const handleSave = useCallback(async () => {
         if (savingSlot) return;
-        if (saveSlots[selectedSlot]?.locked) return;
+        if (getSaveSlots(saveKey)[selectedSlot]?.locked) return;
         setSavingSlot(true);
         setSaveError(undefined);
         try {
-            const oldSlot = saveSlots[selectedSlot];
             const playing = await api.getPlaying();
             if (!playing?.gameName || !playing.core) throw new Error('Start the game on MiSTer first.');
             if (!isRomPlaying(playing, getRomMapping(game.id, activeConsole), activeConsole)) {
@@ -91,9 +100,13 @@ export function useSaveSlots(api: WizzoApi, game: LaunchBoxGame, activeConsole: 
             if (!verifyOnDisk && !slot.screenshotFilename) {
                 throw new Error('Could not confirm the save on MiSTer.');
             }
+            const oldSlot = getSaveSlots(saveKey)[selectedSlot];
             setSaveSlots(putSaveSlot(saveKey, selectedSlot, slot));
-            if (oldSlot?.screenshotCore && oldSlot.screenshotFilename) {
-                api.deleteScreenshot(oldSlot.screenshotCore, oldSlot.screenshotFilename).catch(() => {});
+            try {
+                await removeUnusedSaveScreenshot(api, oldSlot);
+            } catch (err) {
+                console.warn('Save screenshot cleanup failed:', err);
+                setSaveError('The save was overwritten, but its previous screenshot could not be removed.');
             }
         } catch (err) {
             console.warn('Save state failed:', err);
@@ -101,7 +114,7 @@ export function useSaveSlots(api: WizzoApi, game: LaunchBoxGame, activeConsole: 
         } finally {
             setSavingSlot(false);
         }
-    }, [saveKey, selectedSlot, game, savingSlot, api, saveSlots, activeConsole]);
+    }, [saveKey, selectedSlot, game, savingSlot, api, activeConsole]);
 
     const [loadingSlot, setLoadingSlot] = useState(false);
     const hasRomMapping = Boolean(getRomMapping(game.id, activeConsole));
@@ -122,16 +135,17 @@ export function useSaveSlots(api: WizzoApi, game: LaunchBoxGame, activeConsole: 
 
     /** Delete selected slot. Returns whether game has any beaten slot after deletion. */
     const handleDelete = useCallback((): boolean => {
-        if (!saveSlots[selectedSlot]) return false;
-        if (saveSlots[selectedSlot]?.locked) return false;
-        const slot = saveSlots[selectedSlot]!;
-        if (slot.screenshotCore && slot.screenshotFilename) {
-            api.deleteScreenshot(slot.screenshotCore, slot.screenshotFilename).catch(() => {});
-        }
+        const slot = getSaveSlots(saveKey)[selectedSlot];
+        if (!slot || slot.locked) return false;
         const updated = deleteSaveSlot(saveKey, selectedSlot);
         setSaveSlots(updated);
+        setSaveError(undefined);
+        void removeUnusedSaveScreenshot(api, slot).catch(err => {
+            console.warn('Save screenshot cleanup failed:', err);
+            setSaveError('The save slot was removed, but its screenshot could not be deleted.');
+        });
         return hasCompletedVersion();
-    }, [saveKey, selectedSlot, saveSlots, api, hasCompletedVersion]);
+    }, [saveKey, selectedSlot, api, hasCompletedVersion]);
 
     /** Toggle beaten flag on selected slot. Returns whether game has any beaten slot after toggle. */
     const handleToggleBeaten = useCallback((): boolean => {

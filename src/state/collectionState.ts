@@ -1,15 +1,21 @@
 import { create } from 'zustand';
 import { PLATFORMS, STARTER_CONSOLE } from '../constants';
-import type { ConsoleKey } from '../types';
-import { batchStorageWrites, isSharedStorageReady, subscribeToValues } from '../lib/sharedStorage';
+import type { ConsoleKey, LaunchBoxGame } from '../types';
+import { batchStorageWrites, confirmSharedStorageWrites, getSyncStatus, isSharedStorageReady, subscribeToValues } from '../lib/sharedStorage';
 import {
     readActiveConsole, writeActiveConsole, getCollectionIds, addCollectionId, removeCollectionId,
     getFavoriteIds, setFavorite, getBeatenIds, addBeatenId, removeBeatenId,
-    getWalletBalance, readEconomyDisabled, writeEconomyDisabled, setRomMapping,
+    getWalletBalance, setWalletBalance, readEconomyDisabled, writeEconomyDisabled, setRomMapping,
     getOwnedConsoles, writeOwnedConsoles, initializeOwnedConsoles,
 } from '../lib/storage';
 import { rewardBeatenGame, spendWallet, visitWallet } from '../lib/wallet';
 import { consolePrice } from '../lib/consolePricing';
+import { getGamePrice, getResalePrice } from '../lib/pricing';
+
+export const gameResalePrice = (game: LaunchBoxGame) => getResalePrice(getGamePrice(game));
+
+export const consoleResalePrice = (key: ConsoleKey, owned: readonly ConsoleKey[]) =>
+    getResalePrice(consolePrice(key, owned.filter(console => console !== key)) ?? 0);
 
 const preserveIds = <T,>(next: T[], previous?: T[]) =>
     previous && next.length === previous.length && next.every((id, index) => id === previous[index])
@@ -39,7 +45,7 @@ function readCollectionSnapshot(activeConsole = readActiveConsole() ?? STARTER_C
 }
 
 type Feedback = {
-    walletNotice: { amount: number; id: number } | null;
+    walletNotice: { amount: number; id: number; sale?: boolean } | null;
     completion: { title: string; balance: number } | null;
 };
 const emptyFeedback: Feedback = { walletNotice: null, completion: null };
@@ -54,6 +60,8 @@ type CollectionState = ReturnType<typeof readCollectionSnapshot> & Feedback & {
     removeFromCollection: (id: string) => void;
     purchaseGame: (id: string, price: number, romPath: string) => boolean;
     purchaseConsole: (key: ConsoleKey) => boolean;
+    sellGame: (key: ConsoleKey, game: LaunchBoxGame, expectedAmount: number) => boolean;
+    sellConsole: (key: ConsoleKey, expectedAmount: number) => boolean;
     markAsBeaten: (id: string, title: string) => void;
     unmarkAsBeaten: (id: string) => void;
 };
@@ -116,6 +124,36 @@ export const useCollectionState = create<CollectionState>((set, get) => ({
         });
         if (purchased && !free) set({ walletNotice: { amount: -price, id: Date.now() } });
         return purchased;
+    },
+    sellGame: (key, game, expectedAmount) => {
+        if (!isSharedStorageReady() || getSyncStatus() === 'conflict' || readEconomyDisabled() || key !== get().activeConsole ||
+            game.id.startsWith('custom_') || !getCollectionIds(key).includes(game.id)) return false;
+        const amount = gameResalePrice(game);
+        if (amount !== expectedAmount) return false;
+        batchStorageWrites(() => {
+            get().removeFromCollection(game.id);
+            if (amount > 0) setWalletBalance(Math.round((getWalletBalance() + amount) * 100) / 100);
+        });
+        void confirmSharedStorageWrites().then(saved => {
+            if (saved) set({ walletNotice: { amount, id: Date.now(), sale: true } });
+        });
+        return true;
+    },
+    sellConsole: (key, expectedAmount) => {
+        if (!isSharedStorageReady() || getSyncStatus() === 'conflict' || readEconomyDisabled() || key === STARTER_CONSOLE) return false;
+        const owned = getOwnedConsoles();
+        if (!owned.includes(key)) return false;
+        const amount = consoleResalePrice(key, owned);
+        if (amount !== expectedAmount) return false;
+        batchStorageWrites(() => {
+            if (readActiveConsole() === key) writeActiveConsole(STARTER_CONSOLE);
+            writeOwnedConsoles(owned.filter(console => console !== key));
+            if (amount > 0) setWalletBalance(Math.round((getWalletBalance() + amount) * 100) / 100);
+        });
+        void confirmSharedStorageWrites().then(saved => {
+            if (saved) set({ walletNotice: { amount, id: Date.now(), sale: true } });
+        });
+        return true;
     },
     markAsBeaten: (id: string, title: string) => {
         const result = batchStorageWrites(() => {

@@ -19,7 +19,7 @@ import { SettingsPage } from './features/settings/SettingsPage';
 import { RemotePage } from './features/remote/RemotePage';
 import { OwnedGameRoute } from './features/game-sheet/OwnedGameRoute';
 import { MisterOfflinePage } from './kit/MisterOfflinePage';
-import { hasSharedSnapshot, isSharedStorageReady, setSharedStorageOnline, subscribeToSync, syncSharedStorage } from './lib/sharedStorage';
+import { handleSharedStorageChange, hasSharedSnapshot, isSharedStorageReady, setSharedStorageOnline, subscribeToSync, syncSharedStorage } from './lib/sharedStorage';
 
 import './styles/themes.css';
 import './App.css';
@@ -37,6 +37,13 @@ const TAB_ITEMS = [
 function MisterConnection() {
     const api = useMisterState(state => state.api);
     const connected = useConnection(api);
+    useEffect(() => {
+        const refreshFromBrowser = (event: StorageEvent) => {
+            if (event.storageArea === localStorage) handleSharedStorageChange(event.key);
+        };
+        window.addEventListener('storage', refreshFromBrowser);
+        return () => window.removeEventListener('storage', refreshFromBrowser);
+    }, []);
     useEffect(() => {
         setSharedStorageOnline(connected);
         if (!connected) return;
@@ -58,8 +65,6 @@ function MisterConnection() {
 }
 
 function WalletEffects() {
-    const connected = useMisterState(state => state.connected);
-    const storageReady = useSyncExternalStore(subscribeToSync, isSharedStorageReady);
     const economyDisabled = useCollectionState(state => state.economyDisabled);
     const visit = useCollectionState(state => state.visit);
     const notice = useCollectionState(state => state.walletNotice);
@@ -67,7 +72,6 @@ function WalletEffects() {
     const dismissCompletion = useCollectionState(state => state.dismissCompletion);
 
     useEffect(() => {
-        if (!connected || !storageReady) return;
         const check = () => {
             if (document.visibilityState !== 'hidden') visit();
         };
@@ -80,7 +84,7 @@ function WalletEffects() {
             window.removeEventListener('focus', check);
             document.removeEventListener('visibilitychange', check);
         };
-    }, [connected, storageReady, economyDisabled, visit]);
+    }, [economyDisabled, visit]);
 
     return economyDisabled ? null : <WalletFeedback notice={notice} completion={completion} onDismiss={dismissCompletion} />;
 }

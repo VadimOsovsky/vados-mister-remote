@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router';
 import { useCollectionState, usePlatform } from '../../state/collectionState';
 import { useStore } from '../../hooks/useStore';
@@ -9,6 +9,7 @@ import { StoreCard } from './StoreCard';
 import { StoreWallet } from './StoreWallet';
 import type { ConsoleKey, LaunchBoxGame, SortMode } from '../../types';
 import { StoreHeart } from './StoreHeart';
+import { readStoreSort } from '../../lib/storage';
 import './StorePage.css';
 
 const sorts: { mode: SortMode; label: string }[] = [
@@ -17,14 +18,21 @@ const sorts: { mode: SortMode; label: string }[] = [
     { mode: 'title', label: 'A–Z' },
 ];
 
-const storeVisits = new Map<string, {
+type StoreVisit = {
     consoleKey: ConsoleKey;
+    sort: SortMode;
     search: string;
     favoritesOnly: boolean;
     gameId: string;
     gameIndex: number;
     rowOffset: number;
-}>();
+};
+
+function readStoreVisit(key: string): StoreVisit | undefined {
+    try {
+        return JSON.parse(sessionStorage.getItem(key) ?? 'null') ?? undefined;
+    } catch { return undefined; }
+}
 
 export function StorePage() {
     const { key } = useLocation();
@@ -39,12 +47,17 @@ function StoreCatalog({ visitKey }: { visitKey: string }) {
     const economyDisabled = useCollectionState(state => state.economyDisabled);
     const [params] = useSearchParams();
     const preview = import.meta.env.DEV && params.get('preview') === '1';
-    const savedVisit = storeVisits.get(visitKey);
-    const [returnVisit, setReturnVisit] = useState(() => savedVisit?.consoleKey === activeConsole ? savedVisit : undefined);
+    const storageKey = `store.visit.${preview ? 'preview.' : ''}${visitKey}`;
+    const [returnVisit, setReturnVisit] = useState(() => {
+        const savedVisit = readStoreVisit(storageKey);
+        return savedVisit?.consoleKey === activeConsole && savedVisit.sort === (readStoreSort() ?? 'popular')
+            ? savedVisit : undefined;
+    });
     const favoriteIds = useCollectionState(state => state.favoriteIds);
     const [favoritesOnly, setFavoritesOnly] = useState(returnVisit?.favoritesOnly ?? false);
     const { loading, error, search, setSearch, sort, setSort, filteredGames: catalogGames } = useStore(activeConsole, preview, returnVisit?.search);
-    const filteredGames = favoritesOnly ? catalogGames.filter(game => favoriteIds.includes(game.id)) : catalogGames;
+    const filteredGames = useMemo(() => favoritesOnly ? catalogGames.filter(game => favoriteIds.includes(game.id)) : catalogGames,
+        [catalogGames, favoriteIds, favoritesOnly]);
     const scrollRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
     const introRef = useRef<HTMLElement>(null);
@@ -65,14 +78,16 @@ function StoreCatalog({ visitKey }: { visitKey: string }) {
         const scroller = scrollRef.current;
         const row = card?.closest('.game-grid-row');
         if (scroller && row) {
-            storeVisits.set(visitKey, {
+            const visit: StoreVisit = {
                 consoleKey: activeConsole,
+                sort,
                 search,
                 favoritesOnly,
                 gameId: game.id,
                 gameIndex: filteredGames.indexOf(game),
                 rowOffset: row.getBoundingClientRect().top - scroller.getBoundingClientRect().top - scroller.clientTop,
-            });
+            };
+            try { sessionStorage.setItem(storageKey, JSON.stringify(visit)); } catch { /* sessionStorage unavailable */ }
         }
         navigate('/store/game/' + encodeURIComponent(game.id) + (preview ? '?preview=1' : ''), {
             state: { fromStore: true },
@@ -80,7 +95,7 @@ function StoreCatalog({ visitKey }: { visitKey: string }) {
     }
 
     const savedGameIndex = returnVisit ? filteredGames.findIndex(game => game.id === returnVisit.gameId) : -1;
-    const restore = returnVisit && filteredGames.length ? {
+    const restore = returnVisit && returnVisit.sort === sort && returnVisit.search === search && filteredGames.length ? {
         gameIndex: savedGameIndex >= 0 ? savedGameIndex : Math.min(returnVisit.gameIndex, filteredGames.length - 1),
         rowOffset: returnVisit.rowOffset,
     } : undefined;

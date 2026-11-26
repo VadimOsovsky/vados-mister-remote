@@ -8,7 +8,8 @@ import { GameFormDrawer } from './GameFormDrawer';
 import { PhotoViewer } from '../../kit/PhotoViewer';
 import { GameBackdrop } from '../../kit/GameBackdrop';
 
-import { useCollectionState, usePlatform } from '../../state/collectionState';
+import { gameResalePrice, useCollectionState, usePlatform } from '../../state/collectionState';
+import { formatPrice } from '../../lib/pricing';
 import { useMisterState, useIsGamePlaying, useMisterWritable } from '../../state/misterState';
 import { useRomPicker } from '../../hooks/useRomPicker';
 import { useSaveSlots } from '../../hooks/useSaveSlots';
@@ -107,6 +108,13 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
     const favoriteIds = useCollectionState(state => state.favoriteIds);
     const toggleFavorite = useCollectionState(state => state.toggleFavorite);
     const removeFromCollection = useCollectionState(state => state.removeFromCollection);
+    const sellGame = useCollectionState(state => state.sellGame);
+    const economyDisabled = useCollectionState(state => state.economyDisabled);
+    const inCollection = useCollectionState(state => state.collectionIds.includes(selectedGame.id));
+    const [saleOpen, setSaleOpen] = useState(false);
+    const [saleError, setSaleError] = useState(false);
+    const saleAmount = gameResalePrice(selectedGame);
+    const canSell = inCollection && !economyDisabled && !selectedGame.id.startsWith('custom_');
     const unmarkAsBeaten = useCollectionState(state => state.unmarkAsBeaten);
     const playing = useIsGamePlaying(selectedGame.id, activeConsole);
     const hasFlipDisk = platform.controls?.some(control => control.id === 'flip_disk');
@@ -391,6 +399,37 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
                     </div>
                     <Tabs.Content value="main" className="owned-panel">
                         <OwnedGameAbout game={selectedGame} screenshots={screenshots} />
+                        {canSell && <Dialog.Root open={saleOpen} onOpenChange={open => {
+                            setSaleOpen(open);
+                            setSaleError(false);
+                        }}>
+                            <Dialog.Trigger asChild>
+                                <button type="button" className="owned-button owned-sell playroom-press">
+                                    Sell game <strong>{formatPrice(saleAmount)}</strong>
+                                </button>
+                            </Dialog.Trigger>
+                            <Dialog.Portal>
+                                <Dialog.Overlay className="owned-dialog-overlay" />
+                                <Dialog.Content className="owned-dialog owned-confirm owned-exit-dialog">
+                                    <Dialog.Title>Sell game?</Dialog.Title>
+                                    <Dialog.Description>
+                                        <strong>{displayTitle}</strong> will leave your collection. Your saves will be kept.
+                                    </Dialog.Description>
+                                    {!connected && <p role="status">Connect MiSTer to sell.</p>}
+                                    {saleError && <p role="alert" className="owned-exit-error">Could not sell this game. Try again.</p>}
+                                    <div className="owned-exit-actions">
+                                        <Dialog.Close className="owned-button playroom-press">Cancel</Dialog.Close>
+                                        <button type="button" className="owned-button owned-exit-button playroom-press"
+                                            disabled={!connected} onClick={() => {
+                                                if (sellGame(activeConsole, selectedGame, saleAmount)) onClose();
+                                                else setSaleError(true);
+                                            }}>
+                                            Sell for {formatPrice(saleAmount)}
+                                        </button>
+                                    </div>
+                                </Dialog.Content>
+                            </Dialog.Portal>
+                        </Dialog.Root>}
                     </Tabs.Content>
                     <Tabs.Content value="library" className="owned-panel">
                         <p className="owned-eyebrow">The little details</p>
@@ -525,7 +564,7 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
             <GameFormDrawer open={connected && editMode} onOpenChange={setEditMode} title="Edit game"
                 showClose autoFocus={editField !== 'rom'}>
                 <EditGameForm game={selectedGame} regions={regions} activeConsole={activeConsole} initialField={editField}
-                    onSave={closeEdit} onCancel={closeEdit} onDelete={deleteGame} />
+                    onSave={closeEdit} onCancel={closeEdit} onDelete={canSell ? undefined : deleteGame} />
             </GameFormDrawer>
             <StoreRomDialog
                 picker={{ ...romPicker, romPickerOpen: connected && romPickerOpen && !editMode, selectRom: selectGameRom, closeRomPicker: closeGameRomPicker }}

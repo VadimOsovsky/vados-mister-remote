@@ -493,3 +493,8 @@
   transition: transform var(--motion) var(--ease), background var(--motion) var(--ease);
 }
 .owned-edit-sheet .edit-game-delete-btn-confirm { background: #a32637; color: white; }
+.owned-game-page .owned-sell {
+    min-height: 44px;
+    margin-top: 1.25rem;
+    gap: .65rem;
+}

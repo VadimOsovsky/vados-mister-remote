@@ -81,6 +81,16 @@ export function isSaveSlotScreenshot(core: string, filename: string): boolean {
             slot?.screenshotCore === core && slot.screenshotFilename === filename));
 }
 
+export function isGalleryScreenshot(core: string, filename: string): boolean {
+    return appStorage.keys().some(key => {
+        if (!key.startsWith('game_screenshots_')) return false;
+        const gallery = JSON.parse(appStorage.getItem(key) ?? 'null');
+        return Array.isArray(gallery?.images) && gallery.images.some(
+            (image: { core?: string; filename?: string } | null) =>
+                image?.core === core && image.filename === filename);
+    });
+}
+
 export function putSaveSlot(gameId: string | number, slotIndex: number, slot: SaveSlot | null): (SaveSlot | null)[] {
     const slots = getSaveSlots(gameId);
     slots[slotIndex] = slot;
@@ -268,12 +278,14 @@ export function initializeOwnedConsoles(): void {
 const VALID_SORT_MODES: Set<string> = new Set(['az', 'za', 'recent', 'most', 'popular', 'year', 'title']);
 
 export function readStoreSort(): SortMode | null {
-    const val = appStorage.getItem(STORE_SORT_KEY);
-    return val && VALID_SORT_MODES.has(val) ? val as SortMode : null;
+    try {
+        const val = localStorage.getItem(STORE_SORT_KEY);
+        return val && VALID_SORT_MODES.has(val) ? val as SortMode : null;
+    } catch { return null; }
 }
 
 export function writeStoreSort(sort: SortMode): void {
-    appStorage.setItem(STORE_SORT_KEY, sort);
+    try { localStorage.setItem(STORE_SORT_KEY, sort); } catch { /* localStorage unavailable */ }
 }
 
 // ── Wallet ──

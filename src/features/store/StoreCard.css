@@ -110,7 +110,8 @@
 }
 .shop-price small, .shop-price.wide { font: var(--font-label); }
 .shop-caption { min-width: 0; display: grid; gap: 4px; padding-top: 12px; }
-.shop-caption strong { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font: var(--font-label-section); }
+.shop-caption > * { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.shop-caption strong { font: var(--font-label-section); }
 .shop-caption > span { color: var(--muted); font: var(--font-caption); }
 @media (hover: hover) { .shop-card:hover .shop-caption strong { color: var(--muted); } }
 

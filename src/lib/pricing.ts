@@ -9,6 +9,10 @@ export function formatGamePrice(price: number): string {
     return price === 0 ? 'FREE' : formatPrice(price);
 }
 
+export function getResalePrice(storePrice: number): number {
+    return Math.round(storePrice * 70) / 100;
+}
+
 export function formatPrice(price: number): string {
     return '$' + price.toFixed(Number.isInteger(price) ? 0 : 2);
 }

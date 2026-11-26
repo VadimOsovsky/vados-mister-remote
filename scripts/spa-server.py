@@ -49,7 +49,11 @@ def rom_checksum(rom):
     for parent in rom.parents:
         if parent.suffix.lower() == ".zip" and parent.is_file():
             with zipfile.ZipFile(parent) as archive:
-                entry = archive.getinfo(rom.relative_to(parent).as_posix())
+                name = rom.relative_to(parent).as_posix()
+                # MiSTer opens ZIP members with miniz's case-insensitive lookup.
+                entry = next((item for item in archive.infolist() if item.filename.lower() == name.lower()), None)
+                if entry is None:
+                    raise FileNotFoundError(name)
                 if entry.file_size > MAX_NES_BYTES:
                     raise ValueError("ROM is too large.")
                 return checksum_stream(archive.open(entry), entry.file_size)
@@ -67,27 +71,35 @@ def checksum_stream(stream, size):
         return f"{crc:08X}"
 
 
-def cheat_entries(rom):
+def find_cheat_archive(rom):
     folder = MEDIA_ROOT / "fat" / "cheats" / "NES"
-    candidates = [rom.with_suffix(".zip"), folder / rom.with_suffix(".zip").name]
+    candidates = [folder / rom.with_suffix(".zip").name]
+    if ".zip" not in str(rom).lower():
+        candidates.insert(0, rom.with_suffix(".zip"))
     for path in candidates:
         if path.is_file() and zipfile.is_zipfile(path):
-            break
-    else:
-        if not folder.is_dir():
-            return {}
-        try:
-            crc = rom_checksum(rom)
-        except (FileNotFoundError, KeyError):
-            return {}
-        matches = sorted(p for p in folder.iterdir() if p.name.upper().endswith(f"[{crc}].ZIP"))
-        if len(matches) > 1:
-            # Some archive names share a CRC. Prefer the archive named for this ROM.
-            expected_name = f"{rom.stem} [{crc}].zip".casefold()
-            matches = [p for p in matches if p.name.casefold() == expected_name]
-        if len(matches) != 1:
-            return {}
-        path = matches[0]
+            return path
+    if not folder.is_dir():
+        return None
+    try:
+        crc = rom_checksum(rom)
+    except FileNotFoundError:
+        return None
+    if crc == "00000000":
+        return None
+    # Main uses the first regular file with this CRC in directory order.
+    with os.scandir(folder) as archives:
+        for archive in archives:
+            if archive.name.upper().endswith(f"[{crc}].ZIP") and archive.is_file(follow_symlinks=False):
+                path = Path(archive.path)
+                return path if zipfile.is_zipfile(path) else None
+    return None
+
+
+def cheat_entries(rom):
+    path = find_cheat_archive(rom)
+    if path is None:
+        return {}
     with zipfile.ZipFile(path) as archive:
         return {
             entry.filename: entry.file_size // 16
