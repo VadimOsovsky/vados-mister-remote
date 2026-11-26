@@ -9,6 +9,7 @@ import { GameScreenshots } from '../../kit/GameScreenshots';
 import { GameRating } from '../../kit/GameRating';
 import { ExpandableDescription } from '../../kit/ExpandableDescription';
 import { LazyImage } from '../../kit/LazyImage';
+import { SaveSlotPreview } from './SaveSlotPreview';
 
 import { slotLabel } from './slotLabel';
 
@@ -35,6 +36,7 @@ export function OwnedGameAbout({ game, screenshots }: { game: LaunchBoxGame; scr
 
 export function OwnedGameSaves({ gameId, title, saves, previewScreenshot }: { gameId: string; title: string; saves: ReturnType<typeof useSaveSlots>; previewScreenshot?: string }) {
     const api = useMisterState(state => state.api);
+    const deviceConnected = useMisterState(state => state.connected);
     const connected = useMisterWritable();
     const activeConsole = useCollectionState(state => state.activeConsole);
     const markAsBeaten = useCollectionState(state => state.markAsBeaten);
@@ -49,20 +51,30 @@ export function OwnedGameSaves({ gameId, title, saves, previewScreenshot }: { ga
         <p className="owned-eyebrow">Right where you left off</p>
         <div className="owned-section-heading"><h2>Your save slots</h2><small>{used} of 4 used</small></div>
         <div className="owned-save-grid">
-            {saveSlots.map((slot, i) => <button key={i} className={`owned-save-card ${slot ? 'owned-button' : 'owned-save-empty'}`}
+            {saveSlots.map((slot, i) => {
+                const url = slot?.screenshotCore && slot.screenshotFilename
+                    ? api.getScreenshotUrl(slot.screenshotCore, slot.screenshotFilename) : undefined;
+                const cacheKey = JSON.stringify([url, saves.saveKey, i, slot?.savedAt]);
+                const refreshing = deviceConnected && !connected;
+                return <button key={i} className={`owned-save-card ${slot ? 'owned-button' : 'owned-save-empty'}`}
                 aria-pressed={i === index} onClick={() => setSelectedSlot(i)}>
                 <span className="owned-save-art">
-                    {slot ? <LazyImage src={slot.screenshotCore && slot.screenshotFilename
-                        ? api.getScreenshotUrl(slot.screenshotCore, slot.screenshotFilename) : undefined}
-                        crossOrigin={api.screenshotCrossOrigin}
-                        fallbackSrc={previewScreenshot} alt="" /> : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M12 4v16M4 12h16" /></svg>}
+                    {slot ? (
+                        url ? (
+                            refreshing ? null : <SaveSlotPreview key={`${deviceConnected}:${cacheKey}`} url={url}
+                                cacheKey={cacheKey} connected={deviceConnected} fallbackSrc={previewScreenshot} />
+                        )
+                            : previewScreenshot ? <LazyImage src={previewScreenshot} alt="" />
+                                : <span className="owned-save-preview-status">Preview unavailable</span>
+                    ) : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M12 4v16M4 12h16" /></svg>}
                 </span>
                 {slot?.beaten && <span className="owned-medal" aria-hidden="true">✓</span>}
                 <span className="owned-save-caption">
                     <span>{slotLabel(i)}{slot?.locked && <span aria-label="Protected">{LockIcon}</span>}</span>
                     <small>{slot && <i className={slot.beaten ? 'completed' : ''} />}{slot ? slot.beaten ? 'Completed' : 'Saved' : 'Empty'}</small>
                 </span>
-            </button>)}
+            </button>;
+            })}
         </div>
         <section className="owned-save-selection" aria-label="Selected save slot">
             <strong>{slotLabel(index)}</strong>

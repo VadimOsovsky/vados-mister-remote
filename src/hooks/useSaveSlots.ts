@@ -1,8 +1,8 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState, useSyncExternalStore } from 'react';
 import type { ConsoleKey, LaunchBoxGame, SaveSlot } from '../types';
 import type { WizzoApi } from '../services/wizzoApi';
-import { getRomVersions, getGameSaveKey, getOriginalGameSaveKey, getSaveSlots, putSaveSlot, deleteSaveSlot, getRomMapping, isGalleryScreenshot, isSaveSlotScreenshot } from '../lib/storage';
-import { confirmSharedStorageWrites } from '../lib/sharedStorage';
+import { getRomVersions, getGameSaveKey, getOriginalGameSaveKey, getSaveSlots, getSaveSlotsValue, parseSaveSlots, putSaveSlot, deleteSaveSlot, getRomMapping, isGalleryScreenshot, isSaveSlotScreenshot } from '../lib/storage';
+import { confirmSharedStorageWrites, subscribeToValues } from '../lib/sharedStorage';
 import { loadCollectionSave } from '../services/collectionLauncher';
 import { isRomPlaying } from '../services/nowPlaying';
 import { captureScreenshot } from '../services/misterScreenshots';
@@ -27,7 +27,8 @@ async function readSaveVersion(query: URLSearchParams): Promise<string | null> {
 export function useSaveSlots(api: WizzoApi, game: LaunchBoxGame, activeConsole: ConsoleKey) {
     const saveKey = getGameSaveKey(game.id, activeConsole);
     const [selectedSlot, setSelectedSlot] = useState(0);
-    const [saveSlots, setSaveSlots] = useState(() => getSaveSlots(saveKey));
+    const storedSlots = useSyncExternalStore(subscribeToValues, () => getSaveSlotsValue(saveKey));
+    const saveSlots = useMemo(() => parseSaveSlots(storedSlots), [storedSlots]);
     const [savingSlot, setSavingSlot] = useState(false);
     const [saveError, setSaveError] = useState<string>();
 
@@ -38,15 +39,13 @@ export function useSaveSlots(api: WizzoApi, game: LaunchBoxGame, activeConsole: 
     }, [game.id, activeConsole]);
 
     function resetSelection() {
-        setSaveSlots(getSaveSlots(saveKey));
         setSelectedSlot(0);
     }
 
     const handleToggleLock = useCallback(() => {
         if (!saveSlots[selectedSlot]) return;
         const slot = saveSlots[selectedSlot]!;
-        const updated = putSaveSlot(saveKey, selectedSlot, { ...slot, locked: !slot.locked });
-        setSaveSlots(updated);
+        putSaveSlot(saveKey, selectedSlot, { ...slot, locked: !slot.locked });
     }, [saveKey, selectedSlot, saveSlots]);
 
     const handleSave = useCallback(async () => {
@@ -101,7 +100,7 @@ export function useSaveSlots(api: WizzoApi, game: LaunchBoxGame, activeConsole: 
                 throw new Error('Could not confirm the save on MiSTer.');
             }
             const oldSlot = getSaveSlots(saveKey)[selectedSlot];
-            setSaveSlots(putSaveSlot(saveKey, selectedSlot, slot));
+            putSaveSlot(saveKey, selectedSlot, slot);
             try {
                 await removeUnusedSaveScreenshot(api, oldSlot);
             } catch (err) {
@@ -137,8 +136,7 @@ export function useSaveSlots(api: WizzoApi, game: LaunchBoxGame, activeConsole: 
     const handleDelete = useCallback((): boolean => {
         const slot = getSaveSlots(saveKey)[selectedSlot];
         if (!slot || slot.locked) return false;
-        const updated = deleteSaveSlot(saveKey, selectedSlot);
-        setSaveSlots(updated);
+        deleteSaveSlot(saveKey, selectedSlot);
         setSaveError(undefined);
         void removeUnusedSaveScreenshot(api, slot).catch(err => {
             console.warn('Save screenshot cleanup failed:', err);
@@ -151,14 +149,13 @@ export function useSaveSlots(api: WizzoApi, game: LaunchBoxGame, activeConsole: 
     const handleToggleBeaten = useCallback((): boolean => {
         if (!saveSlots[selectedSlot]) return false;
         const slot = saveSlots[selectedSlot]!;
-        const updated = putSaveSlot(saveKey, selectedSlot, { ...slot, beaten: !slot.beaten });
-        setSaveSlots(updated);
+        putSaveSlot(saveKey, selectedSlot, { ...slot, beaten: !slot.beaten });
         return hasCompletedVersion();
     }, [saveKey, selectedSlot, saveSlots, hasCompletedVersion]);
 
     return {
         selectedSlot, setSelectedSlot, resetSelection,
-        saveSlots, savingSlot, saveError, loadingSlot, hasRomMapping,
+        saveKey, saveSlots, savingSlot, saveError, loadingSlot, hasRomMapping,
         handleSave, loadSlot, handleDelete, handleToggleLock, handleToggleBeaten,
     };
 }

@@ -62,9 +62,16 @@ export function setRomMapping(gameId: string, consoleKey: ConsoleKey, romPath: s
     } catch { /* localStorage full or unavailable */ }
 }
 
-export function getSaveSlots(gameId: string | number): (SaveSlot | null)[] {
+export function getSaveSlotsValue(gameId: string | number): string | null {
     try {
-        const raw = appStorage.getItem(`${SAVE_SLOTS_PREFIX}_${gameId}`);
+        return appStorage.getItem(`${SAVE_SLOTS_PREFIX}_${gameId}`);
+    } catch {
+        return null;
+    }
+}
+
+export function parseSaveSlots(raw: string | null): (SaveSlot | null)[] {
+    try {
         if (!raw) return [...EMPTY_SLOTS];
         const parsed = JSON.parse(raw);
         if (!Array.isArray(parsed)) return [...EMPTY_SLOTS];
@@ -72,6 +79,10 @@ export function getSaveSlots(gameId: string | number): (SaveSlot | null)[] {
     } catch {
         return [...EMPTY_SLOTS];
     }
+}
+
+export function getSaveSlots(gameId: string | number): (SaveSlot | null)[] {
+    return parseSaveSlots(getSaveSlotsValue(gameId));
 }
 
 export function isSaveSlotScreenshot(core: string, filename: string): boolean {

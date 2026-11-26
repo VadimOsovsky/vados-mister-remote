@@ -300,6 +300,7 @@
 }
 .owned-button .owned-save-art { background: var(--ink); color: var(--card); }
 .owned-save-art img { image-rendering: pixelated; }
+.owned-save-preview-status { padding: 8px; font: var(--font-caption); text-align: center; }
 .owned-save-art svg { width: 26px; height: 26px; color: var(--line); }
 .owned-save-caption {
   display: flex;
