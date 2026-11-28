@@ -2,10 +2,10 @@ import { useId, useLayoutEffect, useRef, useState } from 'react';
 import { Drawer } from 'vaul';
 import { useLocation, useNavigate } from 'react-router';
 import { BottomSheet } from '../BottomSheet';
-import { consoleResalePrice, useCollectionState, usePlatform } from '../../state/collectionState';
+import { useCollectionState, usePlatform } from '../../state/collectionState';
 import { useMisterWritable } from '../../state/misterState';
 import { CONSOLE_GROUPS, PLATFORMS, STARTER_CONSOLE } from '../../constants';
-import { consolePrice } from '../../lib/consolePricing';
+import { CONSOLE_PRICE, CONSOLE_RESALE_PRICE, consolePrice } from '../../lib/consolePricing';
 import { formatPrice } from '../../lib/pricing';
 import { ChevronDownIcon } from '../../lib/icons';
 import { confirmSharedStorageWrites } from '../../lib/sharedStorage';
@@ -82,7 +82,7 @@ export function ConsoleSheet({ open, onOpenChange, onSwitch }: {
     const origin = useRef<ConsoleKey | null>(null);
     const restoreFocus = useRef(false);
     const price = pending ? consolePrice(pending, owned) : null;
-    const sale = pending && selling && owned.includes(pending) && !free ? consoleResalePrice(pending, owned) : null;
+    const sale = pending && selling && owned.includes(pending) && !free ? CONSOLE_RESALE_PRICE : null;
 
     if (seenOpen !== open) {
         setSeenOpen(open);
@@ -215,13 +215,13 @@ export function ConsoleSheet({ open, onOpenChange, onSwitch }: {
                                                         <ConsoleTile photo={consolePhotos[key]} name={PLATFORMS[key].name} label={key === activeConsole ? '✓ Selected' : 'Select'} />
                                                     </button>
                                                     {!free && key !== STARTER_CONSOLE && <button type="button" className="picker-sell playroom-press"
-                                                        aria-label={`Sell ${PLATFORMS[key].name} for ${formatPrice(consoleResalePrice(key, owned))}`}
+                                                        aria-label={`Sell ${PLATFORMS[key].name} for ${formatPrice(CONSOLE_RESALE_PRICE)}`}
                                                         data-console={key} onClick={() => {
                                                             origin.current = key;
                                                             setSelling(true);
                                                             setPending(key);
                                                         }}>
-                                                        Sell · {formatPrice(consoleResalePrice(key, owned))}
+                                                        Sell · {formatPrice(CONSOLE_RESALE_PRICE)}
                                                     </button>}
                                                 </div>)}
                                             </div>
@@ -239,7 +239,7 @@ export function ConsoleSheet({ open, onOpenChange, onSwitch }: {
                                                         setPending(key);
                                                     }}>
                                                     <ConsoleTile photo={consolePhotos[key]} name={PLATFORMS[key].name}
-                                                        label={free ? 'Add' : formatPrice(consolePrice(key, owned) ?? 0)} />
+                                                        label={free ? 'Add' : formatPrice(CONSOLE_PRICE)} />
                                                 </button>)}
                                             </div>
                                         </section>}

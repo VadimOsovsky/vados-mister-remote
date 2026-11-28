@@ -10,13 +10,10 @@ import {
     getGameCoupons, writeGameCoupons,
 } from '../lib/storage';
 import { rewardBeatenGame, spendWallet, visitWallet } from '../lib/wallet';
-import { consolePrice } from '../lib/consolePricing';
+import { CONSOLE_RESALE_PRICE, consolePrice } from '../lib/consolePricing';
 import { getGamePrice, getResalePrice } from '../lib/pricing';
 
 export const gameResalePrice = (game: LaunchBoxGame) => getResalePrice(getGamePrice(game));
-
-export const consoleResalePrice = (key: ConsoleKey, owned: readonly ConsoleKey[]) =>
-    getResalePrice(consolePrice(key, owned.filter(console => console !== key)) ?? 0);
 
 const preserveIds = <T,>(next: T[], previous?: T[]) =>
     previous && next.length === previous.length && next.every((id, index) => id === previous[index])
@@ -157,7 +154,7 @@ export const useCollectionState = create<CollectionState>((set, get) => ({
         if (!isSharedStorageReady() || getSyncStatus() === 'conflict' || readEconomyDisabled() || key === STARTER_CONSOLE) return false;
         const owned = getOwnedConsoles();
         if (!owned.includes(key)) return false;
-        const amount = consoleResalePrice(key, owned);
+        const amount = CONSOLE_RESALE_PRICE;
         if (amount !== expectedAmount) return false;
         batchStorageWrites(() => {
             if (readActiveConsole() === key) writeActiveConsole(STARTER_CONSOLE);

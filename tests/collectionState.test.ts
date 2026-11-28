@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { consoleResalePrice, gameResalePrice, useCollectionState, initializeCollectionState } from '../src/state/collectionState';
+import { gameResalePrice, useCollectionState, initializeCollectionState } from '../src/state/collectionState';
 import {
     appStorage, confirmSharedStorageWrites, getSyncStatus, initializeSharedStorage, isSharedStorageReady, setSharedStorageOnline,
     subscribeToSync, subscribeToValues, syncSharedStorage,
@@ -21,7 +21,7 @@ test('console purchases debit the wallet and persist ownership in one shared upd
         if (originalStorage) Object.defineProperty(globalThis, 'localStorage', originalStorage);
         else Reflect.deleteProperty(globalThis, 'localStorage');
     });
-    let server = { revision: 1, values: { wallet_balance: '79', owned_consoles: '["nes_ntsc"]' } as Record<string, string> };
+    let server = { revision: 1, values: { wallet_balance: '159', owned_consoles: '["nes_ntsc"]' } as Record<string, string> };
     const writes: typeof server[] = [];
     t.mock.method(globalThis, 'fetch', async (_url: string, init?: RequestInit) => {
         if (init?.method === 'PUT') {
@@ -31,7 +31,8 @@ test('console purchases debit the wallet and persist ownership in one shared upd
         }
         return Response.json(server);
     });
-    assert.equal(consolePrice('famicom', []), 160);
+    assert.equal(consolePrice('famicom', ['nes_ntsc']), 160);
+    assert.equal(consolePrice('snes_us', ['nes_ntsc']), 160);
     await initializeSharedStorage();
     const stop = initializeCollectionState();
     t.after(stop);
@@ -43,7 +44,7 @@ test('console purchases debit the wallet and persist ownership in one shared upd
     assert.deepEqual(availableGameCoupons(state().gameCoupons), []);
     assert.equal(writes.length, 0);
 
-    server.values = { ...server.values, wallet_balance: '80' };
+    server.values = { ...server.values, wallet_balance: '160' };
     await initializeSharedStorage();
     const saved = new Promise<void>(resolve => {
         const unsubscribe = subscribeToSync(() => {
@@ -123,13 +124,12 @@ test('console purchases debit the wallet and persist ownership in one shared upd
     assert.equal(state().purchaseGame(game.id, 55, '/resale.nes'), true);
     state().setEconomyDisabled(false);
 
-    assert.equal(consoleResalePrice('famicom', ['famicom']), 112);
-    assert.equal(consoleResalePrice('famicom', state().ownedConsoles), 56);
-    assert.equal(state().sellConsole('nes_ntsc', 56), false);
-    assert.equal(state().sellConsole('famicom', 56), true);
+    assert.equal(state().sellConsole('nes_ntsc', 112), false);
     assert.equal(state().sellConsole('famicom', 56), false);
+    assert.equal(state().sellConsole('famicom', 112), true);
+    assert.equal(state().sellConsole('famicom', 112), false);
     assert.equal(state().activeConsole, 'nes_ntsc');
-    assert.equal(state().balance, 114.51);
+    assert.equal(state().balance, 170.51);
     assert.equal(state().purchaseConsole('famicom'), true);
     assert.deepEqual(availableGameCoupons(state().gameCoupons), []);
     state().setActiveConsole('famicom');
