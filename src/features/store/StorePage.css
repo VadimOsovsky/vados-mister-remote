@@ -25,6 +25,7 @@
 .store-intro h1 + p { margin-top: 12px; font: var(--font-field); opacity: .8; }
 
 .store-catalog { padding-bottom: 16px; }
+.store-coupon-offer { margin: 20px 20px 0; }
 .store-empty { padding: 24px 20px; text-align: center; }
 .store-empty h2 { margin: 0; font: var(--font-heading-page); }
 .store-empty p { margin: 8px 0 16px; color: var(--muted); font: var(--font-field); }
@@ -40,4 +41,5 @@
 @media (min-width: 521px) {
   .store-intro { padding: 28px 32px; }
   .store-catalog .shelf-tools { padding-inline: 30px; }
+  .store-coupon-offer { margin-inline: 30px; }
 }

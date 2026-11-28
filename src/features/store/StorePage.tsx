@@ -7,9 +7,10 @@ import { SearchBar } from '../collection/SearchBar';
 import { GameGrid } from '../collection/GameGrid';
 import { StoreCard } from './StoreCard';
 import { StoreWallet } from './StoreWallet';
+import { GameCouponTicket } from './GameCouponTicket';
 import type { ConsoleKey, LaunchBoxGame, SortMode } from '../../types';
 import { StoreHeart } from './StoreHeart';
-import { readStoreSort } from '../../lib/storage';
+import { availableGameCoupons, readStoreSort } from '../../lib/storage';
 import './StorePage.css';
 
 const sorts: { mode: SortMode; label: string }[] = [
@@ -45,6 +46,8 @@ function StoreCatalog({ visitKey }: { visitKey: string }) {
     const platform = usePlatform();
     const balance = useCollectionState(state => state.balance);
     const economyDisabled = useCollectionState(state => state.economyDisabled);
+    const coupons = useCollectionState(state => state.gameCoupons);
+    const couponCount = economyDisabled ? 0 : availableGameCoupons(coupons).length;
     const [params] = useSearchParams();
     const preview = import.meta.env.DEV && params.get('preview') === '1';
     const storageKey = `store.visit.${preview ? 'preview.' : ''}${visitKey}`;
@@ -120,6 +123,11 @@ function StoreCatalog({ visitKey }: { visitKey: string }) {
                     </div>
                 </section>
                 <main className="store-catalog">
+                    {couponCount > 0 && <div className="store-coupon-offer">
+                        <GameCouponTicket title={couponCount === 1 ? 'You have a free game coupon' : `You have ${couponCount} free game coupons`}>
+                            Pick any game below and use a coupon at checkout.
+                        </GameCouponTicket>
+                    </div>}
                     <div className="shelf-tools">
                         <div className="shelf-heading">
                             <h2>Browse the shelves</h2>

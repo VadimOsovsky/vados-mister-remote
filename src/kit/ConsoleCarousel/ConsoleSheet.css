@@ -346,6 +346,7 @@ button.picker-option { cursor: pointer; }
 .console-checkout-details div + div { border-top: 1px solid var(--console-line); }
 .console-checkout-details dd { margin: 0; font-weight: 800; font-variant-numeric: tabular-nums; }
 .console-checkout-status { margin: 10px 0; }
+.console-checkout .game-coupon-ticket { margin-top: 14px; }
 .console-checkout .console-checkout-action {
   display: flex;
   width: 100%;

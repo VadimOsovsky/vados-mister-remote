@@ -12,11 +12,14 @@ import { ExpandableDescription } from '../../kit/ExpandableDescription';
 import { LazyImage } from '../../kit/LazyImage';
 import { BackArrowIcon, FlipIcon, StoreIcon } from '../../lib/icons';
 import { getImageUrl, loadPlatformGames, resolveImages, resolveScreenshots, resolveTitle } from '../../services/launchbox';
-import type { LaunchBoxGame } from '../../types';
+import type { ConsoleKey, LaunchBoxGame } from '../../types';
 import { getPreviewCover, getPreviewScreenshot } from '../collection/previewCovers';
 import { StoreRomDialog } from './StoreRomDialog';
 import { PurchaseSuccess } from './PurchaseSuccess';
-import { formatGamePrice } from '../../lib/pricing';
+import { formatGamePrice, formatPrice } from '../../lib/pricing';
+import { availableGameCoupons } from '../../lib/storage';
+import { confirmSharedStorageWrites } from '../../lib/sharedStorage';
+import { GameCouponIcon } from './GameCouponTicket';
 import { StoreWallet } from './StoreWallet';
 import { storePrice } from './storePreview';
 import { StoreHeart } from './StoreHeart';
@@ -80,22 +83,46 @@ function StoreProduct({ game, preview, backUrl }: { game: LaunchBoxGame; preview
     const toggleFavorite = useCollectionState(state => state.toggleFavorite);
     const purchaseGame = useCollectionState(state => state.purchaseGame);
     const economyDisabled = useCollectionState(state => state.economyDisabled);
+    const coupons = useCollectionState(state => state.gameCoupons);
+    const [selectedCoupon, setSelectedCoupon] = useState<ConsoleKey>();
+    const [saving, setSaving] = useState(false);
+    const [checkoutError, setCheckoutError] = useState<string>();
     const [back, setBack] = useState(false);
-    const [purchased, setPurchased] = useState(false);
+    const [purchased, setPurchased] = useState<'purchase' | 'addition' | 'coupon'>();
     const [galleryIndex, setGalleryIndex] = useState<number>();
     const title = resolveTitle(game, platform.nameRegions);
     const price = storePrice(game, activeConsole, preview, economyDisabled);
     const wallet = preview ? 120 : balance;
     const owned = !preview && collectionIds.includes(game.id);
     const available = preview || writable;
-    const canPurchase = available && !owned && wallet >= price;
-    const romPicker = useRomPicker(api, platform, game, activeConsole, romPath => {
-        if (!canPurchase) return;
-        if (purchaseGame(game.id, price, romPath)) {
-            if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
-            setPurchased(true);
+    const coupon = price > 0 ? availableGameCoupons(coupons)[0] : undefined;
+    const offersCoupon = coupon !== undefined && !owned;
+    const canOpenCheckout = available && !owned && (coupon !== undefined || wallet >= price);
+    const canPurchase = available && !owned && (selectedCoupon ? price > 0 && coupons[selectedCoupon] === 'available' : wallet >= price);
+    const romPicker = useRomPicker(api, platform, game, activeConsole, async romPath => {
+        if (saving || !canPurchase) return false;
+        setCheckoutError(undefined);
+        if (!purchaseGame(game.id, price, romPath, selectedCoupon)) {
+            setCheckoutError('Could not add this game. Check your payment option and try again.');
+            return false;
         }
+        setSaving(true);
+        const saved = await confirmSharedStorageWrites();
+        setSaving(false);
+        if (!saved) {
+            setCheckoutError('Could not confirm the purchase. Check your collection after syncing.');
+            return false;
+        }
+        if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+        setPurchased(selectedCoupon ? 'coupon' : economyDisabled ? 'addition' : 'purchase');
+        return true;
     }, !preview && writable);
+
+    function openCheckout() {
+        setSelectedCoupon(coupon);
+        setCheckoutError(undefined);
+        romPicker.openRomPicker(title);
+    }
     const images = resolveImages(game, platform.imageRegions);
     const localCover = preview && getPreviewCover(activeConsole, game.id);
     const front = localCover || (images.front && getImageUrl(images.front));
@@ -114,7 +141,7 @@ function StoreProduct({ game, preview, backUrl }: { game: LaunchBoxGame; preview
         ['Genre', game.genre], ['Players', game.maxPlayers],
     ];
 
-    if (purchased) return <PurchaseSuccess title={title} cover={front || undefined} preview={preview} variant={economyDisabled ? 'addition' : 'purchase'} />;
+    if (purchased) return <PurchaseSuccess title={title} cover={front || undefined} preview={preview} variant={purchased} />;
 
     return (
         <>
@@ -166,14 +193,27 @@ function StoreProduct({ game, preview, backUrl }: { game: LaunchBoxGame; preview
                 </article>
             </main>
             <aside className="owned-dock store-dock" aria-label="Purchase">
-                {!economyDisabled && <div className="store-dock-price"><small>Price</small><strong>{formatGamePrice(price)}</strong></div>}
+                {!economyDisabled && <div className="store-dock-price">
+                    <small>{offersCoupon ? 'With coupon' : 'Price'}</small>
+                    <strong>{offersCoupon ? formatPrice(0) : formatGamePrice(price)}</strong>
+                </div>}
                 <button className="owned-button owned-gold owned-primary playroom-press"
-                    disabled={!canPurchase} onClick={() => romPicker.openRomPicker(title)}>
-                    {StoreIcon}<span>{!available ? 'Connect MiSTer to buy' : owned ? 'In your collection' : wallet < price ? 'Not enough funds' : economyDisabled ? 'Add game' : 'Buy game'}</span>
+                    disabled={!canOpenCheckout || saving} onClick={openCheckout}>
+                    {offersCoupon ? <GameCouponIcon /> : StoreIcon}
+                    <span>{owned ? 'In your collection' : !available ? 'Connect MiSTer to buy' : coupon ? 'Get with coupon' : wallet < price ? 'Not enough funds' : economyDisabled ? 'Add game' : 'Buy game'}</span>
                 </button>
             </aside>
             <StoreRomDialog picker={romPicker} title={title} consoleName={platform.name}
-                price={price} preview={preview} canPurchase={canPurchase} />
+                price={price} preview={preview} canPurchase={canPurchase} saving={saving} checkoutError={checkoutError}
+                payment={coupon || selectedCoupon ? {
+                    balance: wallet,
+                    couponSelected: selectedCoupon !== undefined,
+                    couponAvailable: selectedCoupon ? saving || (price > 0 && coupons[selectedCoupon] === 'available') : coupon !== undefined,
+                    onSelect: useCoupon => {
+                        setCheckoutError(undefined);
+                        setSelectedCoupon(useCoupon ? coupon : undefined);
+                    },
+                } : undefined} />
             <PhotoViewer index={galleryIndex ?? null} onClose={() => setGalleryIndex(undefined)} slides={slides} />
         </>
     );

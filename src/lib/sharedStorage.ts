@@ -9,7 +9,7 @@ const endpoint = `${apiOrigin}/api/playroom/state`;
 let sharedEnabled = import.meta.env?.PROD && (import.meta.env.BASE_URL === '/' || Boolean(apiOrigin));
 const cacheKey = `playroom.snapshot:${endpoint}`;
 const walletVisitPrefix = cacheKey + ':wallet-visit:';
-const sharedKey = /^(?:store_free_games|rom_mappings|active_console|owned_consoles|wallet_balance|wallet_last_topup|wallet_allowance_since|wallet_visit_\d{4}-\d{2}-\d{2}|wallet_beaten_rewarded|owned_game_tab|(?:save_slots|game_rom_versions|game_overrides|game_cheats|game_screenshots|collection|favorites|beaten|custom_games)_.+|playroom\.recent\..+)$/;
+const sharedKey = /^(?:store_free_games|rom_mappings|active_console|owned_consoles|wallet_balance|wallet_last_topup|wallet_allowance_since|wallet_visit_\d{4}-\d{2}-\d{2}|wallet_beaten_rewarded|wallet_game_coupons|owned_game_tab|(?:save_slots|game_rom_versions|game_overrides|game_cheats|game_screenshots|collection|favorites|beaten|custom_games)_.+|playroom\.recent\..+)$/;
 
 let confirmed: Snapshot | undefined;
 let values: Values = {};

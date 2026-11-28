@@ -48,6 +48,27 @@
 }
 .store-rom-mark svg, .store-rom-search svg, .store-rom-file svg { width: 20px; height: 20px; flex: none; }
 .store-rom-content > p { color: var(--muted); font: var(--font-field); margin: 16px 0; }
+.store-payment { display: grid; gap: 6px; min-width: 0; margin: 16px 0 0; padding: 0; border: 0; }
+.store-payment legend { margin-bottom: 6px; font: var(--font-label); }
+.store-payment label {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  font: var(--font-field);
+  cursor: pointer;
+}
+.store-payment label:has(:checked) { border-color: var(--ink); background: color-mix(in srgb, var(--gold) 32%, var(--card)); }
+.store-payment label:has(:disabled) { color: var(--muted); cursor: default; }
+.store-payment input { margin: 0; width: 16px; height: 16px; accent-color: var(--ink); }
+.store-payment small { display: block; color: var(--muted); font: var(--font-caption); }
+.store-payment svg { width: 21px; height: 21px; }
+.store-checkout-error { margin-bottom: 10px; font: var(--font-field); }
 .store-rom-search {
   display: flex;
   align-items: center;
@@ -93,6 +114,7 @@
   overflow: auto;
 }
 .store-rom-results > p { font: var(--font-field); color: var(--muted); }
+.store-rom-content:has(.store-payment) .store-rom-results { max-height: none; overflow: visible; }
 
 .store-rom-file {
   display: grid;

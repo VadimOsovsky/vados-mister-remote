@@ -1,5 +1,6 @@
 import { useId, useLayoutEffect, useRef, useState } from 'react';
 import { Drawer } from 'vaul';
+import { useLocation, useNavigate } from 'react-router';
 import { BottomSheet } from '../BottomSheet';
 import { consoleResalePrice, useCollectionState, usePlatform } from '../../state/collectionState';
 import { useMisterWritable } from '../../state/misterState';
@@ -7,6 +8,8 @@ import { CONSOLE_GROUPS, PLATFORMS, STARTER_CONSOLE } from '../../constants';
 import { consolePrice } from '../../lib/consolePricing';
 import { formatPrice } from '../../lib/pricing';
 import { ChevronDownIcon } from '../../lib/icons';
+import { confirmSharedStorageWrites } from '../../lib/sharedStorage';
+import { GameCouponTicket } from '../../features/store/GameCouponTicket';
 import { ConsoleControls } from './ConsoleControls';
 import type { ConsoleKey } from '../../types';
 import nesPhoto from '../../assets/consoles/nes.webp';
@@ -50,15 +53,20 @@ export function ConsoleSheet({ open, onOpenChange, onSwitch }: {
     const owned = useCollectionState(state => state.ownedConsoles);
     const balance = useCollectionState(state => state.balance);
     const free = useCollectionState(state => state.economyDisabled);
+    const coupons = useCollectionState(state => state.gameCoupons);
     const purchaseConsole = useCollectionState(state => state.purchaseConsole);
     const sellConsole = useCollectionState(state => state.sellConsole);
     const writable = useMisterWritable();
+    const navigate = useNavigate();
+    const { search } = useLocation();
     const platform = PLATFORMS[activeConsole];
     const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
     const [pending, setPending] = useState<ConsoleKey | null>(null);
     const [purchased, setPurchased] = useState(false);
+    const [couponAwarded, setCouponAwarded] = useState(false);
+    const [buying, setBuying] = useState(false);
     const [selling, setSelling] = useState(false);
-    const [error, setError] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const [seenOpen, setSeenOpen] = useState(open);
     const groupId = useId();
     const scroller = useRef<HTMLDivElement>(null);
@@ -74,8 +82,9 @@ export function ConsoleSheet({ open, onOpenChange, onSwitch }: {
             setExpandedGroup(null);
             setPending(null);
             setPurchased(false);
+            setCouponAwarded(false);
             setSelling(false);
-            setError(false);
+            setError(null);
         }
     }
 
@@ -94,23 +103,35 @@ export function ConsoleSheet({ open, onOpenChange, onSwitch }: {
         onOpenChange(false);
     }
 
-    function confirmPurchase(key: ConsoleKey) {
-        if (purchaseConsole(key)) setPurchased(true);
-        else setError(true);
+    async function confirmPurchase(key: ConsoleKey) {
+        if (buying) return;
+        const earnsCoupon = !free && !coupons[key];
+        setError(null);
+        if (!purchaseConsole(key)) {
+            setError('Could not add this console. Check your balance and try again.');
+            return;
+        }
+        setBuying(true);
+        const saved = await confirmSharedStorageWrites();
+        setBuying(false);
+        if (saved) {
+            setCouponAwarded(earnsCoupon);
+            setPurchased(true);
+        } else setError('Purchase could not be confirmed. Check your console collection after syncing.');
     }
 
     return (
-        <BottomSheet open={open} onOpenChange={onOpenChange} overlayClassName="console-sheet-overlay" className="console-sheet">
+        <BottomSheet open={open} onOpenChange={onOpenChange} dismissible={!buying} overlayClassName="console-sheet-overlay" className="console-sheet">
             <Drawer.Handle className="console-sheet-handle" />
             <header className="console-sheet-header">
-                {pending && !purchased && <button type="button" className="console-sheet-back" aria-label="Back to consoles"
-                    onClick={() => { restoreFocus.current = true; setPending(null); setError(false); }}>
+                {pending && !purchased && <button type="button" className="console-sheet-back" aria-label="Back to consoles" disabled={buying}
+                    onClick={() => { restoreFocus.current = true; setPending(null); setError(null); }}>
                     {ChevronDownIcon}
                 </button>}
                 <Drawer.Title ref={heading} tabIndex={-1} className="picker-title">
                     {purchased ? 'Console added!' : selling && pending ? 'Sell console' : pending ? 'Buy console' : 'Consoles'}
                 </Drawer.Title>
-                <Drawer.Close className="console-sheet-close" aria-label="Close">×</Drawer.Close>
+                <Drawer.Close className="console-sheet-close" aria-label="Close" disabled={buying}>×</Drawer.Close>
             </header>
 
             <div className="console-sheet-body" ref={scroller} data-vaul-no-drag>
@@ -135,15 +156,19 @@ export function ConsoleSheet({ open, onOpenChange, onSwitch }: {
                                 if (sale !== null && sellConsole(pending, sale)) {
                                     if (pending === activeConsole) onSwitch(STARTER_CONSOLE);
                                     onOpenChange(false);
-                                } else setError(true);
+                                } else setError('Could not sell this console.');
                             }}>
                             Sell console{sale !== null && <strong>{formatPrice(sale)}</strong>}
                         </button>
                     </div>
                 ) : pending ? (
                     <ConsoleCheckout key={pending} consoleKey={pending} price={price} balance={balance} free={free}
-                        purchased={purchased} error={error} onBuy={() => confirmPurchase(pending)}
-                        onSelect={() => selectConsole(pending)} />
+                        purchased={purchased} buying={buying} error={error} onBuy={() => void confirmPurchase(pending)}
+                        offersCoupon={!free && !coupons[pending]} couponAwarded={couponAwarded}
+                        onSelect={() => selectConsole(pending)} onBrowse={() => {
+                            selectConsole(pending);
+                            navigate('/store' + search);
+                        }} />
                 ) : (
                     <div className="console-picker">
                         <div className="picker-options picker-groups">
@@ -241,21 +266,24 @@ function ConsoleTile({ photo, name, label }: { photo?: string; name: string; lab
     </>;
 }
 
-function ConsoleCheckout({ consoleKey, price, balance, free, purchased, error, onBuy, onSelect }: {
+function ConsoleCheckout({ consoleKey, price, balance, free, purchased, buying, error, offersCoupon, couponAwarded, onBuy, onSelect, onBrowse }: {
     consoleKey: ConsoleKey;
     price: number | null;
     balance: number;
     free: boolean;
     purchased: boolean;
-    error: boolean;
+    buying: boolean;
+    error: string | null;
+    offersCoupon: boolean;
+    couponAwarded: boolean;
     onBuy: () => void;
     onSelect: () => void;
+    onBrowse: () => void;
 }) {
     const writable = useMisterWritable();
     const platform = PLATFORMS[consoleKey];
     const photo = consolePhotos[consoleKey];
     const shortfall = price === null || free ? 0 : Math.max(0, price - balance);
-    const owned = price === null;
 
     return (
         <div className="console-checkout">
@@ -267,7 +295,7 @@ function ConsoleCheckout({ consoleKey, price, balance, free, purchased, error, o
                 <h3>{platform.name}</h3>
                 {platform.branding !== platform.name && <p>{platform.branding}</p>}
             </div>
-            {purchased ? <p className="console-checkout-status" role="status">{platform.name} is now in your collection.</p> : null}
+            {purchased && <p className="console-checkout-status" role="status">{platform.name} is now in your collection.</p>}
             {!free && price !== null && (
                 <dl className="console-checkout-details">
                     <div><dt>Price</dt><dd>{formatPrice(price)}</dd></div>
@@ -275,13 +303,21 @@ function ConsoleCheckout({ consoleKey, price, balance, free, purchased, error, o
                     {shortfall === 0 && <div><dt>Balance after purchase</dt><dd>{formatPrice(balance - price)}</dd></div>}
                 </dl>
             )}
+            {couponAwarded && <GameCouponTicket title="Free game coupon added">Use it on any game in the store.</GameCouponTicket>}
+            {!purchased && !buying && price !== null && offersCoupon &&
+                <GameCouponTicket title="Includes a free game coupon">Pick any game in the store, now or later.</GameCouponTicket>}
             {shortfall > 0 && <p className="console-checkout-status" role="status">You need {formatPrice(shortfall)} more.</p>}
-            {error && <p className="console-checkout-status" role="alert">Could not add this console. Try again.</p>}
-            <button type="button" className="console-checkout-action playroom-button playroom-primary playroom-press"
-                disabled={!owned && (!writable || shortfall > 0)} onClick={owned ? onSelect : onBuy}>
-                <span>{owned ? `Play on ${platform.name}` : !writable ? 'Connect MiSTer to buy' : free ? 'Add console' : 'Buy console'}</span>
+            {error && <p className="console-checkout-status" role="alert">{error}</p>}
+            {couponAwarded && <button type="button" className="console-checkout-action playroom-button playroom-primary playroom-press" onClick={onBrowse}>
+                Choose a free game
+            </button>}
+            {purchased ? <button type="button" className={`console-checkout-action playroom-button playroom-press${couponAwarded ? '' : ' playroom-primary'}`} onClick={onSelect}>
+                {couponAwarded ? 'Switch console' : `Play on ${platform.name}`}
+            </button> : <button type="button" className="console-checkout-action playroom-button playroom-primary playroom-press"
+                disabled={buying || price === null || !writable || shortfall > 0} onClick={onBuy}>
+                <span>{buying ? 'Saving purchase…' : !writable ? 'Connect MiSTer to buy' : free ? 'Add console' : 'Buy console'}</span>
                 {!free && price !== null && <strong>{formatPrice(price)}</strong>}
-            </button>
+            </button>}
         </div>
     );
 }

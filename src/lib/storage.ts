@@ -26,6 +26,7 @@ const STORE_SORT_KEY = 'store_sort';
 const WALLET_BALANCE_KEY = 'wallet_balance';
 const WALLET_LAST_TOPUP_KEY = 'wallet_last_topup';
 const WALLET_REWARDED_KEY = 'wallet_beaten_rewarded';
+const GAME_COUPONS_KEY = 'wallet_game_coupons';
 
 export const EMPTY_SLOTS: (SaveSlot | null)[] = [null, null, null, null];
 
@@ -312,6 +313,28 @@ export function setWalletBalance(amount: number): void {
     try {
         appStorage.setItem(WALLET_BALANCE_KEY, String(amount));
     } catch { /* localStorage full */ }
+}
+
+export type GameCoupons = Partial<Record<ConsoleKey, string>>;
+
+export function getGameCoupons(): GameCoupons {
+    try {
+        const raw = JSON.parse(appStorage.getItem(GAME_COUPONS_KEY) ?? 'null') as GameCoupons | null;
+        const coupons: GameCoupons = {};
+        for (const key of CONSOLE_KEYS) {
+            const value = raw?.[key];
+            if (typeof value === 'string' && value) coupons[key] = value;
+        }
+        return coupons;
+    } catch { return {}; }
+}
+
+export function writeGameCoupons(coupons: GameCoupons): void {
+    appStorage.setItem(GAME_COUPONS_KEY, JSON.stringify(coupons));
+}
+
+export function availableGameCoupons(coupons: GameCoupons): ConsoleKey[] {
+    return CONSOLE_KEYS.filter(key => coupons[key] === 'available');
 }
 
 export function getLastTopupDate(): string | null {

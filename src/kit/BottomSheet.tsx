@@ -2,15 +2,16 @@ import type { ReactNode } from 'react';
 import { Drawer } from 'vaul';
 import './BottomSheet.css';
 
-export function BottomSheet({ open, onOpenChange, autoFocus = false, className, overlayClassName, children }: {
+export function BottomSheet({ open, onOpenChange, autoFocus = false, dismissible = true, className, overlayClassName, children }: {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     autoFocus?: boolean;
+    dismissible?: boolean;
     className: string;
     overlayClassName: string;
     children: ReactNode;
 }) {
-    return <Drawer.Root open={open} onOpenChange={onOpenChange} autoFocus={autoFocus} repositionInputs={false}>
+    return <Drawer.Root open={open} onOpenChange={onOpenChange} autoFocus={autoFocus} dismissible={dismissible} repositionInputs={false}>
         <Drawer.Portal>
             <Drawer.Overlay className={overlayClassName} />
             <Drawer.Content className={`bottom-sheet ${className}`} aria-describedby={undefined}>

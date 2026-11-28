@@ -36,6 +36,7 @@ button.store-wallet:focus-visible { outline: 3px solid var(--gold); outline-offs
 .wallet-eyebrow { font: var(--font-caption); opacity: .65; margin: 0; }
 .wallet-total { font-size: 40px; font-weight: 800; margin: 20px 0; font-variant-numeric: tabular-nums; }
 .wallet-rules { margin: 0; }
+.wallet-sheet .game-coupon-ticket { margin-bottom: 20px; }
 .wallet-rules > div { padding: 16px 0; border-top: 1px solid color-mix(in srgb, var(--ink) 15%, transparent); }
 .wallet-rules dt { display: flex; justify-content: space-between; gap: 16px; font-weight: 700; }
 .wallet-rules dd { margin: 8px 0 0; font-size: 14px; line-height: 1.6; opacity: .75; }

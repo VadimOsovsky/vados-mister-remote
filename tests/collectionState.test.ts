@@ -5,7 +5,7 @@ import {
     appStorage, confirmSharedStorageWrites, getSyncStatus, initializeSharedStorage, isSharedStorageReady, setSharedStorageOnline,
     subscribeToSync, subscribeToValues, syncSharedStorage,
 } from '../src/lib/sharedStorage';
-import { addCustomGame, getFavoriteIds, getRomMapping, setFavorite } from '../src/lib/storage';
+import { addCustomGame, availableGameCoupons, getFavoriteIds, getRomMapping, setFavorite } from '../src/lib/storage';
 import { consolePrice } from '../src/lib/consolePricing';
 import { loadCollectionGames } from '../src/services/launchbox';
 import type { LaunchBoxGame } from '../src/types';
@@ -40,6 +40,7 @@ test('console purchases debit the wallet and persist ownership in one shared upd
     state().setActiveConsole('famicom');
     assert.equal(state().activeConsole, 'nes_ntsc');
     assert.equal(state().purchaseConsole('famicom'), false);
+    assert.deepEqual(availableGameCoupons(state().gameCoupons), []);
     assert.equal(writes.length, 0);
 
     server.values = { ...server.values, wallet_balance: '80' };
@@ -55,10 +56,12 @@ test('console purchases debit the wallet and persist ownership in one shared upd
     assert.equal(state().purchaseConsole('famicom'), false);
     assert.equal(state().balance, 0);
     assert.deepEqual(state().ownedConsoles, ['nes_ntsc', 'famicom']);
+    assert.deepEqual(availableGameCoupons(state().gameCoupons), ['famicom']);
     await saved;
     assert.equal(writes.length, 1);
     assert.equal(writes[0].values.wallet_balance, '0');
     assert.equal(writes[0].values.owned_consoles, '["nes_ntsc","famicom"]');
+    assert.equal(writes[0].values.wallet_game_coupons, '{"famicom":"available"}');
 
     const cache = JSON.parse(localStorage.getItem('playroom.snapshot:/api/playroom/state') ?? 'null');
     assert.deepEqual(cache, server);
@@ -67,6 +70,8 @@ test('console purchases debit the wallet and persist ownership in one shared upd
     appStorage.setItem('wallet_balance', '999');
     appStorage.removeItem('owned_consoles');
     assert.equal(state().purchaseGame('offline', 0, '/offline.nes'), false);
+    assert.equal(state().purchaseGame('offline', 25, '/offline.nes', 'famicom'), false);
+    assert.deepEqual(availableGameCoupons(state().gameCoupons), ['famicom']);
     assert.equal(appStorage.getItem('wallet_balance'), '0');
     assert.equal(appStorage.getItem('owned_consoles'), '["nes_ntsc","famicom"]');
     assert.equal(writes.length, 1);
@@ -83,6 +88,23 @@ test('console purchases debit the wallet and persist ownership in one shared upd
     assert.equal(state().balance, 30);
     assert.deepEqual(JSON.parse(stored.get('playroom.snapshot:/api/playroom/state') ?? 'null'), server);
     assert.equal(writes.length, 1);
+
+    // A coupon earned from the Famicom works on the active NES without touching the wallet.
+    assert.equal(state().activeConsole, 'nes_ntsc');
+    assert.equal(state().purchaseGame('coupon-game', 55, '/coupon-game.nes'), false);
+    assert.equal(state().purchaseGame('coupon-game', 55, '/coupon-game.nes', 'nes_pal'), false);
+    assert.equal(state().purchaseGame('coupon-game', 55, '/coupon-game.nes', 'famicom'), true);
+    assert.equal(state().purchaseGame('second-game', 55, '/second-game.nes', 'famicom'), false);
+    assert.equal(state().balance, 30);
+    assert.deepEqual(state().collectionIds, ['coupon-game']);
+    assert.deepEqual(availableGameCoupons(state().gameCoupons), []);
+    assert.equal(getRomMapping('coupon-game', 'nes_ntsc'), '/coupon-game.nes');
+    assert.equal(await confirmSharedStorageWrites(), true);
+    const redemption = writes.at(-1)?.values;
+    assert.equal(redemption?.wallet_balance, '30');
+    assert.equal(redemption?.collection_nes_ntsc, '["coupon-game"]');
+    assert.match(redemption?.rom_mappings ?? '', /coupon-game\.nes/);
+    assert.equal(JSON.parse(redemption?.wallet_game_coupons ?? '{}').famicom, state().gameCoupons.famicom);
 
     state().setActiveConsole('famicom');
     await syncSharedStorage();
@@ -109,8 +131,12 @@ test('console purchases debit the wallet and persist ownership in one shared upd
     assert.equal(state().activeConsole, 'nes_ntsc');
     assert.equal(state().balance, 114.51);
     assert.equal(state().purchaseConsole('famicom'), true);
+    assert.deepEqual(availableGameCoupons(state().gameCoupons), []);
     state().setActiveConsole('famicom');
     assert.deepEqual(state().collectionIds, [game.id]);
+    state().setEconomyDisabled(true);
+    assert.equal(state().purchaseConsole('nes_pal'), true);
+    assert.equal(state().gameCoupons.nes_pal, undefined);
     assert.equal(await confirmSharedStorageWrites(), true);
 });
 

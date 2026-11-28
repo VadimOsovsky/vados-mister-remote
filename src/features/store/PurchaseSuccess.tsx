@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router';
 import { LazyImage } from '../../kit/LazyImage';
 import './PurchaseSuccess.css';
 
-export function PurchaseSuccess({ title, cover, preview, variant = 'purchase' }: { title: string; cover?: string; preview: boolean; variant?: 'purchase' | 'addition' }) {
+export function PurchaseSuccess({ title, cover, preview, variant = 'purchase' }: { title: string; cover?: string; preview: boolean; variant?: 'purchase' | 'addition' | 'coupon' }) {
     const navigate = useNavigate();
     const headingRef = useRef<HTMLHeadingElement>(null);
 
@@ -31,7 +31,7 @@ export function PurchaseSuccess({ title, cover, preview, variant = 'purchase' }:
             <p className="purchase-success-kicker">A new adventure awaits</p>
             <h1 ref={headingRef} tabIndex={-1}>{variant === 'addition' ? 'A new game on your shelf.' : 'Voilà! It’s yours.'}</h1>
             <p className="purchase-success-title">{title}</p>
-            <p className="purchase-success-caption">Added to your collection</p>
+            <p className="purchase-success-caption">{variant === 'coupon' ? 'Added to your collection with a free game coupon' : 'Added to your collection'}</p>
             <p className="purchase-success-caption">Taking you to your collection…</p>
         </div>
     </main>;

@@ -11,7 +11,7 @@ function launchErrorMessage(error: unknown): string {
     return 'Could not launch the game. Try again.';
 }
 
-export function useRomPicker(api: WizzoApi, platform: PlatformDef, selectedGame: LaunchBoxGame | null, activeConsole: ConsoleKey, onSelect?: (romPath: string) => void, searchEnabled = true) {
+export function useRomPicker(api: WizzoApi, platform: PlatformDef, selectedGame: LaunchBoxGame | null, activeConsole: ConsoleKey, onSelect?: (romPath: string) => boolean | Promise<boolean>, searchEnabled = true) {
     const [romPickerOpen, setRomPickerOpen] = useState(false);
     const [romSearchQuery, setQuery] = useState('');
     const searchVersion = useRef(0);
@@ -106,10 +106,10 @@ export function useRomPicker(api: WizzoApi, platform: PlatformDef, selectedGame:
 
     const selectRom = useCallback(async (result: WizzoGameSearchResult) => {
         if (!selectedGame) return;
-        closeRomPicker();
         if (onSelect) {
-            onSelect(result.path);
+            if (await onSelect(result.path)) closeRomPicker();
         } else {
+            closeRomPicker();
             try {
                 setRomMapping(selectedGame.id, activeConsole, result.path);
                 await launchCollectionGame(api, activeConsole, selectedGame.id, result.path);

@@ -2,16 +2,20 @@ import { useCollectionState } from '../../state/collectionState';
 import { useState } from 'react';
 import { Drawer } from 'vaul';
 import { BottomSheet } from '../../kit/BottomSheet';
+import { availableGameCoupons } from '../../lib/storage';
 import { DAILY_ALLOWANCE, BEATEN_REWARD, STARTING_BALANCE } from '../../lib/wallet';
+import { GameCouponTicket } from './GameCouponTicket';
 import './StoreWallet.css';
 import { formatPrice } from '../../lib/pricing';
 
 export function StoreWallet({ balance, compact }: { balance: number; compact?: boolean }) {
     const [open, setOpen] = useState(false);
     const economyDisabled = useCollectionState(state => state.economyDisabled);
+    const coupons = useCollectionState(state => state.gameCoupons);
     if (economyDisabled) return null;
+    const count = availableGameCoupons(coupons).length;
     return <>
-        <button type="button" className={compact ? 'store-wallet compact' : 'store-wallet'} aria-label={'Your balance: ' + formatPrice(balance) + '. View wallet rules'} onClick={() => setOpen(true)}>
+        <button type="button" className={compact ? 'store-wallet compact' : 'store-wallet'} aria-label={'Your balance: ' + formatPrice(balance) + '. Open wallet'} aria-haspopup="dialog" onClick={() => setOpen(true)}>
             <span className="store-coin" aria-hidden="true">$</span>
             <span>{!compact && <small>Your balance</small>}<strong>{formatPrice(balance)}</strong></span>
         </button>
@@ -21,6 +25,9 @@ export function StoreWallet({ balance, compact }: { balance: number; compact?: b
                 <p className="wallet-eyebrow">A little towards your next adventure</p>
                 <Drawer.Title>Your pocket money</Drawer.Title>
                 <div className="wallet-total">{formatPrice(balance)}</div>
+                <GameCouponTicket title={count === 1 ? '1 free game coupon' : `${count} free game coupons`}>
+                    {count ? 'Each coupon covers any one game in the store.' : 'Get a coupon the first time you buy each console model.'}
+                </GameCouponTicket>
                 <dl className="wallet-rules">
                     <div><dt>Drop by today <strong>+{formatPrice(DAILY_ALLOWANCE)}</strong></dt><dd>Automatically added on your first visit each local calendar day. Missed days do not accumulate, and there is no streak to maintain.</dd></div>
                     <div><dt>Finish a game <strong>+{formatPrice(BEATEN_REWARD)}</strong></dt><dd>Mark a save as completed to collect your reward. Once per game, even if you unmark it or add it again.</dd></div>

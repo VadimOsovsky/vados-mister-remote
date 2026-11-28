@@ -6,25 +6,36 @@ import type { useRomPicker } from '../../hooks/useRomPicker';
 import type { WizzoGameSearchResult } from '../../services/wizzoApi';
 import { FileIcon, SearchIcon, StoreIcon } from '../../lib/icons';
 import { useCollectionState, usePlatform } from '../../state/collectionState';
-import { formatGamePrice } from '../../lib/pricing';
+import { formatGamePrice, formatPrice } from '../../lib/pricing';
+import { GameCouponIcon } from './GameCouponTicket';
 
 type Picker = ReturnType<typeof useRomPicker>;
+
+type PaymentOptions = {
+    balance: number;
+    couponSelected: boolean;
+    couponAvailable: boolean;
+    onSelect: (useCoupon: boolean) => void;
+};
 
 type RomDialogProps = {
     picker: Picker;
     title: string;
     consoleName: string;
     preview: boolean;
+    payment?: PaymentOptions;
+    saving?: boolean;
+    checkoutError?: string;
 } & ({ price: number; canPurchase: boolean; launchLabel?: never } | { launchLabel: string; price?: never; canPurchase?: never });
 
 export function StoreRomDialog(props: RomDialogProps) {
-    const { picker } = props;
+    const { picker, saving } = props;
     return (
-        <BottomSheet open={picker.romPickerOpen} onOpenChange={open => { if (!open) picker.closeRomPicker(); }}
+        <BottomSheet open={picker.romPickerOpen} dismissible={!saving} onOpenChange={open => { if (!open) picker.closeRomPicker(); }}
             overlayClassName="owned-dialog-overlay" className="store-rom-dialog">
             <header>
                 <div><p className="store-kicker">One last thing</p><Drawer.Title>Choose a game file</Drawer.Title></div>
-                <Drawer.Close className="playroom-button playroom-icon-button playroom-press" aria-label="Close">
+                <Drawer.Close className="playroom-button playroom-icon-button playroom-press" aria-label="Close" disabled={saving}>
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
                 </Drawer.Close>
             </header>
@@ -33,7 +44,7 @@ export function StoreRomDialog(props: RomDialogProps) {
     );
 }
 
-function StoreRomForm({ picker, title, consoleName, price, preview, canPurchase, launchLabel }: RomDialogProps) {
+function StoreRomForm({ picker, title, consoleName, price, preview, canPurchase, launchLabel, payment, saving, checkoutError }: RomDialogProps) {
     const economyDisabled = useCollectionState(state => state.economyDisabled);
     const platform = usePlatform();
     const searchRef = useRef<HTMLInputElement>(null);
@@ -50,6 +61,7 @@ function StoreRomForm({ picker, title, consoleName, price, preview, canPurchase,
     const file = results.find(result => result.path === selected);
     const loading = !preview && picker.romSearchLoading;
     const error = !preview && picker.romSearchError;
+    const redeeming = payment?.couponSelected;
 
     function updateQuery(query: string) {
         setSelected(undefined);
@@ -68,6 +80,19 @@ function StoreRomForm({ picker, title, consoleName, price, preview, canPurchase,
                     <span className="store-rom-mark">{StoreIcon}</span>
                     <span><strong>{title}</strong><small>{consoleName} · Files on your MiSTer</small></span>
                 </div>
+                {payment && price !== undefined && <fieldset className="store-payment" disabled={saving}>
+                    <legend>Payment method</legend>
+                    <label>
+                        <input type="radio" name="store-payment" checked={redeeming} disabled={!payment.couponAvailable} onChange={() => payment.onSelect(true)} />
+                        <span>Free game coupon{!payment.couponAvailable && <small>Coupon no longer available</small>}</span>
+                        <GameCouponIcon />
+                    </label>
+                    <label>
+                        <input type="radio" name="store-payment" checked={!redeeming} disabled={payment.balance < price} onChange={() => payment.onSelect(false)} />
+                        <span>Wallet<small>{payment.balance < price ? 'Not enough funds' : `${formatPrice(payment.balance)} available`}</small></span>
+                        <strong>{formatPrice(price)}</strong>
+                    </label>
+                </fieldset>}
                 <p>Pick the ROM you want to link to this game.</p>
                 <div className="store-rom-search">
                     {SearchIcon}
@@ -99,13 +124,14 @@ function StoreRomForm({ picker, title, consoleName, price, preview, canPurchase,
                 </div>
             </div>
             <footer>
+                {checkoutError && <div className="store-checkout-error" role="alert">{checkoutError}</div>}
                 <p aria-live="polite">{file ? file.name : 'Choose a file to continue'}</p>
                 <div className="store-rom-actions">
-                    <Drawer.Close className="playroom-button playroom-press">Cancel</Drawer.Close>
+                    <Drawer.Close className="playroom-button playroom-press" disabled={saving}>Cancel</Drawer.Close>
                     <button className="playroom-button playroom-primary playroom-press"
-                        disabled={!file || loading || canPurchase === false} onClick={() => { if (file) confirm(file); }}>
-                        <span>{launchLabel ?? (price === 0 ? 'Add game' : 'Buy game')}</span>
-                        {price !== undefined && !economyDisabled && <strong>{formatGamePrice(price)}</strong>}
+                        disabled={saving || !file || loading || canPurchase === false} onClick={() => { if (file) confirm(file); }}>
+                        <span>{saving ? 'Saving…' : launchLabel ?? (redeeming ? 'Redeem coupon' : price === 0 ? 'Add game' : 'Buy game')}</span>
+                        {price !== undefined && !economyDisabled && <strong>{redeeming ? formatPrice(0) : formatGamePrice(price)}</strong>}
                     </button>
                 </div>
             </footer>

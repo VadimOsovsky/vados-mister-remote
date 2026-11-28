@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { PLATFORMS, STARTER_CONSOLE } from '../constants';
+import { CONSOLE_KEYS, PLATFORMS, STARTER_CONSOLE } from '../constants';
 import type { ConsoleKey, LaunchBoxGame } from '../types';
 import { batchStorageWrites, confirmSharedStorageWrites, getSyncStatus, isSharedStorageReady, subscribeToValues } from '../lib/sharedStorage';
 import {
@@ -7,6 +7,7 @@ import {
     getFavoriteIds, setFavorite, getBeatenIds, addBeatenId, removeBeatenId,
     getWalletBalance, setWalletBalance, readEconomyDisabled, writeEconomyDisabled, setRomMapping,
     getOwnedConsoles, writeOwnedConsoles, initializeOwnedConsoles,
+    getGameCoupons, writeGameCoupons,
 } from '../lib/storage';
 import { rewardBeatenGame, spendWallet, visitWallet } from '../lib/wallet';
 import { consolePrice } from '../lib/consolePricing';
@@ -23,12 +24,15 @@ const preserveIds = <T,>(next: T[], previous?: T[]) =>
 
 function readCollection(previous?: ReturnType<typeof readCollectionSnapshot>) {
     const next = readCollectionSnapshot();
+    const previousCoupons = previous?.gameCoupons;
     return {
         ...next,
         collectionIds: preserveIds(next.collectionIds, previous?.collectionIds),
         favoriteIds: preserveIds(next.favoriteIds, previous?.favoriteIds),
         beatenIds: preserveIds(next.beatenIds, previous?.beatenIds),
         ownedConsoles: preserveIds(next.ownedConsoles, previous?.ownedConsoles),
+        gameCoupons: previousCoupons && CONSOLE_KEYS.every(key => previousCoupons[key] === next.gameCoupons[key])
+            ? previousCoupons : next.gameCoupons,
     };
 }
 
@@ -40,6 +44,7 @@ function readCollectionSnapshot(activeConsole = readActiveConsole() ?? STARTER_C
         favoriteIds: getFavoriteIds(activeConsole),
         beatenIds: getBeatenIds(activeConsole),
         balance: getWalletBalance(),
+        gameCoupons: getGameCoupons(),
         economyDisabled: readEconomyDisabled(),
     };
 }
@@ -58,7 +63,7 @@ type CollectionState = ReturnType<typeof readCollectionSnapshot> & Feedback & {
     addToCollection: (id: string) => void;
     toggleFavorite: (id: string) => void;
     removeFromCollection: (id: string) => void;
-    purchaseGame: (id: string, price: number, romPath: string) => boolean;
+    purchaseGame: (id: string, price: number, romPath: string, coupon?: ConsoleKey) => boolean;
     purchaseConsole: (key: ConsoleKey) => boolean;
     sellGame: (key: ConsoleKey, game: LaunchBoxGame, expectedAmount: number) => boolean;
     sellConsole: (key: ConsoleKey, expectedAmount: number) => boolean;
@@ -73,6 +78,7 @@ export const useCollectionState = create<CollectionState>((set, get) => ({
     favoriteIds: [],
     beatenIds: [],
     balance: 0,
+    gameCoupons: {},
     economyDisabled: false,
     ...emptyFeedback,
     setActiveConsole: key => {
@@ -98,21 +104,27 @@ export const useCollectionState = create<CollectionState>((set, get) => ({
         removeCollectionId(key, id);
         setFavorite(key, id, false);
     }),
-    purchaseGame: (id: string, price: number, romPath: string) => {
-        if (!isSharedStorageReady()) return false;
+    purchaseGame: (id, price, romPath, coupon) => {
+        if (!isSharedStorageReady() || getSyncStatus() === 'conflict') return false;
         const key = get().activeConsole;
         const free = readEconomyDisabled();
         const purchased = batchStorageWrites(() => {
-            if (getCollectionIds(key).includes(id) || spendWallet(price) === null) return false;
+            if (getCollectionIds(key).includes(id)) return false;
+            if (coupon) {
+                const coupons = getGameCoupons();
+                if (free || !Number.isFinite(price) || price <= 0 || coupons[coupon] !== 'available') return false;
+                // Each redemption has its own value so sync can detect competing uses of the same coupon.
+                writeGameCoupons({ ...coupons, [coupon]: crypto.getRandomValues(new Uint32Array(4)).join('-') });
+            } else if (spendWallet(price) === null) return false;
             setRomMapping(id, key, romPath);
             addCollectionId(key, id);
             return true;
         });
-        if (purchased && !free && price > 0) set({ walletNotice: { amount: -price, id: Date.now() } });
+        if (purchased && !coupon && !free && price > 0) set({ walletNotice: { amount: -price, id: Date.now() } });
         return purchased;
     },
     purchaseConsole: key => {
-        if (!isSharedStorageReady()) return false;
+        if (!isSharedStorageReady() || getSyncStatus() === 'conflict') return false;
         const owned = getOwnedConsoles();
         const price = consolePrice(key, owned);
         if (price === null) return false;
@@ -120,6 +132,8 @@ export const useCollectionState = create<CollectionState>((set, get) => ({
         const purchased = batchStorageWrites(() => {
             if (spendWallet(price) === null) return false;
             writeOwnedConsoles([...owned, key]);
+            const coupons = getGameCoupons();
+            if (!free && !coupons[key]) writeGameCoupons({ ...coupons, [key]: 'available' });
             return true;
         });
         if (purchased && !free) set({ walletNotice: { amount: -price, id: Date.now() } });
