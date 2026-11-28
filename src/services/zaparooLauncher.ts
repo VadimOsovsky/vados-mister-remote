@@ -5,11 +5,11 @@ function escapeXml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
 }
 
-function buildMglXml({ setname, rbf, systemType }: NonNullable<PlatformDef['mglConfig']>, romPath: string): string {
+function buildMglXml({ setname, rbf, systemType, optionName }: NonNullable<PlatformDef['mglConfig']>, romPath: string): string {
   const profile = setname ? `\n   <setname same_dir="1">${escapeXml(setname)}</setname>` : '';
   return `<mistergamedescription>
    <rbf>${escapeXml(rbf)}</rbf>${profile}
-   <option name="System Type" value="${systemType}"/>
+   <option name="${optionName ?? 'System Type'}" value="${systemType}"/>
    <file delay="2" type="f" index="1" path="${escapeXml(romPath)}"/>
 </mistergamedescription>
 `

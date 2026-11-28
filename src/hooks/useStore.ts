@@ -37,10 +37,10 @@ export function useStore(activeConsole: ConsoleKey, preview = false, initialSear
         }
         const collectionSet = new Set(collectionIds);
         const regionFiltered = games
-            .filter(g => hasImageInRegions(g, platform.imageRegions) && !collectionSet.has(g.id))
+            .filter(g => !collectionSet.has(g.id) && (platform.showFullCatalog || hasImageInRegions(g, platform.imageRegions)))
             .sort(SORT_FNS[sort]);
         return search ? searchGames(regionFiltered, search) : regionFiltered;
-    }, [catalog, search, platform.imageRegions, sort, collectionIds, activeConsole, loading, preview]);
+    }, [catalog, search, platform, sort, collectionIds, activeConsole, loading, preview]);
 
     return { loading, error: !loading && catalog?.error, search, setSearch, sort, setSort, filteredGames };
 }

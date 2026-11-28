@@ -1,0 +1,14 @@
+Console photographs
+
+SNES (PAL): JCD1981NL, transparency by Aurora Romes. Cropped, resized and converted to WebP.
+Source: https://commons.wikimedia.org/wiki/File:Wikipedia_SNES_PAL.png
+License: https://creativecommons.org/licenses/by/3.0/
+
+SNES (US): Evan-Amos, retouched by Pixel8. Public domain.
+Source: https://commons.wikimedia.org/wiki/File:SNES_US.png
+
+Super Famicom: Evan-Amos, transparent version by Gunnar.offel. Public domain.
+Source: https://commons.wikimedia.org/wiki/File:Nintendo-Super-Famicom-Console-FL.png
+
+Nintendo 64: Evan-Amos. Public domain.
+Source: https://commons.wikimedia.org/wiki/File:Nintendo-64-Console-FL.png

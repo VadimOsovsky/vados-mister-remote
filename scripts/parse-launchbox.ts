@@ -10,6 +10,7 @@ import { SaxesParser } from 'saxes';
 const PLATFORM_MAP: Record<string, string> = {
   'Nintendo Entertainment System': 'nes',
   'Super Nintendo Entertainment System': 'snes',
+  'Nintendo 64': 'n64',
   'Sega Genesis': 'genesis',
   'Sega Mega Drive': 'genesis',
   'Nintendo Game Boy': 'gb',

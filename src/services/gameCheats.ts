@@ -26,11 +26,18 @@ export function saveCheatSelection(consoleKey: ConsoleKey, rom: string, names: s
 }
 
 export async function fetchCheats(rom: string, signal?: AbortSignal): Promise<CheatCatalog> {
+    if (import.meta.env.BASE_URL !== '/') {
+        throw new Error('Open Playroom directly on your MiSTer (port 8183) to use Game Genie.');
+    }
     const response = await fetch(`${endpoint}?${new URLSearchParams({ rom })}`, { signal });
-    if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) {
+    if (!response.headers.get('content-type')?.includes('application/json')) {
         throw new Error('Cheats are unavailable from the Playroom server.');
     }
-    return response.json();
+    const body = await response.json();
+    if (!response.ok) {
+        throw new Error(typeof body?.error === 'string' ? body.error : `Cheat request failed (HTTP ${response.status}).`);
+    }
+    return body;
 }
 
 export async function applyLaunchCheats(rom: string, names: string[], previous: string) {

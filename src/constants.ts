@@ -10,6 +10,17 @@ const FLIP_DISK = { id: 'flip_disk', label: 'Flip Disk', action: 'user' } as con
 
 // ── PLATFORMS ──
 const NES_NTSC_MGL = { rbf: '_Console/NES', systemType: 'NTSC' } as const;
+const SNES_NTSC_MGL = { rbf: '_Console/SNES', systemType: 'NTSC', optionName: 'Video Region' } as const;
+const SNES_PAL_REGIONS = ['Europe', 'United Kingdom', 'Germany', 'France', 'Spain', 'Italy', 'The Netherlands', 'Sweden', 'Australia', 'Oceania'];
+const SNES_PAL_THEME = 'theme-snes-pal';
+const SNES_PLATFORM = {
+  mediaLabel: 'Cartridge',
+  branding: 'Super Nintendo Entertainment System',
+  lbPlatform: 'snes',
+  wizzoSystemId: 'SNES',
+  controls: [LAUNCH_CORE, RESET],
+  mglConfig: SNES_NTSC_MGL,
+};
 
 export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
   nes_ntsc: {
@@ -19,7 +30,6 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/NES-Console-Set.png/960px-NES-Console-Set.png',
     theme: 'theme-nes-ntsc',
     branding: 'Nintendo Entertainment System',
-    colors: ['#c0392b', '#e74c3c', '#d35400', '#e67e22'],
     lbPlatform: 'nes',
     wizzoSystemId: 'NES',
     imageRegions: ['North America', 'United States', 'Canada', 'World'],
@@ -33,7 +43,6 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Wikipedia_NES_PAL.jpg/960px-Wikipedia_NES_PAL.jpg',
     theme: 'theme-nes-pal',
     branding: 'Nintendo Entertainment System',
-    colors: ['#2c3e50', '#34495e', '#c0392b', '#e74c3c'],
     lbPlatform: 'nes',
     wizzoSystemId: 'NES',
     imageRegions: ['Europe', 'United Kingdom', 'Germany', 'France', 'Spain', 'Italy', 'Australia'],
@@ -47,7 +56,6 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Nintendo-Famicom-Console-Set-FL.png/960px-Nintendo-Famicom-Console-Set-FL.png',
     theme: 'theme-famicom',
     branding: 'Family Computer',
-    colors: ['#c0392b', '#a93226', '#922B21', '#7B241C'],
     lbPlatform: 'nes',
     wizzoSystemId: 'NES',
     imageRegions: ['Japan', 'Asia', 'World'],
@@ -63,7 +71,6 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Nintendo-Famicom-Disk-System.png/960px-Nintendo-Famicom-Disk-System.png',
     theme: 'theme-famicom',
     branding: 'Famicom Disk System',
-    colors: ['#c0392b', '#a93226', '#922B21', '#7B241C'],
     lbPlatform: 'fds',
     wizzoSystemId: 'FDS',
     imageRegions: ['Japan', 'Asia', 'World'],
@@ -79,7 +86,6 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/f/f1/New_Famicom.jpg',
     theme: 'theme-av-famicom',
     branding: 'AV Famicom',
-    colors: ['#2d2d2d', '#3a3a3a', '#c0392b', '#e8c840'],
     lbPlatform: 'nes',
     wizzoSystemId: 'NES',
     imageRegions: ['Japan', 'Asia', 'World'],
@@ -96,7 +102,6 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     imageUrl: avFamicomFdsPhoto,
     theme: 'theme-av-famicom',
     branding: 'AV Famicom Disk System',
-    colors: ['#2d2d2d', '#3a3a3a', '#c0392b', '#e8c840'],
     lbPlatform: 'fds',
     wizzoSystemId: 'FDS',
     imageRegions: ['Japan', 'Asia', 'World'],
@@ -113,12 +118,44 @@ export const PLATFORMS: Record<ConsoleKey, PlatformDef> = {
     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Dendy_Junior_with_cart_and_joypads.png/960px-Dendy_Junior_with_cart_and_joypads.png',
     theme: 'theme-dendy',
     branding: 'Dendy',
-    colors: ['#f5f5dc', '#d4a843', '#c0392b', '#2c3e50'],
     lbPlatform: 'nes',
     wizzoSystemId: 'NES',
     imageRegions: [],
     controls: [LAUNCH_CORE, RESET],
     mglConfig: { setname: 'NES_Dendy', rbf: '_Console/NES', systemType: 'Dendy' },
+  },
+  snes_us: {
+    ...SNES_PLATFORM,
+    name: 'SNES (US)',
+    theme: 'theme-snes-us',
+    imageRegions: ['North America', 'United States', 'Canada', 'World'],
+  },
+  snes_pal: {
+    ...SNES_PLATFORM,
+    theme: SNES_PAL_THEME,
+    name: 'SNES (PAL)',
+    imageRegions: [...SNES_PAL_REGIONS, 'World'],
+    nameRegions: SNES_PAL_REGIONS,
+    mglConfig: { ...SNES_NTSC_MGL, setname: 'SNES_PAL', systemType: 'PAL' },
+  },
+  super_famicom: {
+    ...SNES_PLATFORM,
+    theme: SNES_PAL_THEME,
+    name: 'Super Famicom',
+    branding: 'Super Famicom',
+    imageRegions: ['Japan', 'Asia', 'World'],
+    nameRegions: ['Japan'],
+  },
+  n64: {
+    name: 'Nintendo 64',
+    mediaLabel: 'Cartridge',
+    theme: 'theme-n64',
+    branding: 'Nintendo 64',
+    lbPlatform: 'n64',
+    wizzoSystemId: 'Nintendo64',
+    imageRegions: ['North America', 'United States', 'Europe', 'Japan', 'World'],
+    showFullCatalog: true,
+    controls: [LAUNCH_CORE, RESET],
   },
 };
 
@@ -133,6 +170,8 @@ export const CONSOLE_GROUPS: {
   unavailable?: readonly { id: string; name: string; photo?: string }[];
 }[] = [
   { id: 'nes', name: 'NES', consoles: ['nes_ntsc', 'nes_pal', 'famicom', 'fds', 'av_famicom', 'av_famicom_fds', 'dendy'] },
+  { id: 'snes', name: 'Super Nintendo', consoles: ['snes_us', 'snes_pal', 'super_famicom'] },
+  { id: 'n64', name: 'Nintendo 64', consoles: ['n64'] },
   {
     id: 'playstation',
     name: 'PlayStation',
@@ -147,12 +186,6 @@ export const STARTER_CONSOLE: ConsoleKey = 'nes_ntsc';
 
 export const CONSOLE_NAMES: Record<ConsoleKey, string> =
   Object.fromEntries(CONSOLE_KEYS.map(k => [k, PLATFORMS[k].name])) as Record<ConsoleKey, string>;
-
-export const CONSOLE_THEMES: Record<ConsoleKey, string> =
-  Object.fromEntries(CONSOLE_KEYS.map(k => [k, PLATFORMS[k].theme])) as Record<ConsoleKey, string>;
-
-export const CONSOLE_COLORS: Record<ConsoleKey, string[]> =
-  Object.fromEntries(CONSOLE_KEYS.map(k => [k, PLATFORMS[k].colors])) as Record<ConsoleKey, string[]>;
 
 // ── SORT ──
 export const SORT_MODES: { key: SortMode; label: string }[] = [

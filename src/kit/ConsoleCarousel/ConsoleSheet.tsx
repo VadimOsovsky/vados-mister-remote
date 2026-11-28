@@ -18,6 +18,10 @@ import fdsPhoto from '../../assets/consoles/fds.webp';
 import dendyPhoto from '../../assets/consoles/dendy.webp';
 import avFamicomPhoto from '../../assets/consoles/av-famicom.webp';
 import avFamicomFdsPhoto from '../../assets/consoles/av-famicom-fds.webp';
+import snesUsPhoto from '../../assets/consoles/snes-us.webp';
+import snesPalPhoto from '../../assets/consoles/snes-pal.webp';
+import superFamicomPhoto from '../../assets/consoles/super-famicom.webp';
+import n64Photo from '../../assets/consoles/n64.webp';
 import './ConsoleSheet.css';
 
 const consolePhotos: Partial<Record<ConsoleKey, string>> = {
@@ -28,6 +32,10 @@ const consolePhotos: Partial<Record<ConsoleKey, string>> = {
     dendy: dendyPhoto,
     av_famicom: avFamicomPhoto,
     av_famicom_fds: avFamicomFdsPhoto,
+    snes_us: snesUsPhoto,
+    snes_pal: snesPalPhoto,
+    super_famicom: superFamicomPhoto,
+    n64: n64Photo,
 };
 
 export function ConsoleBadge({ onClick, expanded }: { onClick: () => void; expanded: boolean }) {

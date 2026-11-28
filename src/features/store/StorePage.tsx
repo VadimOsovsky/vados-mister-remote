@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router';
 import { useCollectionState, usePlatform } from '../../state/collectionState';
+import { useMisterWritable } from '../../state/misterState';
 import { useStore } from '../../hooks/useStore';
 import { PlayroomConsoleHeader } from '../../kit/PlayroomConsoleHeader';
 import { SearchBar } from '../collection/SearchBar';
@@ -50,6 +51,7 @@ function StoreCatalog({ visitKey }: { visitKey: string }) {
     const couponCount = economyDisabled ? 0 : availableGameCoupons(coupons).length;
     const [params] = useSearchParams();
     const preview = import.meta.env.DEV && params.get('preview') === '1';
+    const writable = useMisterWritable();
     const storageKey = `store.visit.${preview ? 'preview.' : ''}${visitKey}`;
     const [returnVisit, setReturnVisit] = useState(() => {
         const savedVisit = readStoreVisit(storageKey);
@@ -162,7 +164,7 @@ function StoreCatalog({ visitKey }: { visitKey: string }) {
                         restore={restore}
                         onSelect={openProduct}
                         renderStoreCard={game => <StoreCard key={game.id} game={game} consoleKey={activeConsole}
-                            preview={preview} onSelect={openProduct} />} />}
+                            preview={preview} canFavorite={preview || writable} onSelect={openProduct} />} />}
                 </main>
             </div>
         </div>

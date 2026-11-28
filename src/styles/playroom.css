@@ -1,4 +1,4 @@
-/* Shared visual foundation. Legacy feature tokens bridge screens during migration. */
+/* Shared layout, typography and component styles. */
 
 @font-face {
   font-family: Rubik;
@@ -8,6 +8,8 @@
 }
 
 :root {
+  --motion: 200ms;
+  --ease: cubic-bezier(.2,.7,.3,1);
   --footer-height: 64px;
   --footer-content-gap: 16px;
   --navigation-footer-bottom: max(10px, var(--app-safe-area-bottom, env(safe-area-inset-bottom)));
@@ -41,88 +43,6 @@ button,input,textarea,select {
 
 body {
   color-scheme: light;
-}
-
-:root,.app,body[class*="theme-"] {
-  --button-accent: var(--gold);
-  --button-text: var(--ink);
-  --button-text-muted: var(--muted);
-  --button-pattern-dot: #ffffff90;
-  --button-fill: radial-gradient(var(--button-pattern-dot) 1px, transparent 1.5px) 0 0 / 5px 5px, var(--button-accent);
-  --ink: #182947;
-  --paper: #e7e8e4;
-  --card: #f7f6ef;
-  --gold: #ffdb54;
-  --muted: #697182;
-  --line: #b8bfca;
-  --focus: #72dcff;
-  --stage: #192c50;
-  --motion: 200ms;
-  --ease: cubic-bezier(.2,.7,.3,1);
-}
-
-.theme-famicom {
-  --ink: #741324 !important;
-  --paper: #efe5cf !important;
-  --card: #fff8e7 !important;
-  --gold: #efc66c !important;
-  --muted: #8b7168 !important;
-  --line: #cfbda3 !important;
-  --focus: #ffd586 !important;
-  --stage: #8e1423 !important;
-}
-
-.theme-av-famicom {
-  --ink: #38383c !important;
-  --paper: #e6e6e8 !important;
-  --card: #f8f8f9 !important;
-  --gold: #ffbd45 !important;
-  --button-accent: #b94136 !important;
-  --button-text: #fff !important;
-  --button-text-muted: #ffffffcc !important;
-  --button-pattern-dot: #ffffff1a !important;
-  --muted: #6e6e75 !important;
-  --line: #bfc0c5 !important;
-  --focus: #eb6254 !important;
-  --stage: #414145 !important;
-}
-
-.theme-dendy {
-  --ink: #343846 !important;
-  --paper: #e2e3e5 !important;
-  --card: #f3f4f5 !important;
-  --gold: #ffbd45 !important;
-  --muted: #70737b !important;
-  --line: #bdc0c6 !important;
-  --focus: #eea826 !important;
-  --stage: #343846 !important;
-}
-
-.app,body[class*="theme-"] {
-  --field-shadow-color: color-mix(in srgb, var(--ink) 25%, transparent);
-  --bg-primary: var(--paper);
-  --bg-secondary: var(--paper);
-  --bg-card: var(--card);
-  --bg-card-inner: var(--card);
-  --bg-input: var(--card);
-  --bg-pill: var(--card);
-  --bg-pill-active: var(--button-accent);
-  --bg-tab-bar: var(--ink);
-  --text-primary: var(--ink);
-  --text-secondary: var(--muted);
-  --text-tertiary: var(--muted);
-  --text-on-card: var(--ink);
-  --text-on-accent: var(--button-text);
-  --accent: var(--ink);
-  --accent-hover: var(--muted);
-  --accent-badge: var(--card);
-  --text-badge: var(--ink);
-  --border-main: var(--line);
-  --border-card: 2px solid var(--ink);
-  --border-input: 2px solid var(--ink);
-  --tab-bar-text: var(--card);
-  --tab-bar-active: var(--button-accent);
-  --tab-bar-border: var(--ink);
 }
 
 button:enabled,
@@ -260,21 +180,14 @@ button:not(:disabled):is(:active, .is-key-pressed) {
 }
 
 .playroom-stage {
-  --hero-stage: var(--stage);
-  --hero-stage-light: color-mix(in srgb, var(--hero-stage) 88%, white);
+  --hero-stage: var(--stage-background, var(--stage));
+  --hero-stage-light: var(--stage-highlight, color-mix(in srgb, var(--hero-stage) 88%, white));
   position: relative;
   isolation: isolate;
   overflow: hidden;
   background: var(--hero-stage);
   color: var(--card);
   border-block: 4px solid var(--ink);
-}
-
-.theme-nes-ntsc .playroom-stage,
-.theme-nes-pal .playroom-stage { --hero-stage-light: #30436a; }
-.theme-famicom .playroom-stage {
-  --hero-stage: #762b3d;
-  --hero-stage-light: #9c4652;
 }
 
 .playroom-stage::before {
@@ -286,6 +199,17 @@ button:not(:disabled):is(:active, .is-key-pressed) {
   background-size: 352px 352px, cover;
   background-position: 18px 0, center;
   transform: rotate(-7deg) scale(1.06);
+}
+
+.theme-snes-pal .playroom-stage::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 4px;
+  pointer-events: none;
+  background: linear-gradient(to right,
+    var(--snes-yellow) 0 25%, var(--snes-blue) 25% 50%,
+    var(--snes-green) 50% 75%, var(--snes-red) 75% 100%);
 }
 
 @media (max-width: 520px) {
@@ -301,7 +225,6 @@ button:not(:disabled):is(:active, .is-key-pressed) {
   text-transform: uppercase;
   letter-spacing: .12em;
 }
-.app { --playroom-punctuation: #e53643; }
 .playroom-button {
   display: inline-flex;
   align-items: center;

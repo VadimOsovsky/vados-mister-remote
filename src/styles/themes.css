@@ -1,143 +1,137 @@
-/* ── THEME: NES (NTSC & PAL) ──
-   Dark charcoal grey + Nintendo red accents.
-   Based on NES Classic Mini UI. Shared by NTSC and PAL variants. */
-.theme-nes-ntsc,
-.theme-nes-pal {
-  --bg-primary: #0a1030;
-  --bg-secondary: #1a2250;
-  --bg-card: #787888;
-  --bg-card-inner: #6a6a78;
-  --bg-input: #2a2a30;
-  --bg-pill: #2a2a30;
-  --bg-pill-active: #cc0000;
-  --bg-tab-bar: #111115;
+:root,
+.app,
+body[class*="theme-"] {
+  --button-accent: var(--gold);
+  --button-text: var(--ink);
+  --button-text-muted: var(--muted);
+  --button-pattern-dot: #ffffff90;
+  --button-fill: radial-gradient(var(--button-pattern-dot) 1px, transparent 1.5px) 0 0 / 5px 5px, var(--button-accent);
+  --ink: #182947;
+  --paper: #e7e8e4;
+  --card: #f7f6ef;
+  --gold: #ffdb54;
+  --muted: #697182;
+  --line: #b8bfca;
+  --focus: #72dcff;
+  --stage: #192c50;
   --bg-overlay: rgba(10, 10, 14, 0.85);
-
-  --text-primary: #e0e0e0;
-  --text-secondary: #909090;
-  --text-tertiary: #606060;
-  --text-on-accent: #ffffff;
-  --text-on-card: #1a1a1a;
-
-  --accent: #cc0000;
-  --accent-hover: #dd1111;
-  --accent-badge: #787888;
-  --text-badge: #e0e0e0;
-
-  --border-main: #505060;
-  --border-card: 3px solid #4a4a4a;
-  --border-input: 3px solid #3a3a40;
-
-  --pattern-opacity: 0.03;
-  --branding-color: #cc0000;
-  --tab-bar-text: #505055;
-  --tab-bar-active: #dd1111;
-  --tab-bar-border: #2a2a30;
+  --playroom-punctuation: #e53643;
+  --tab-bar-shadow: #18294740;
 }
 
-/* ── THEME: Dendy Junior ──
-   Warm light-grey body, dark charcoal stripe,
-   red controller buttons. */
-.theme-dendy {
-  --bg-primary: #e2ddd8;
-  --bg-secondary: #d8d2cc;
-  --bg-card: #f5f2ef;
-  --bg-card-inner: #efece8;
-  --bg-input: #d8d2cc;
-  --bg-pill: #d0cac3;
-  --bg-pill-active: #cc2222;
-  --bg-tab-bar: #2a2a32;
+:is(.app, body):is(.theme-nes-ntsc, .theme-nes-pal) {
+  --stage-highlight: #30436a;
+}
+
+:is(.app, body).theme-famicom {
+  --ink: #741324;
+  --paper: #efe5cf;
+  --card: #fff8e7;
+  --gold: #efc66c;
+  --muted: #8b7168;
+  --line: #cfbda3;
+  --focus: #ffd586;
+  --stage: #8e1423;
+  --stage-background: #762b3d;
+  --stage-highlight: #9c4652;
+}
+
+:is(.app, body).theme-av-famicom {
+  --ink: #38383c;
+  --paper: #e6e6e8;
+  --card: #f8f8f9;
+  --gold: #ffbd45;
+  --button-accent: #b94136;
+  --button-text: #fff;
+  --button-text-muted: #ffffffcc;
+  --button-pattern-dot: #ffffff1a;
+  --muted: #6e6e75;
+  --line: #bfc0c5;
+  --focus: #eb6254;
+  --stage: #414145;
+}
+
+:is(.app, body).theme-dendy {
+  --ink: #343846;
+  --paper: #e2e3e5;
+  --card: #f3f4f5;
+  --gold: #ffbd45;
+  --muted: #70737b;
+  --line: #bdc0c6;
+  --focus: #eea826;
+  --stage: #343846;
   --bg-overlay: rgba(20, 20, 24, 0.85);
-
-  --text-primary: #2a2a2a;
-  --text-secondary: #666060;
-  --text-tertiary: #989090;
-  --text-on-accent: #ffffff;
-  --text-on-card: #2a2a2a;
-
-  --accent: #cc2222;
-  --accent-hover: #dd3333;
-  --accent-badge: #ece8e4;
-  --text-badge: #2a2a2a;
-
-  --border-main: #c0b8b0;
-  --border-card: 3px solid #d8d0c8;
-  --border-input: 3px solid #c0b8b0;
-
-  --pattern-opacity: 0.02;
-  --branding-color: #2a2a32;
-  --tab-bar-text: rgba(255, 255, 255, 0.35);
-  --tab-bar-active: #cc2222;
-  --tab-bar-border: #1e1e24;
 }
 
-/* ── THEME: Famicom ──
-   Famicom Classic Mini: cream background,
-   red frame accents, white cards, dark maroon bar. */
-.theme-famicom {
-  --bg-primary: #f0e8d8;
-  --bg-secondary: #e8dcc8;
-  --bg-card: #ffffff;
-  --bg-card-inner: #ffffff;
-  --bg-input: #e8dcc8;
-  --bg-pill: #e0d0b8;
-  --bg-pill-active: #cc0000;
-  --bg-tab-bar: #5c1010;
-  --bg-overlay: rgba(10, 10, 14, 0.85);
-
-  --text-primary: #3a2015;
-  --text-secondary: #7a5a40;
-  --text-tertiary: #a08868;
-  --text-on-accent: #ffffff;
-  --text-on-card: #3a2015;
-
-  --accent: #cc0000;
-  --accent-hover: #dd1111;
-  --accent-badge: #f8f8f8;
-  --text-badge: #3a2015;
-
-  --border-main: #c0a888;
-  --border-card: 3px solid #e9d8bc;
-  --border-input: 3px solid #c0a888;
-
-  --pattern-opacity: 0.02;
-  --branding-color: #5c1010;
-  --tab-bar-text: rgba(255, 200, 160, 0.4);
-  --tab-bar-active: #ffdc6e;
-  --tab-bar-border: #4a0c0c;
+:is(.app, body).theme-snes-us {
+  --ink: #3d3057;
+  --paper: #e6e2ec;
+  --card: #faf8fd;
+  --muted: #6e627e;
+  --line: #c0b5cd;
+  --focus: #9574cf;
+  --stage: #544078;
 }
 
-/* ── THEME: AV Famicom (AV Famicom / HVC-101) ──
-   White body, dark charcoal top, red & gold controller accents. */
-.theme-av-famicom {
-  --bg-primary: #f5f3f0;
-  --bg-secondary: #ebe8e4;
-  --bg-card: #ffffff;
-  --bg-card-inner: #ffffff;
-  --bg-input: #e8e5e0;
-  --bg-pill: #dddad5;
-  --bg-pill-active: #3a3a3a;
-  --bg-tab-bar: #2d2d2d;
-  --bg-overlay: rgba(10, 10, 14, 0.85);
+:is(.app, body).theme-snes-pal {
+  --ink: #272727;
+  --paper: #ededed;
+  --card: #f8f8f8;
+  --gold: var(--snes-yellow);
+  --muted: #606060;
+  --line: #bcbcbc;
+  --focus: #686868;
+  --stage: #505050;
+  --playroom-punctuation: var(--muted);
+  --snes-yellow: #f7c542;
+  --snes-blue: #5b88e3;
+  --snes-green: #44b775;
+  --snes-red: #e84e55;
+  --snes-tab-blue-active: #2d5298;
+  --snes-tab-green-active: #216047;
+  --snes-tab-red-active: #993345;
+  --snes-tab-active-text: #fff;
+  --snes-tab-active-dot: #ffffff22;
+  --snes-tab-active-edge: #ffffff30;
+  --tab-bar-shadow: #0004;
+}
 
-  --text-primary: #2d2d2d;
-  --text-secondary: #6a6a6a;
-  --text-tertiary: #9a9a9a;
-  --text-on-accent: #ffffff;
-  --text-on-card: #2d2d2d;
+:is(.app, body).theme-n64 {
+  --ink: #272e3a;
+  --paper: #e2e5e8;
+  --card: #f6f7f8;
+  --gold: #f3cf59;
+  --muted: #586372;
+  --line: #b7bec8;
+  --focus: #397cc4;
+  --stage: #343941;
+}
 
-  --accent: #c0392b;
-  --accent-hover: #d44637;
-  --accent-badge: #f0eeeb;
-  --text-badge: #2d2d2d;
-
-  --border-main: #d0cdc8;
-  --border-card: 3px solid #e0ddd8;
-  --border-input: 3px solid #d0cdc8;
-
-  --pattern-opacity: 0.015;
-  --branding-color: #2d2d2d;
-  --tab-bar-text: rgba(255, 255, 255, 0.35);
-  --tab-bar-active: #c0392b;
-  --tab-bar-border: #222222;
+/* Keep the existing component tokens tied to the active palette. */
+.app,
+body[class*="theme-"] {
+  --field-shadow-color: color-mix(in srgb, var(--ink) 25%, transparent);
+  --bg-primary: var(--paper);
+  --bg-secondary: var(--paper);
+  --bg-card: var(--card);
+  --bg-card-inner: var(--card);
+  --bg-input: var(--card);
+  --bg-pill: var(--card);
+  --bg-pill-active: var(--button-accent);
+  --bg-tab-bar: var(--ink);
+  --text-primary: var(--ink);
+  --text-secondary: var(--muted);
+  --text-tertiary: var(--muted);
+  --text-on-card: var(--ink);
+  --text-on-accent: var(--button-text);
+  --accent: var(--ink);
+  --accent-hover: var(--muted);
+  --accent-badge: var(--card);
+  --text-badge: var(--ink);
+  --border-main: var(--line);
+  --border-card: 2px solid var(--ink);
+  --border-input: 2px solid var(--ink);
+  --tab-bar-text: var(--card);
+  --tab-bar-active: var(--button-accent);
+  --tab-bar-border: var(--ink);
 }

@@ -19,7 +19,8 @@ export interface GameWithConsole extends Game {
   _console: string;
 }
 
-export type ConsoleKey = 'nes_ntsc' | 'nes_pal' | 'famicom' | 'av_famicom' | 'av_famicom_fds' | 'dendy' | 'fds';
+export type ConsoleKey = 'nes_ntsc' | 'nes_pal' | 'famicom' | 'av_famicom' | 'av_famicom_fds' | 'dendy' | 'fds'
+  | 'snes_us' | 'snes_pal' | 'super_famicom' | 'n64';
 export type SortMode = 'az' | 'za' | 'recent' | 'most' | 'popular' | 'year' | 'title';
 export type TabKey = 'games' | 'favorites' | 'recents' | 'settings';
 export type SheetTab = 'info' | 'library' | 'controls';
@@ -47,20 +48,25 @@ export interface ConsoleControl {
 export interface PlatformDef {
   name: string;
   mediaLabel: string;        // Physical media name: Cartridge, Disk, Disc, etc.
-  logo: string;
+  logo?: string;
   theme: string;
   branding: string;
-  colors: string[];
   lbPlatform: string;        // LaunchBox JSON file name (without .json)
   wizzoSystemId: string;     // MiSTer/Wizzo system ID for searchGames() API
   imageRegions: string[];    // Priority order for image region resolution
   coverScale?: number;       // Collection cover scale, defaults to 1
   nameRegions?: string[];    // Priority order for alternate name resolution
+  showFullCatalog?: boolean; // Include all releases in the store, even without matching box art
   collectionGroup?: ConsoleKey; // Share collection storage with another console
   imageUrl?: string;
   controls?: ConsoleControl[];
   launchPath?: string;        // Override: launch this file path instead of launchSystem()
-  mglConfig?: { setname?: string; rbf: string; systemType: 'NTSC' | 'PAL' | 'Dendy' };
+  mglConfig?: {
+    setname?: string;
+    rbf: string;
+    systemType: 'NTSC' | 'PAL' | 'Dendy';
+    optionName?: 'Video Region';
+  };
 }
 
 // ── LAUNCHBOX ──
