@@ -28,6 +28,15 @@ export function resolveGameArtwork(overrides: GameOverrides, language = 'origina
     }));
 }
 
+export function resolveGameManualUrl(overrides: GameOverrides, language = 'original'): string | undefined {
+    const original = overrides.manualUrl?.trim();
+    const web = overrides.webManualUrl?.trim();
+    if (language === 'original') return original || web || undefined;
+
+    const translated = overrides.artworkByLanguage?.[language]?.manualUrl?.trim();
+    return translated || web || original || undefined;
+}
+
 /** Keep only explicit edits, without losing other language sets when editing one. */
 export function cleanGameOverrides(draft: GameOverrides, defaults: GameOverrides = {}): GameOverrides {
     const cleaned: GameOverrides = {};

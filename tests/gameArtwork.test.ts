@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { cleanGameOverrides, getCoverSources, resolveGameArtwork } from '../src/lib/gameArtwork';
+import { cleanGameOverrides, getCoverSources, resolveGameArtwork, resolveGameManualUrl } from '../src/lib/gameArtwork';
 import { getDisplayGameOverrides } from '../src/lib/storage';
 import { appStorage } from '../src/lib/sharedStorage';
 import { collectionCoverUrl } from '../src/services/coverUploads';
@@ -78,6 +78,19 @@ test('web manual is saved once for the game alongside independent localized PDFs
     assert.equal(cleaned.manualUrl, original.manualUrl);
     assert.equal(cleaned.artworkByLanguage?.English.manualUrl, original.artworkByLanguage?.English.manualUrl);
     assert.equal(cleanGameOverrides({ ...cleaned, webManualUrl: '' }).webManualUrl, undefined);
+});
+
+test('manual links prefer the translated document, then the web manual, then the original document', () => {
+    const webManualUrl = 'https://example.org/nes/mario/';
+    const overrides = { ...original, webManualUrl };
+
+    assert.equal(resolveGameManualUrl(overrides, 'English'), original.artworkByLanguage!.English.manualUrl);
+    assert.equal(resolveGameManualUrl(overrides, 'Русский'), webManualUrl);
+    assert.equal(resolveGameManualUrl({ manualUrl: original.manualUrl, webManualUrl }, 'Русский'), webManualUrl);
+    assert.equal(resolveGameManualUrl({ ...overrides, webManualUrl: '  ' }, 'Русский'), original.manualUrl);
+    assert.equal(resolveGameManualUrl(overrides, 'original'), original.manualUrl);
+    assert.equal(resolveGameManualUrl({ webManualUrl }, 'original'), webManualUrl);
+    assert.equal(resolveGameManualUrl({}), undefined);
 });
 
 test('collection artwork follows selected ROM language while keeping other fields original', t => {

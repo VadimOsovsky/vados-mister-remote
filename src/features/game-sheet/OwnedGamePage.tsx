@@ -22,7 +22,7 @@ import { getGameArtworkLanguage, getGameOverrides, deleteGameOverrides, getRomMa
 import { readCheatSelection } from '../../services/gameCheats';
 import { launchCollectionGame } from '../../services/collectionLauncher';
 import { isRomPlaying } from '../../services/nowPlaying';
-import { getCoverSources, resolveGameArtwork, type CoverKey } from '../../lib/gameArtwork';
+import { getCoverSources, resolveGameArtwork, resolveGameManualUrl, type CoverKey } from '../../lib/gameArtwork';
 import { coverImageCrossOrigin } from '../../services/coverUploads';
 import { EditGameForm } from './EditGameForm';
 import { StoreRomDialog } from '../store/StoreRomDialog';
@@ -140,10 +140,15 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
     const regions = platform.imageRegions;
     const images = resolveImages(selectedGame, regions);
     const overrides = getGameOverrides(selectedGame.id, activeConsole);
-    const [artworkLanguage, setArtworkLanguage] = useState(() => getGameArtworkLanguage(selectedGame.id, activeConsole));
+    const gameArtworkLanguage = getGameArtworkLanguage(selectedGame.id, activeConsole);
+    const [artworkLanguage, setArtworkLanguage] = useState(gameArtworkLanguage);
     const artworkLanguages = Object.entries(overrides.artworkByLanguage ?? {}).filter(([, value]) => Object.values(value).some(Boolean)).map(([language]) => language);
+    if (overrides.webManualUrl?.trim() && gameArtworkLanguage !== 'original' && !artworkLanguages.includes(gameArtworkLanguage)) {
+        artworkLanguages.push(gameArtworkLanguage);
+    }
     const libraryLanguage = artworkLanguages.includes(artworkLanguage) ? artworkLanguage : 'original';
     const libraryArtwork = resolveGameArtwork(overrides, libraryLanguage);
+    const manualUrl = resolveGameManualUrl(overrides, libraryLanguage);
     const favorite = favoriteIds.includes(selectedGame.id);
     const preview = import.meta.env.DEV && new URLSearchParams(window.location.search).get('preview') === '1';
     function coverSources(language: string, cover: CoverKey, version: 'preview' | 'full') {
@@ -154,7 +159,6 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
             image ? getImageUrl(image, version === 'full' ? 300 : undefined) : undefined,
         ]);
     }
-    const gameArtworkLanguage = getGameArtworkLanguage(selectedGame.id, activeConsole);
     const [front, ...frontFallbacks] = coverSources(gameArtworkLanguage, 'boxFrontUrl', 'full');
     const [frontPreview, ...frontPreviewFallbacks] = coverSources(gameArtworkLanguage, 'boxFrontUrl', 'preview');
     const boxFront = preview && activeConsole === 'nes_ntsc' && selectedGame.id === '112'
@@ -465,8 +469,8 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
                                     <small>{caption}</small>
                                 </>;
                                 const className = 'owned-library-card owned-button playroom-press';
-                                if (kind === 'manual' && libraryArtwork.manualUrl) {
-                                    return <a key={kind} className={className} href={libraryArtwork.manualUrl} target="_blank" rel="noreferrer">{content}</a>;
+                                if (kind === 'manual' && manualUrl) {
+                                    return <a key={kind} className={className} href={manualUrl} target="_blank" rel="noreferrer">{content}</a>;
                                 }
                                 return <button key={kind} className={className}
                                     onClick={() => {
