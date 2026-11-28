@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import { cleanGameOverrides, getCoverSources, resolveGameArtwork } from '../src/lib/gameArtwork';
 import { getDisplayGameOverrides } from '../src/lib/storage';
 import { appStorage } from '../src/lib/sharedStorage';
+import { collectionCoverUrl } from '../src/services/coverUploads';
 import type { GameOverrides } from '../src/types';
 
 const original: GameOverrides = {
@@ -62,6 +63,13 @@ test('front and back covers prefer the requested version and fall back within th
         ['/english-small.webp', '/front.webp', '/front-small.webp', '/catalog.webp']);
     assert.deepEqual(getCoverSources(artwork, 'English', 'boxBackUrl', 'preview'), ['/english-back.webp', '/back-small.webp']);
     assert.deepEqual(cleanGameOverrides(artwork), artwork);
+});
+
+test('collection thumbnails mark uploaded artwork without changing external URLs', () => {
+    const upload = '/api/playroom/artwork/' + 'a'.repeat(64) + '.webp';
+    assert.equal(collectionCoverUrl(upload), upload + '?collection-cover=1');
+    const signedLink = 'https://example.org/cover.webp?signature=abc';
+    assert.equal(collectionCoverUrl(signedLink), signedLink);
 });
 
 test('web manual is saved once for the game alongside independent localized PDFs', () => {

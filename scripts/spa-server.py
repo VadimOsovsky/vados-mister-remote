@@ -271,10 +271,11 @@ class SPAHandler(http.server.SimpleHTTPRequestHandler):
     def is_versioned_asset(self):
         return bool(re.fullmatch(r"/assets/[^/]+-[A-Za-z0-9_-]{8,}\.[^/]+", urlsplit(self.path).path))
 
-    def end_headers(self):
+    def end_headers(self, *, cache_artwork_preview=False):
         # HTML, metadata and worker scripts keep stable URLs across releases.
-        # Only build assets with content hashes can be cached indefinitely.
         policy = "public, max-age=31536000, immutable" if self.is_versioned_asset() else "no-store"
+        if cache_artwork_preview:
+            policy = "private, max-age=31536000, immutable"
         self.send_header("Cache-Control", policy)
         path = urlsplit(self.path).path
         if path == STATE_ROUTE or path == ARTWORK_ROUTE or ARTWORK_PATH.fullmatch(path):
@@ -286,7 +287,8 @@ class SPAHandler(http.server.SimpleHTTPRequestHandler):
         super().end_headers()
 
     def send_head(self):
-        path = urlsplit(self.path).path
+        request = urlsplit(self.path)
+        path = request.path
         match = ARTWORK_PATH.fullmatch(path)
         if match:
             try:
@@ -297,7 +299,7 @@ class SPAHandler(http.server.SimpleHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-Type", "image/webp")
             self.send_header("Content-Length", str(os.fstat(stream.fileno()).st_size))
-            self.end_headers()
+            self.end_headers(cache_artwork_preview=request.query == "collection-cover=1")
             return stream
         if path == ARTWORK_ROUTE or path.startswith(ARTWORK_ROUTE + "/"):
             self.send_error(404)

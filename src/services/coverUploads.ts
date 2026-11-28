@@ -10,9 +10,16 @@ export function coverImageUrl(value: string) {
     return isUploadedCover(value) ? apiOrigin + value : value;
 }
 
+export function collectionCoverUrl(src: string) {
+    return isUploadedCover(src) || isRemoteUploadedCover(src) ? `${src}?collection-cover=1` : src;
+}
+
+function isRemoteUploadedCover(src: string) {
+    return Boolean(apiOrigin && src.startsWith(apiOrigin) && isUploadedCover(src.slice(apiOrigin.length)));
+}
+
 export function coverImageCrossOrigin(src: string) {
-    return apiOrigin && src.startsWith(apiOrigin) && isUploadedCover(src.slice(apiOrigin.length))
-        ? 'anonymous' as const : undefined;
+    return isRemoteUploadedCover(src.replace(/\?collection-cover=1$/, '')) ? 'anonymous' as const : undefined;
 }
 
 export async function uploadCover(file: File, version: 'preview' | 'full') {

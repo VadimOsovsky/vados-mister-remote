@@ -10,7 +10,7 @@ import { getImageUrl, resolveImages, resolveTitle } from '../../services/launchb
 import { PLATFORMS } from '../../constants';
 import { getGameArtworkLanguage, getGameOverrides, getSaveSlots, getGameSaveKey } from '../../lib/storage';
 import { getCoverSources } from '../../lib/gameArtwork';
-import { coverImageCrossOrigin } from '../../services/coverUploads';
+import { collectionCoverUrl, coverImageCrossOrigin } from '../../services/coverUploads';
 import { getPreviewCover } from './previewCovers';
 import './GameGrid.css';
 
@@ -46,7 +46,7 @@ export function GameCard({ game, regions, activeConsole, onSelect, preview, rece
     const [frontSrc, ...fallbacks] = getCoverSources(overrides, getGameArtworkLanguage(game.id, activeConsole), 'boxFrontUrl', 'preview', [
         localCover, images.front ? `${getImageUrl(images.front, 300)}&collection-cover=1` : undefined,
         images.front ? getImageUrl(images.front) : undefined,
-    ]);
+    ]).map(collectionCoverUrl);
     const coverScale = PLATFORMS[activeConsole].coverScale;
     const slots = getSaveSlots(getGameSaveKey(game.id, activeConsole));
     const playerCount = game.maxPlayers.trim();

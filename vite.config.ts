@@ -34,7 +34,9 @@ export default defineConfig(({ mode }) => ({
         runtimeCaching: [
           {
             urlPattern: ({ request, url }) => request.destination === 'image' &&
-              url.origin === 'https://wsrv.nl' && url.searchParams.get('collection-cover') === '1',
+              url.searchParams.get('collection-cover') === '1' && (
+                url.origin === 'https://wsrv.nl' || /^\/api\/playroom\/artwork\/[a-f0-9]{64}\.webp$/.test(url.pathname)
+              ),
             handler: 'CacheFirst',
             options: {
               cacheName: 'collection-cover-previews',
