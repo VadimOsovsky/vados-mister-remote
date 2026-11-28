@@ -22,7 +22,8 @@ import { getGameArtworkLanguage, getGameOverrides, deleteGameOverrides, getRomMa
 import { readCheatSelection } from '../../services/gameCheats';
 import { launchCollectionGame } from '../../services/collectionLauncher';
 import { isRomPlaying } from '../../services/nowPlaying';
-import { resolveGameArtwork } from '../../lib/gameArtwork';
+import { getCoverSources, resolveGameArtwork, type CoverKey } from '../../lib/gameArtwork';
+import { coverImageCrossOrigin } from '../../services/coverUploads';
 import { EditGameForm } from './EditGameForm';
 import { StoreRomDialog } from '../store/StoreRomDialog';
 import { GameLanguages } from './GameLanguages';
@@ -139,28 +140,40 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
     const regions = platform.imageRegions;
     const images = resolveImages(selectedGame, regions);
     const overrides = getGameOverrides(selectedGame.id, activeConsole);
-    const artwork = resolveGameArtwork(overrides, getGameArtworkLanguage(selectedGame.id, activeConsole));
     const [artworkLanguage, setArtworkLanguage] = useState(() => getGameArtworkLanguage(selectedGame.id, activeConsole));
     const artworkLanguages = Object.entries(overrides.artworkByLanguage ?? {}).filter(([, value]) => Object.values(value).some(Boolean)).map(([language]) => language);
     const libraryLanguage = artworkLanguages.includes(artworkLanguage) ? artworkLanguage : 'original';
     const libraryArtwork = resolveGameArtwork(overrides, libraryLanguage);
     const favorite = favoriteIds.includes(selectedGame.id);
     const preview = import.meta.env.DEV && new URLSearchParams(window.location.search).get('preview') === '1';
-    const frontOverride = artwork.boxFrontUrl || (preview && getPreviewCover(activeConsole, selectedGame.id));
-    const front = frontOverride || (images.front && getImageUrl(images.front));
-    const frontPreview = frontOverride || (images.front && getImageUrl(images.front, 300));
+    function coverSources(language: string, cover: CoverKey, version: 'preview' | 'full') {
+        const image = cover === 'boxFrontUrl' ? images.front : images.back;
+        const local = preview && cover === 'boxFrontUrl' ? getPreviewCover(activeConsole, selectedGame.id) : undefined;
+        return getCoverSources(overrides, language, cover, version, [local,
+            image ? getImageUrl(image, version === 'preview' ? 300 : undefined) : undefined,
+            image ? getImageUrl(image, version === 'full' ? 300 : undefined) : undefined,
+        ]);
+    }
+    const gameArtworkLanguage = getGameArtworkLanguage(selectedGame.id, activeConsole);
+    const [front, ...frontFallbacks] = coverSources(gameArtworkLanguage, 'boxFrontUrl', 'full');
+    const [frontPreview, ...frontPreviewFallbacks] = coverSources(gameArtworkLanguage, 'boxFrontUrl', 'preview');
     const boxFront = preview && activeConsole === 'nes_ntsc' && selectedGame.id === '112'
         ? getPreviewCover(activeConsole, selectedGame.id) : undefined;
     const previewScreenshot = preview && getPreviewScreenshot(selectedGame.id);
     const screenshots = previewScreenshot ? [previewScreenshot] : resolveScreenshots(selectedGame).map(path => getImageUrl(path));
     const displayTitle = overrides.title || resolveTitle(selectedGame, platform.nameRegions);
     const library = [
-        { title: 'Front cover', caption: 'The face of your collection', src: libraryArtwork.boxFrontUrl || (preview && getPreviewCover(activeConsole, selectedGame.id)) || (images.front && getImageUrl(images.front)), kind: 'front' },
-        { title: 'Back cover', caption: 'One more side to the story', src: libraryArtwork.boxBackUrl || (images.back && getImageUrl(images.back)), kind: 'back' },
+        { title: 'Front cover', caption: 'The face of your collection', cover: 'boxFrontUrl', kind: 'front' },
+        { title: 'Back cover', caption: 'One more side to the story', cover: 'boxBackUrl', kind: 'back' },
         { title: platform.mediaLabel, caption: 'The original adventure, in hand', src: libraryArtwork.cartridgeUrl, kind: 'cartridge' },
         { title: 'Manual', caption: 'Keep every little detail', src: libraryArtwork.manualPhotoUrl, kind: 'manual' },
-    ];
-    const slides = library.flatMap(item => item.src ? [{ src: item.src }] : []);
+    ] as const;
+    const libraryImages = library.map(item => ({
+        ...item,
+        previewSources: 'cover' in item ? coverSources(libraryLanguage, item.cover, 'preview') : item.src ? [item.src] : [],
+        fullSources: 'cover' in item ? coverSources(libraryLanguage, item.cover, 'full') : item.src ? [item.src] : [],
+    }));
+    const slides = libraryImages.flatMap(({ fullSources: [src, ...fallbackSrcs] }) => src ? [{ src, fallbackSrcs }] : []);
     const used = saves.saveSlots.filter(Boolean).length;
     const completedIndex = saves.saveSlots.findIndex(slot => slot?.beaten);
     const completed = completedIndex >= 0 || beatenIds.includes(selectedGame.id) || (preview && selectedGame.id === '112');
@@ -363,7 +376,7 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
                         fallbackSrc={screenshots[0]} crossOrigin={api.screenshotCrossOrigin} />
                     <div className="owned-hero-inner">
                         <button type="button" className="owned-cover" aria-label="View front cover" disabled={!front} onClick={() => setGalleryIndex(-1)}>
-                            <LazyImage src={frontPreview || undefined} fallbackSrc={front || undefined} alt="" priority />
+                            <LazyImage src={frontPreview} fallbackSrcs={frontPreviewFallbacks} crossOrigin={coverImageCrossOrigin} alt="" priority />
                             {completed && <span className="card-beaten" aria-label="Completed" role="img">{TrophyIcon}</span>}
                         </button>
                         <div className="owned-hero-copy">
@@ -442,11 +455,11 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
                             </label>}
                         </div>
                         <div className="owned-library">
-                            {library.map(({ title, caption, src, kind }, index) => {
+                            {libraryImages.map(({ title, caption, previewSources: [src, ...fallbacks], kind }, index) => {
                                 const content = <>
                                     <span className="owned-library-top"><span>0{index + 1}</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10" /></svg></span>
                                     <span className="owned-library-art" data-kind={kind}>
-                                        {src ? <LazyImage src={src} alt="" /> : <span className={`owned-placeholder owned-placeholder-${kind}`} aria-hidden="true">+</span>}
+                                        {src ? <LazyImage src={src} fallbackSrcs={fallbacks} crossOrigin={coverImageCrossOrigin} alt="" /> : <span className={`owned-placeholder owned-placeholder-${kind}`} aria-hidden="true">+</span>}
                                     </span>
                                     <strong>{title}</strong>
                                     <small>{caption}</small>
@@ -458,7 +471,7 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
                                 return <button key={kind} className={className}
                                     onClick={() => {
                                         if (!src) { edit(); return; }
-                                        setGalleryIndex(library.slice(0, index).filter(item => item.src).length);
+                                        setGalleryIndex(libraryImages.slice(0, index).filter(item => item.fullSources.length).length);
                                     }}>{content}</button>;
                             })}
                         </div>
@@ -572,7 +585,8 @@ function OwnedGameContent({ selectedGame, onClose, onVersionChange }: {
                 launchLabel={pendingLoadSlot.current === null ? 'Play' : 'Load save'} />
             {boxOpen && boxFront && <PreviewBox front={boxFront} back={`${import.meta.env.BASE_URL}playroom/preview/mario3-back.jpg`}
                 title={displayTitle} onClose={() => setBoxOpen(false)} />}
-            <PhotoViewer index={galleryIndex === -1 ? 0 : galleryIndex} onClose={() => setGalleryIndex(null)} slides={galleryIndex === -1 ? [{ src: front || '' }] : slides} />
+            <PhotoViewer index={galleryIndex === -1 ? 0 : galleryIndex} onClose={() => setGalleryIndex(null)}
+                slides={galleryIndex === -1 && front ? [{ src: front, fallbackSrcs: frontFallbacks }] : slides} />
         </>
     );
 }

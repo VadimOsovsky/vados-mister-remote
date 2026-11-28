@@ -7,10 +7,12 @@ serves index.html so the client-side router can handle them.
 import errno
 import http.server
 import fcntl
+import hashlib
 import json
 import os
 import re
 import sys
+import tempfile
 import termios
 import threading
 import time
@@ -22,6 +24,9 @@ from urllib.request import Request, urlopen
 
 
 STATE_ROUTE = "/api/playroom/state"
+ARTWORK_ROUTE = "/api/playroom/artwork"
+ARTWORK_PATH = re.compile(ARTWORK_ROUTE + r"/([a-f0-9]{64}\.webp)")
+MAX_ARTWORK_BYTES = 12 * 1024 * 1024
 PAGES_ORIGIN = "https://vadimosovsky.github.io"
 STATE_LOCK = threading.Lock()
 MAX_STATE_BYTES = 4 * 1024 * 1024
@@ -162,6 +167,8 @@ def read_state():
 
 class SPAHandler(http.server.SimpleHTTPRequestHandler):
     def do_POST(self):
+        if self.path == ARTWORK_ROUTE:
+            return self.upload_artwork()
         if self.path != CHEATS_ROUTE:
             return self.send_error(404)
         if self.headers.get("Origin") != "http://" + self.headers.get("Host", ""):
@@ -222,6 +229,45 @@ class SPAHandler(http.server.SimpleHTTPRequestHandler):
             return self.send_json(503, {"error": "MiSTer could not receive the selected cheats."})
         return self.send_json(200, {"queued": True})
 
+    def upload_artwork(self):
+        if self.headers.get("Origin") not in {"http://" + self.headers.get("Host", ""), PAGES_ORIGIN}:
+            return self.send_error(403)
+        if self.headers.get_content_type() != "image/webp":
+            return self.send_error(415)
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+        except ValueError:
+            return self.send_error(400)
+        if not 20 <= length <= MAX_ARTWORK_BYTES:
+            return self.send_error(413)
+
+        try:
+            self.connection.settimeout(20)
+            image = self.rfile.read(length)
+            if (len(image) != length or image[:4] != b"RIFF"
+                    or int.from_bytes(image[4:8], "little") != length - 8
+                    or image[8:16] not in {b"WEBPVP8 ", b"WEBPVP8L", b"WEBPVP8X"}):
+                return self.send_error(400)
+            name = hashlib.sha256(image).hexdigest() + ".webp"
+            artwork_dir = state_path.parent / "artwork"
+            artwork_dir.mkdir(parents=True, exist_ok=True)
+            path = artwork_dir / name
+            if not path.is_file():
+                with tempfile.NamedTemporaryFile(dir=artwork_dir, delete=False) as stream:
+                    temporary = Path(stream.name)
+                    try:
+                        stream.write(image)
+                        stream.flush()
+                        os.fsync(stream.fileno())
+                        stream.close()
+                        os.replace(temporary, path)
+                    finally:
+                        temporary.unlink(missing_ok=True)
+        except OSError as error:
+            self.log_error("Could not save cover: %s", error)
+            return self.send_error(503)
+        return self.send_json(200, {"path": f"{ARTWORK_ROUTE}/{name}"})
+
     def is_versioned_asset(self):
         return bool(re.fullmatch(r"/assets/[^/]+-[A-Za-z0-9_-]{8,}\.[^/]+", urlsplit(self.path).path))
 
@@ -230,13 +276,32 @@ class SPAHandler(http.server.SimpleHTTPRequestHandler):
         # Only build assets with content hashes can be cached indefinitely.
         policy = "public, max-age=31536000, immutable" if self.is_versioned_asset() else "no-store"
         self.send_header("Cache-Control", policy)
-        if urlsplit(self.path).path == STATE_ROUTE:
+        path = urlsplit(self.path).path
+        if path == STATE_ROUTE or path == ARTWORK_ROUTE or ARTWORK_PATH.fullmatch(path):
             self.send_header("Vary", "Origin")
             if self.headers.get("Origin") == PAGES_ORIGIN:
                 self.send_header("Access-Control-Allow-Origin", PAGES_ORIGIN)
+        if ARTWORK_PATH.fullmatch(path):
+            self.send_header("X-Content-Type-Options", "nosniff")
         super().end_headers()
 
     def send_head(self):
+        path = urlsplit(self.path).path
+        match = ARTWORK_PATH.fullmatch(path)
+        if match:
+            try:
+                stream = (state_path.parent / "artwork" / match[1]).open("rb")
+            except OSError:
+                self.send_error(404)
+                return None
+            self.send_response(200)
+            self.send_header("Content-Type", "image/webp")
+            self.send_header("Content-Length", str(os.fstat(stream.fileno()).st_size))
+            self.end_headers()
+            return stream
+        if path == ARTWORK_ROUTE or path.startswith(ARTWORK_ROUTE + "/"):
+            self.send_error(404)
+            return None
         if not self.is_versioned_asset():
             # Old clients may still send validators for a previously cached shell.
             for header in ("If-Modified-Since", "If-None-Match"):
@@ -253,14 +318,15 @@ class SPAHandler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_OPTIONS(self):
-        if self.path != STATE_ROUTE:
+        methods = {STATE_ROUTE: {"GET", "PUT"}, ARTWORK_ROUTE: {"POST"}}
+        if self.path not in methods:
             return self.send_error(404)
         if self.headers.get("Origin") != PAGES_ORIGIN:
             return self.send_error(403)
-        if self.headers.get("Access-Control-Request-Method") not in {"GET", "PUT"}:
+        if self.headers.get("Access-Control-Request-Method") not in methods[self.path]:
             return self.send_error(405)
         self.send_response(204)
-        self.send_header("Access-Control-Allow-Methods", "GET, PUT")
+        self.send_header("Access-Control-Allow-Methods", ", ".join(sorted(methods[self.path])))
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.end_headers()
 
@@ -313,6 +379,8 @@ class SPAHandler(http.server.SimpleHTTPRequestHandler):
 
     def do_GET(self):
         request = urlsplit(self.path)
+        if request.path == ARTWORK_ROUTE or request.path.startswith(ARTWORK_ROUTE + "/"):
+            return super().do_GET()
         if request.path == CHEATS_ROUTE:
             query = parse_qs(request.query)
             try:

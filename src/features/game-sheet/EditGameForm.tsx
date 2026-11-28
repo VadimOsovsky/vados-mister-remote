@@ -21,18 +21,17 @@ export function EditGameForm({ game, regions, activeConsole, onSave, onCancel, o
     isNew?: boolean;
     initialField?: 'rom';
 }) {
+    const images = resolveImages(game, regions);
+    const defaultCovers = {
+        boxFrontUrl: images.front ? getImageUrl(images.front) : undefined,
+        boxBackUrl: images.back ? getImageUrl(images.back) : undefined,
+    };
     const [draft, setDraft] = useState<GameOverrides>(() => {
         if (isNew) return getGameOverrides(game.id, activeConsole);
         const overrides = getGameOverrides(game.id, activeConsole);
-        const images = resolveImages(game, regions);
         return {
             ...overrides,
             title: overrides.title || resolveTitle(game, PLATFORMS[activeConsole].nameRegions),
-            boxFrontUrl: overrides.boxFrontUrl || (images.front ? getImageUrl(images.front) : undefined),
-            boxBackUrl: overrides.boxBackUrl || (images.back ? getImageUrl(images.back) : undefined),
-            cartridgeUrl: overrides.cartridgeUrl,
-            manualPhotoUrl: overrides.manualPhotoUrl,
-            manualUrl: overrides.manualUrl,
             romName: overrides.romName || getOriginalRomMapping(game.id, activeConsole)?.split('/').pop() || undefined,
         };
     });
@@ -124,11 +123,9 @@ export function EditGameForm({ game, regions, activeConsole, onSave, onCancel, o
             return;
         }
         // Only save fields that differ from defaults to avoid redundant storage
-        const images = resolveImages(game, regions);
         const defaults: GameOverrides = {
             title: resolveTitle(game, PLATFORMS[activeConsole].nameRegions),
-            boxFrontUrl: images.front ? getImageUrl(images.front) : undefined,
-            boxBackUrl: images.back ? getImageUrl(images.back) : undefined,
+            ...defaultCovers,
             romName: getOriginalRomMapping(game.id, activeConsole)?.split('/').pop() || undefined,
         };
         setGameOverrides(game.id, activeConsole, cleanGameOverrides(draft, defaults));
@@ -192,7 +189,7 @@ export function EditGameForm({ game, regions, activeConsole, onSave, onCancel, o
                     </div>
                 </div>
 
-                <GameArtworkEditor draft={draft} mediaLabel={platform.mediaLabel} initialLanguage={isNew ? 'original' : getGameArtworkLanguage(game.id, activeConsole)} uploading={uploadingArtwork} onUploadingChange={setUploadingArtwork} onWebManualChange={value => set('webManualUrl', value)} onChange={(language, key, value) => {
+                <GameArtworkEditor draft={draft} defaultCovers={defaultCovers} mediaLabel={platform.mediaLabel} initialLanguage={isNew ? 'original' : getGameArtworkLanguage(game.id, activeConsole)} uploading={uploadingArtwork} onUploadingChange={setUploadingArtwork} onWebManualChange={value => set('webManualUrl', value)} onChange={(language, key, value) => {
                     if (language === 'original') set(key, value);
                     else setDraft(previous => ({ ...previous, artworkByLanguage: {
                         ...previous.artworkByLanguage,

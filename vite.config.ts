@@ -7,6 +7,7 @@ export default defineConfig(({ mode }) => ({
   base: process.env.VITE_PAGES_BASE || '/',
   server: {
     proxy: {
+      '/api/playroom/artwork': `http://${loadEnv(mode, '.', 'VITE_').VITE_WIZZO_ADDRESS || '192.168.0.118'}:8183`,
       '/api/playroom/cheats': {
         target: `http://${loadEnv(mode, '.', 'VITE_').VITE_WIZZO_ADDRESS || '192.168.0.118'}:8183`,
         changeOrigin: true,

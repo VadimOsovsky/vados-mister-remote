@@ -15,6 +15,10 @@
 .artwork-tile strong { font: var(--font-title-card); overflow-wrap: anywhere; }
 .artwork-tile small { margin-top: 3px; font: var(--font-caption); color: var(--muted); }
 .artwork-field-panel { margin-top: 16px; }
+.artwork-cover-fields { display: grid; gap: 14px; }
+.artwork-cover-fields > .artwork-editor-hint { margin: 0; }
+.artwork-cover-field { display: grid; gap: 8px; }
+.artwork-cover-field > button { justify-self: start; }
 .artwork-url-row { display: flex; gap: 8px; align-items: center; }
 .artwork-url-row input { min-width: 0; flex: 1; }
 .artwork-clear { display: grid; place-items: center; flex: 0 0 44px; height: 44px; padding: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink); font-size: 20px; }

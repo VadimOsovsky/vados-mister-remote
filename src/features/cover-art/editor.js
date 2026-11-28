@@ -1,4 +1,5 @@
 import qrcode from 'qrcode-generator';
+import { coverImageCrossOrigin } from '../../services/coverUploads';
 
 const savedDrafts = new Map();
 const printQueue = [];
@@ -297,6 +298,9 @@ export function mountCoverEditor(root, games, initialGameId) {
         }
         if (element.getAttribute('src') !== source) {
             element.hidden = false;
+            const crossOrigin = coverImageCrossOrigin(source);
+            if (crossOrigin) element.crossOrigin = crossOrigin;
+            else element.removeAttribute('crossorigin');
             element.src = source;
         }
     }

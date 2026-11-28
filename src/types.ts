@@ -95,7 +95,9 @@ export interface LaunchBoxGame {
 // ── GAME OVERRIDES (user customizations) ──
 export interface GameArtwork {
   boxFrontUrl?: string;
+  boxFrontPreviewUrl?: string;
   boxBackUrl?: string;
+  boxBackPreviewUrl?: string;
   cartridgeUrl?: string;
   manualUrl?: string;
   manualPhotoUrl?: string;

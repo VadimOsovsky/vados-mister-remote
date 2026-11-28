@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { cleanGameOverrides, resolveGameArtwork } from '../src/lib/gameArtwork';
+import { cleanGameOverrides, getCoverSources, resolveGameArtwork } from '../src/lib/gameArtwork';
 import { getDisplayGameOverrides } from '../src/lib/storage';
 import { appStorage } from '../src/lib/sharedStorage';
 import type { GameOverrides } from '../src/types';
@@ -48,6 +48,20 @@ test('clearing the last translated image restores the original and removes the e
 test('legacy original overrides round-trip without migration', () => {
     const legacy = { title: 'Cats', cartridgeUrl: '/cart.jpg', manualUrl: 'https://example.org/manual.pdf' };
     assert.deepEqual(cleanGameOverrides(legacy), legacy);
+});
+
+test('front and back covers prefer the requested version and fall back within the selected language', () => {
+    const artwork: GameOverrides = {
+        boxFrontUrl: '/front.webp', boxFrontPreviewUrl: '/front-small.webp', boxBackPreviewUrl: '/back-small.webp',
+        artworkByLanguage: { English: { boxFrontPreviewUrl: '/english-small.webp', boxBackUrl: '/english-back.webp' } },
+    };
+    assert.deepEqual(getCoverSources(artwork, 'original', 'boxFrontUrl', 'preview'), ['/front-small.webp', '/front.webp']);
+    assert.deepEqual(getCoverSources(artwork, 'original', 'boxFrontUrl', 'full'), ['/front.webp', '/front-small.webp']);
+    assert.deepEqual(getCoverSources(artwork, 'original', 'boxBackUrl', 'full'), ['/back-small.webp']);
+    assert.deepEqual(getCoverSources(artwork, 'English', 'boxFrontUrl', 'full', ['/front.webp', '/catalog.webp']),
+        ['/english-small.webp', '/front.webp', '/front-small.webp', '/catalog.webp']);
+    assert.deepEqual(getCoverSources(artwork, 'English', 'boxBackUrl', 'preview'), ['/english-back.webp', '/back-small.webp']);
+    assert.deepEqual(cleanGameOverrides(artwork), artwork);
 });
 
 test('web manual is saved once for the game alongside independent localized PDFs', () => {

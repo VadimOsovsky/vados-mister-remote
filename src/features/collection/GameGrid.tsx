@@ -8,7 +8,9 @@ import { FavoriteBookmark } from './FavoriteBookmark';
 import { LazyImage } from '../../kit/LazyImage';
 import { getImageUrl, resolveImages, resolveTitle } from '../../services/launchbox';
 import { PLATFORMS } from '../../constants';
-import { getDisplayGameOverrides, getSaveSlots, getGameSaveKey } from '../../lib/storage';
+import { getGameArtworkLanguage, getGameOverrides, getSaveSlots, getGameSaveKey } from '../../lib/storage';
+import { getCoverSources } from '../../lib/gameArtwork';
+import { coverImageCrossOrigin } from '../../services/coverUploads';
 import { getPreviewCover } from './previewCovers';
 import './GameGrid.css';
 
@@ -37,12 +39,14 @@ export function GameCard({ game, regions, activeConsole, onSelect, preview, rece
     const beatenIds = useCollectionState(state => state.beatenIds);
     const favoriteIds = useCollectionState(state => state.favoriteIds);
     const playing = useIsGamePlaying(game.id, activeConsole);
-    const overrides = getDisplayGameOverrides(game.id, activeConsole);
+    const overrides = getGameOverrides(game.id, activeConsole);
     const images = resolveImages(game, regions);
     const displayTitle = overrides.title || resolveTitle(game, PLATFORMS[activeConsole].nameRegions);
     const localCover = preview ? getPreviewCover(activeConsole, game.id) : undefined;
-    const frontSrc = overrides.boxFrontUrl || localCover || (images.front ? `${getImageUrl(images.front, 300)}&collection-cover=1` : undefined);
-    const directCover = images.front ? getImageUrl(images.front) : undefined;
+    const [frontSrc, ...fallbacks] = getCoverSources(overrides, getGameArtworkLanguage(game.id, activeConsole), 'boxFrontUrl', 'preview', [
+        localCover, images.front ? `${getImageUrl(images.front, 300)}&collection-cover=1` : undefined,
+        images.front ? getImageUrl(images.front) : undefined,
+    ]);
     const coverScale = PLATFORMS[activeConsole].coverScale;
     const slots = getSaveSlots(getGameSaveKey(game.id, activeConsole));
     const playerCount = game.maxPlayers.trim();
@@ -54,7 +58,7 @@ export function GameCard({ game, regions, activeConsole, onSelect, preview, rece
         >
             <span className="card-frame">
                 <span className="card-art-wrap">
-                    <LazyImage src={frontSrc} fallbackSrc={directCover} alt="" className="card-art"
+                    <LazyImage src={frontSrc} fallbackSrcs={fallbacks} crossOrigin={coverImageCrossOrigin} alt="" className="card-art"
                         style={coverScale === undefined ? undefined : { scale: coverScale }} />
                     {favoriteIds.includes(game.id) && <FavoriteBookmark />}
                     {isBeaten && <span className="card-beaten" aria-hidden="true">

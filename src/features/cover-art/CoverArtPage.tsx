@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef } from 'react';
 import { Link, Navigate, useParams } from 'react-router';
 import { useCollection } from '../../hooks/useCollection';
 import { useCollectionState, usePlatform } from '../../state/collectionState';
-import { getDisplayGameOverrides } from '../../lib/storage';
+import { getGameArtworkLanguage, getGameOverrides } from '../../lib/storage';
+import { getCoverSources, resolveGameArtwork } from '../../lib/gameArtwork';
 import {
     getImageUrl,
     resolveImages,
@@ -30,10 +31,8 @@ export function CoverArtPage() {
             filteredGames
                 .filter((game) => game.id === gameId)
                 .map((game) => {
-                    const overrides = getDisplayGameOverrides(
-                        game.id,
-                        consoleKey,
-                    );
+                    const overrides = getGameOverrides(game.id, consoleKey);
+                    const language = getGameArtworkLanguage(game.id, consoleKey);
                     const images = resolveImages(game, platform.imageRegions);
                     const screenshot = resolveScreenshots(game)[0];
                     const clearLogo =
@@ -54,12 +53,10 @@ export function CoverArtPage() {
                                       .slice(0, 177)
                                       .replace(/\s+\S*$/, '') + '…'
                                 : game.desc,
-                        art:
-                            overrides.boxFrontUrl ||
-                            (preview
-                                ? getPreviewCover(consoleKey, game.id)
-                                : '') ||
-                            (images.front ? getImageUrl(images.front) : ''),
+                        art: getCoverSources(overrides, language, 'boxFrontUrl', 'full', [
+                            preview ? getPreviewCover(consoleKey, game.id) : undefined,
+                            images.front ? getImageUrl(images.front) : undefined,
+                        ])[0] ?? '',
                         screen:
                             (preview ? getPreviewScreenshot(game.id) : '') ||
                             (screenshot ? getImageUrl(screenshot) : ''),
@@ -71,7 +68,7 @@ export function CoverArtPage() {
                             : undefined,
                         manual:
                             overrides.webManualUrl ||
-                            overrides.manualUrl ||
+                            resolveGameArtwork(overrides, language).manualUrl ||
                             undefined,
                     };
                 }),
