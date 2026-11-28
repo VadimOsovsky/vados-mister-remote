@@ -148,6 +148,10 @@ export class WizzoApi {
     return url.hostname;
   }
 
+  get origin(): string {
+    return new URL(this.baseUrl).origin;
+  }
+
   get wsUrl(): string {
     return `${this.baseUrl.replace('http', 'ws')}/ws`;
   }

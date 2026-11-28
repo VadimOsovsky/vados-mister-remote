@@ -34,7 +34,7 @@ mister-playroom.duckdns.org {
 		route {
 			respond @preflight 204
 
-			@playroom path /api/playroom/state /api/playroom/artwork /api/playroom/artwork/*
+			@playroom path /api/playroom/state /api/playroom/artwork /api/playroom/artwork/* /api/playroom/cheats
 			handle @playroom {
 				reverse_proxy 127.0.0.1:8183 {
 					header_down -Access-Control-*

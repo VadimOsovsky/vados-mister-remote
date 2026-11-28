@@ -171,7 +171,7 @@ class SPAHandler(http.server.SimpleHTTPRequestHandler):
             return self.upload_artwork()
         if self.path != CHEATS_ROUTE:
             return self.send_error(404)
-        if self.headers.get("Origin") != "http://" + self.headers.get("Host", ""):
+        if self.headers.get("Origin") not in {"http://" + self.headers.get("Host", ""), PAGES_ORIGIN}:
             return self.send_error(403)
         if self.headers.get_content_type() != "application/json":
             return self.send_error(415)

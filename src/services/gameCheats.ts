@@ -1,11 +1,19 @@
 import { appStorage } from '../lib/sharedStorage';
 import type { ConsoleKey } from '../types';
+import type { WizzoApi } from './wizzoApi';
 
-const endpoint = '/api/playroom/cheats';
+const apiOrigin = import.meta.env?.VITE_PLAYROOM_API_ORIGIN?.trim().replace(/\/+$/, '') ?? '';
+const endpoint = `${apiOrigin}/api/playroom/cheats`;
 export const NES_CHEAT_LIMIT = 32;
 export type CheatCatalog = { supported: boolean; revision: string; entries: { id: string; codes: number }[] };
 
 export class CheatLaunchError extends Error {}
+
+export function assertCheatLaunchTarget(api: WizzoApi) {
+    if (apiOrigin ? api.origin !== new URL(apiOrigin).origin : api.host !== window.location.hostname) {
+        throw new Error('Connect to the MiSTer that hosts this Playroom to launch with cheats.');
+    }
+}
 
 function selectionKey(consoleKey: ConsoleKey, rom: string) {
     return `game_cheats_${consoleKey}:${rom}`;
@@ -26,7 +34,7 @@ export function saveCheatSelection(consoleKey: ConsoleKey, rom: string, names: s
 }
 
 export async function fetchCheats(rom: string, signal?: AbortSignal): Promise<CheatCatalog> {
-    if (import.meta.env.BASE_URL !== '/') {
+    if (!apiOrigin && import.meta.env.BASE_URL !== '/') {
         throw new Error('Open Playroom directly on your MiSTer (port 8183) to use Game Genie.');
     }
     const response = await fetch(`${endpoint}?${new URLSearchParams({ rom })}`, { signal });

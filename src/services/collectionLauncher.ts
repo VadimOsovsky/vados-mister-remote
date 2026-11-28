@@ -5,14 +5,14 @@ import type { ConsoleKey } from '../types';
 import type { WizzoApi } from './wizzoApi';
 import { launchGameForPlatform } from './zaparooLauncher';
 import { isRomPlaying } from './nowPlaying';
-import { applyLaunchCheats, CheatLaunchError, fetchCheats, NES_CHEAT_LIMIT, readCheatSelection } from './gameCheats';
+import { applyLaunchCheats, assertCheatLaunchTarget, CheatLaunchError, fetchCheats, NES_CHEAT_LIMIT, readCheatSelection } from './gameCheats';
 
 export async function launchCollectionGame(api: WizzoApi, consoleKey: ConsoleKey, gameId: string, romPath: string) {
     const names = readCheatSelection(consoleKey, romPath);
     let previousRevision = '';
     if (names.length) {
         try {
-            if (api.host !== window.location.hostname) throw new Error('Open Playroom on the MiSTer you want to use cheats on.');
+            assertCheatLaunchTarget(api);
             const catalog = await fetchCheats(romPath);
             previousRevision = catalog.revision;
             if (!catalog.supported) throw new Error('Start MiSTer with Zaparoo Main or clear your selection in Cheats.');
